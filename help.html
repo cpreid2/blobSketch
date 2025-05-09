@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>blobSketch – Help &amp; User Guide</title>
+  <style>
+    /* ---------- GLOBAL BOX-SIZING ---------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    /* ---------- GENERAL LAYOUT ---------- */
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: "Courier New", monospace;
+      background: #efefef;
+      color: #000;
+    }
+    body {
+      display: flex;
+      overflow: hidden;
+    }
+    aside {
+      /* fix width and prevent shrinking below min-width */
+      flex: 0 0 230px;
+      min-width: 200px;
+      background: #d9d9d9;
+      border-right: 2px solid #000;
+      padding: 16px 14px 40px;
+      overflow-y: auto;
+    }
+    main {
+      flex: 1 1 auto;
+      padding: 28px 36px 80px;
+      overflow-y: auto;
+    }
+
+    /* ---------- TYPOGRAPHY ---------- */
+    h1 {
+      margin: 0 0 18px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    h2 {
+      background: #c0c0c0;
+      border: 2px solid #000;
+      padding: 4px 8px;
+      margin: 26px 0 10px;
+      font-size: 18px;
+    }
+    h3 {
+      margin: 18px 0 6px;
+      font-size: 16px;
+    }
+    p, li {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    kbd {
+      display: inline-block;
+      min-width: 20px;
+      padding: 1px 4px;
+      border: 1px solid #000;
+      border-radius: 4px;
+      background: #fff;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    /* ---------- NAVIGATION ---------- */
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    nav li {
+      margin-bottom: 6px;
+    }
+    nav a {
+      display: block;
+      color: #000;
+      text-decoration: none;
+      font-weight: bold;
+      /* ensure long labels wrap rather than overflow */
+      word-wrap: break-word;
+      word-break: break-word;
+      hyphens: auto;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    nav a.active {
+      background: #ff0;
+      padding: 2px 4px;
+      border: 1px solid #000;
+    }
+    nav ul ul {
+      margin-top: 4px;
+      margin-left: 12px;
+      padding-left: 12px;
+      border-left: 1px solid #000;
+    }
+
+    /* ---------- TABLE ---------- */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 8px 0;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    th {
+      background: #c0c0c0;
+    }
+
+    /* ---------- BACK LINK ---------- */
+    .back-link {
+      display: block;
+      margin-top: 28px;
+      font-weight: bold;
+    }
+
+    /* ---------- RESPONSIVE Fallback ---------- */
+    @media (max-width: 600px) {
+      body {
+        flex-direction: column;
+        overflow: auto;
+      }
+      aside {
+        width: 100%;
+        flex: 0 0 auto;
+        border-right: none;
+        border-bottom: 2px solid #000;
+      }
+      main {
+        width: 100%;
+        padding-top: 14px;
+      }
+      /* collapse nested borders on mobile */
+      nav ul ul {
+        border-left: none;
+        padding-left: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <h1>blobSketch Help</h1>
+    <nav>
+      <ul>
+        <li><a href="#intro">Overview</a></li>
+        <li><a href="#interface">Interface</a>
+          <ul>
+            <li><a href="#draw">Draw Tools</a></li>
+            <li><a href="#edit">Edit Tools</a></li>
+            <li><a href="#shape">Shape Settings</a></li>
+            <li><a href="#sliders">Physics Sliders</a></li>
+            <li><a href="#canvas">Canvas Controls</a></li>
+          </ul>
+        </li>
+        <li><a href="#requirements">System Requirements</a></li>
+        <li><a href="#file">File &amp; Export</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+      </ul>
+    </nav>
+    <a href="index.html" class="back-link">← Back to App</a>
+  </aside>
+  <main>
+    <section id="intro">
+      <h2>Overview</h2>
+      <p>blobSketch is a WebGL-based canvas for creating physics-driven blobs, lines, and repulsion circles. Draw shapes, tweak physics, then export to SVG or high-res JPG.</p>
+    </section>
+
+    <section id="interface">
+      <h2>Interface</h2>
+      <ul>
+        <li><strong>Toolbar (left)</strong> – icons for draw/edit modes and shape defaults.</li>
+        <li><strong>Canvas (center)</strong> – 500×500 px drawing area with always-on grid.</li>
+        <li><strong>Sliders (bottom)</strong> – real-time physics controls.</li>
+      </ul>
+    </section>
+
+    <section id="draw">
+      <h2>Draw Tools</h2>
+      <ul>
+        <li><strong>Blob</strong> – closed shapes. Click-drag to draw; releases seal the shape.</li>
+        <li><strong>Line</strong> – open polylines. Click-drag to draw</li>
+        <li><strong>Circle</strong> – draw a repulsion circle. Drag sets radius; blobs avoid inside. Wrap blobs around circles to create controlled shapes.</li>
+      </ul>
+      <p>Active tool shows an "ON" badge on its icon.</p>
+    </section>
+
+    <section id="edit">
+      <h2>Edit Tools</h2>
+      <ul>
+        <li><strong>Drag</strong> – move blobs, lines or circles.</li>
+        <li><strong>Freeze</strong> – lock physics inside closed shapes (dashed rendering).</li>
+        <li><strong>Slice</strong> – click a chain segment to split the shape.</li>
+        <li><strong>Pin</strong> – fix single points in place (red target ring). Click red target ring to release point.</li>
+        <li><strong>Delete</strong> – erase the nearest circle, line segment or blob.</li>
+      </ul>
+      <p>Only one edit mode may be active at a time.</p>
+    </section>
+
+    <section id="shape">
+      <h2>Shape Settings</h2>
+      <ul>
+        <li><strong>Color</strong> – sets stroke/fill color.</li>
+        <li><strong>Size</strong> – sets the base blob / line size</li>
+        <li><strong>Variation</strong> – random size variation per drawn object</li>
+      </ul>
+    </section>
+
+    <section id="sliders">
+      <h2>Physics Sliders</h2>
+      <table>
+        <thead><tr><th>Slider</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td>Blob Size</td><td>Scales blob size.</td></tr>
+          <tr><td>Excitability</td><td>Controls bounce/damping.</td></tr>
+          <tr><td>Rigidity</td><td>Spring tension between points on blob/line.</td></tr>
+          <tr><td>Turmoil</td><td>Repulsion strength to avoid overlaps.</td></tr>
+          <tr><td>Animation Speed</td><td>Adjusts the global timestep.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="canvas">
+      <h2>Canvas Controls</h2>
+      <ul>
+        <li><strong>Thickness (T icon)</strong> – toggles 1 px/5 px stroke.</li>
+        <li><strong>Undo (⎌)</strong> – removes last element.</li>
+        <li><strong>Repel ↔ </strong> – enables high repel mode, which adds more force to keep blobs from intersecting</li>
+        <li><strong>Reset (⟳)</strong> – clears all after confirmation.</li>
+      </ul>
+    </section>
+    <section id="shortcuts">
+      <h2>Keyboard</h2>
+      <ul>
+        <li><kbd>Space</kbd> – Freezes animation -> toggles Excitability to 0 and back.</li>
+      </ul>
+    </section>
+    <section id="file">
+      <h2>File &amp; Export</h2>
+      <h3>File Menu</h3>
+      <ul>
+        <li>Save Blobs – saves shapes + settings to JSON.</li>
+        <li>Load Blobs – import shapes + settings from JSON.</li>
+      </ul>
+      <h3>Export Menu</h3>
+      <ul>
+        <li>Lines → SVG/JPG – strokes only.</li>
+        <li>Fill → SVG/JPG – fills closed shapes.</li>
+      </ul>
+    </section>
+    <section id="requirements">
+      <h2>System Requirements</h2>
+      <h3>Hardware</h3>
+      <ul>
+        <li><strong>Desktop / Laptop (recommended)</strong> – any CPU from 2013‑onward with an
+            integrated or discrete GPU that supports OpenGL 2.1 / WebGL 1.0.</li>
+        <li><strong>Tablets and Mobile Devices</strong> – Not Supported</li>
+      </ul>
+
+      <h3>Software</h3>
+      <ul>
+        <li><strong>Browsers</strong> – Chrome 49+, Firefox 44+, Edge 79+, Safari 11+ with WebGL enabled.</li>
+        <li><strong>OS</strong> – Windows 7+, macOS 10.11+, Linux distros with Mesa 11+ drivers.</li>
+      </ul>
+
+      <h3>Performance Tips</h3>
+      <ul>
+        <li>Turn off <em>Thickness</em> or lower <em>Blob Size</em> on Intel HD 4000‑era GPUs.</li>
+        <li>Press <kbd>Space</kbd> to mute physics when previewing static artwork.</li>
+        <li>Laptop users: disable high‑DPI rendering by setting browser zoom to 100 % for extra FPS.</li>
+      </ul>
+    </section>
+    <section id="troubleshooting">
+      <h2>Troubleshooting</h2>
+      <ul>
+        <li><strong>No drawing?</strong> Ensure WebGL is enabled in your browser.</li>
+        <li><strong>Slow performance?</strong> Lower Blob Size or Animation Speed.</li>
+        <li><strong>Mobile warning?</strong> App requires a desktop browser.</li>
+      </ul>
+    </section>
+  </main>
+
+  <script>
+    const navLinks = document.querySelectorAll('aside nav a');
+    const sections = document.querySelectorAll('main section');
+    function updateNav(){
+      let id = 'intro';
+      sections.forEach(sec=>{
+        if(sec.getBoundingClientRect().top <= 60) id=sec.id;
+      });
+      navLinks.forEach(a=>a.classList.toggle('active', a.getAttribute('href').slice(1)===id));
+    }
+    document.addEventListener('scroll', updateNav, {passive:true});
+  </script>
+</body>
+</html>

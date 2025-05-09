@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>blobSketch version 1.0</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Courier New", monospace;
+      background-color: #efefef;
+      color: #000;
+    }
+    .window {
+      width: 800px;
+      margin: 40px auto;
+      border: 2px solid #000;
+      background-color: #fff;
+      box-shadow: 4px 4px 0px #000;
+      position: relative;
+    }
+
+    /* TITLE BAR */
+    .title-bar {
+      background-color: #c0c0c0;
+      border-bottom: 2px solid #000;
+      padding: 4px 8px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      position: relative;
+    }
+    .menu-bar {
+      display: flex;
+      gap: 16px;
+    }
+    .menu-bar span {
+      font-weight: bold;
+      cursor: pointer;
+      position: relative;
+    }
+    .menu-bar span:hover {
+      text-decoration: underline;
+    }
+    .submenu {
+      display: none;
+      position: absolute;
+      top: 24px;
+      left: 0;
+      background-color: #c0c0c0;
+      border: 2px solid #000;
+      padding: 4px;
+      flex-direction: column;
+      gap: 4px;
+      z-index: 999;
+    }
+    .submenu span {
+      display: block;
+      padding: 2px 6px;
+      cursor: pointer;
+    }
+    .submenu span:hover {
+      background-color: #d9d9d9;
+    }
+    #exportSubmenu { width: 160px; }
+    #fileSubmenu { width: 200px; }
+
+    #mobileWarning {
+       position: fixed;
+       top: 0;
+       left: 0;
+       width: 100%;
+       height: 100%;
+       background: #fff;
+       color: #000;
+       font-family: sans-serif;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       text-align: center;
+       z-index: 10000;
+       padding: 20px;
+     }
+
+    .reset-icon {
+      margin-left: auto;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+      text-decoration: none;
+      padding: 0 8px;
+    }
+    .reset-icon:hover {
+      background-color: #d9d9d9;
+    }
+
+    /* CONTENT AREA */
+    .content {
+      display: flex;
+    }
+
+    /* TOOLBAR with separate sections */
+    .toolbar {
+      width: 140px;
+      border-right: 2px solid #000;
+      background-color: #d9d9d9;
+      padding: 6px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Generic section in the toolbar */
+    .toolbar-section {
+      border: 1px solid #000;
+      background-color: #efefef;
+      padding: 4px;
+      margin: 2px 0;
+    }
+    .toolbar-section h4 {
+      margin: 0 0 4px;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      background-color: #b0b0b0;
+      color: #000;
+      border: 1px solid #000;
+      padding: 2px;
+    }
+    .toolbar-section .icon-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .icon {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #000;
+      background-color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      user-select: none;
+      font-weight: normal;
+      position: relative;
+    }
+    .icon img {
+      width: 30px;
+      height: 30px;
+    }
+
+    /* "ON" label when .icon-active is present */
+    .icon.icon-active::after {
+      content: "ON";
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background-color: #ff0;
+      color: #000;
+      font-size: 10px;
+      font-weight: bold;
+      border: 1px solid #000;
+      padding: 2px 4px;
+      border-radius: 4px;
+      box-shadow: 2px 2px 0px #000;
+      z-index: 5;
+    }
+
+    /* SHAPE SETTINGS */
+    .shape-settings {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .shape-settings label {
+      font-size: 12px;
+      text-align: center;
+      display: block;
+    }
+    .shape-settings input[type="color"],
+    .shape-settings input[type="number"] {
+      margin-top: 2px;
+      width: 70px;
+    }
+
+    /* MAIN DRAWING AREA */
+    .main-area {
+      flex: 1;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #glCanvas {
+      width: 500px;
+      height: 500px;
+      border: 2px solid #000;
+      background-color: #fff;
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    /* BOTTOM SLIDER PANEL */
+    .bottom-panel {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      border-top: 2px solid #000;
+      padding: 8px;
+      background-color: #c0c0c0;
+      text-align: center;
+    }
+    #sliders > div {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+    #sliders label {
+      width: 250px;
+      text-align: center;
+      margin-right: 8px;
+    }
+    #sliders label span {
+      display: inline-block;
+      font-weight: bold;
+      vertical-align: middle;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 300px;
+      background: #fff;
+      border: 1px solid #000;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 20px;
+      background: #c0c0c0;
+      border: 1px solid #000;
+      cursor: pointer;
+      margin-top: -7px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 20px;
+      background: #c0c0c0;
+      border: 1px solid #000;
+      cursor: pointer;
+    }
+
+    /* DIALOGS */
+    .dialog-backdrop {
+      display: none;
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.4);
+      justify-content: center;
+      align-items: center;
+      z-index:99;
+    }
+    .dialog-content {
+      background-color: #fff;
+      border: 2px solid #000;
+      padding: 16px;
+      min-width: 200px;
+      text-align: center;
+      box-shadow: 4px 4px 0px #000;
+      font-family: "Courier New", monospace;
+    }
+    .dialog-content button {
+      margin-top: 12px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* SPLASH OVERLAY */
+    #splashOverlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      cursor: pointer;
+    }
+    #splashOverlay img {
+      max-width: 50%;
+      max-height: 50%;
+      pointer-events: none;
+      margin-bottom: 50px;
+      border: 2px solid #000;
+      border-radius: 6px;
+      padding: 0px;
+    }
+    .splashText {
+      font-family: "Courier New", monospace;
+      font-size: 18px;
+      font-weight: bold;
+      color: #000;
+      background-color: #c0c0c0;
+      padding: 8px 12px;
+      border: 2px solid #000;
+      box-shadow: 4px 4px 0px #000;
+      user-select: none;
+    }
+
+    /* HELP ICON TOOLTIP */
+    .inline-icon {
+      width: 16px;
+      height: 16px;
+      vertical-align: middle;
+      margin: 0 4px;
+    }
+    .help-icon-container {
+      position: relative;
+      display: inline-block;
+    }
+    .help-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #c0c0c0; /* retro style */
+      border: 1px solid #000;
+      color: #000;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: center;
+      line-height: 16px;
+      cursor: help;
+      user-select: none;
+    }
+    .help-tooltip {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      min-width: 120px;
+      background-color: #efefef;
+      color: #000;
+      border: 1px solid #000;
+      padding: 4px;
+      font-size: 12px;
+      box-shadow: 4px 4px 0 #000;
+      z-index: 9999;
+    }
+    .help-icon-container:hover .help-tooltip {
+      display: block;
+    }
+
+    /* CURSOR STYLES FOR EACH MODE */
+    .canvas-blob-mode {
+      cursor: url("images/pencil.png"), auto;
+    }
+    .canvas-line-mode {
+      cursor: url("images/pencil.png"), auto;
+    }
+    .canvas-circle-mode {
+      cursor: url("images/CircleCursor.png"), auto;
+    }
+    .canvas-drag-mode {
+      cursor: url("images/glove.png"), auto;
+    }
+    .canvas-pin-mode {
+      cursor: url("images/PinCursor.png"), auto;
+    }
+    .canvas-slicing-mode {
+      cursor: url("images/trim.png"), auto;
+    }
+    .canvas-freeze-mode {
+      cursor: url("images/FreezeCursor.png"), auto;
+    }
+    .canvas-delete-mode {
+      cursor: url("images/DeleteCursor.png"), auto;
+    }
+  </style>
+</head>
+<body>
+<div class="window">
+  <!-- Splash Overlay -->
+  <div id="splashOverlay">
+    <img src="images/splash.png" alt="Splash Image" />
+    <div class="splashText">Click and Drag to Start Blobbing</div>
+  </div>
+
+  <!-- Title Bar -->
+  <div class="title-bar">
+    <div class="menu-bar">
+      <span id="menuFile">File
+        <div class="submenu" id="fileSubmenu">
+          <span id="saveBlobsOption">Save Blobs (JSON)</span>
+          <span id="loadBlobsOption">Load Blobs (JSON)</span>
+        </div>
+      </span>
+      <span id="menuExport">Export
+        <div class="submenu" id="exportSubmenu">
+          <span id="exportStrokedOption">...Lines&gt;SVG</span>
+          <span id="exportStrokedJPGOption">...Lines&gt;JPG</span>
+          <span id="exportFilledOption">...Fill&gt;SVG</span>
+          <span id="exportFilledJPGOption">...Fill&gt;JPG</span>
+        </div>
+      </span>
+      <span id="menuAbout">About</span>
+      <span id="menuHelp">Help</span>
+    </div>
+    <span id="resetIcon" class="reset-icon" title="Reset Canvas">⟳</span>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <!-- Toolbar: grouped into Draw Tools, Edit Tools, Canvas Tools, and now Shape Settings -->
+    <div class="toolbar">
+      <!-- DRAW TOOLS -->
+      <div class="toolbar-section">
+        <h4>Draw Tools</h4>
+        <div class="icon-group">
+          <div class="icon" id="iconBlob" title="Blob Mode">
+            <img src="images/blob.png" alt="Blob Mode" />
+          </div>
+          <div class="icon" id="iconLine" title="Line Mode">
+            <img src="images/line.png" alt="Line Mode" />
+          </div>
+          <div class="icon" id="iconCircle" title="Circle Mode">
+            <img src="images/wrap.png" alt="Circle Mode" />
+          </div>
+        </div>
+      </div>
+
+      <!-- EDIT TOOLS -->
+      <div class="toolbar-section">
+        <h4>Edit Tools</h4>
+        <div class="icon-group">
+          <div class="icon" id="iconDrag" title="Enable Drag Mode">
+            <img src="images/gloveIcon.png" alt="Drag Mode" />
+          </div>
+          <div class="icon" id="iconFreeze" title="Enable Freeze Mode">
+            <img src="images/freeze.png" alt="Freeze Mode" />
+          </div>
+          <div class="icon" id="iconSlice" title="Enable Slicing Mode">
+            <img src="images/cut.png" alt="Cut Mode" />
+          </div>
+          <div class="icon" id="iconPin" title="Enable Pin Mode">
+            <img src="images/pin.png" alt="Pin Mode" />
+          </div>
+          <div class="icon" id="iconDelete" title="Enable Delete Mode">
+            <img src="images/delete.png" alt="Delete">
+          </div>
+        </div>
+      </div>
+
+      <!-- SHAPE SETTINGS (Color, Gap, ΔSize) -->
+      <div class="toolbar-section">
+        <h4>Shape Settings</h4>
+        <div class="shape-settings">
+          <div>
+            <label for="blobColor">Color</label>
+            <input type="color" id="blobColor" value="#000000">
+          </div>
+          <div>
+            <label for="radiusAvgInput">Size</label>
+            <input type="number" id="radiusAvgInput" min="0.0" max="20" step="0.2" value="5">
+          </div>
+          <div>
+            <label for="radiusVarInput">Variation</label>
+            <input type="number" id="radiusVarInput" min="0" max="10" step="0.5" value="2">
+          </div>
+        </div>
+      </div>
+
+      <!-- CANVAS TOOLS -->
+      <div class="toolbar-section">
+        <h4>Canvas</h4>
+        <div class="icon-group">
+          <div class="icon" id="iconThickness" title="Line Thickness: Thin">T</div>
+          <div class="icon" id="iconUndo" title="Undo Last Item">⎌</div>
+          <div class="icon" id="iconDiffusion" title="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Drawing Area -->
+    <div class="main-area">
+      <canvas id="glCanvas" width="500" height="500"></canvas>
+    </div>
+  </div>
+
+  <!-- Bottom Panel: Sliders -->
+  <div class="bottom-panel">
+    <div id="sliders">
+      <div>
+        <div class="help-icon-container">
+          <span class="help-icon">i</span>
+          <div class="help-tooltip">
+             Higher = bigger blobs/lines.
+          </div>
+        </div>
+        <label for="dotScaleSlider" class="slider-label">Blob Size: <span id="dotScaleValue">39%</span></label>
+        <input type="range" id="dotScaleSlider" min="0" max="100" value="39" step="0.5">
+      </div>
+      <div>
+        <div class="help-icon-container">
+          <span class="help-icon">i</span>
+          <div class="help-tooltip">
+            Higher = more wobble.
+          </div>
+        </div>
+        <label for="dampingSlider">Excitability: <span id="dampingValue">85%</span></label>
+        <input type="range" id="dampingSlider" min="0" max="100" value="85" step="0.5">
+      </div>
+      <div>
+        <div class="help-icon-container">
+          <span class="help-icon">i</span>
+          <div class="help-tooltip">
+            Higher = tighter shapes.
+          </div>
+        </div>
+        <label for="springConstantSlider">Rigidity: <span id="springConstantValue">30%</span></label>
+        <input type="range" id="springConstantSlider" min="0" max="100" value="30" step="1">
+      </div>
+      <div>
+        <div class="help-icon-container">
+          <span class="help-icon">i</span>
+          <div class="help-tooltip">
+            Higher = more expansion.
+          </div>
+        </div>
+        <label for="repulsionConstantSlider">Turmoil: <span id="repulsionConstantValue">10%</span></label>
+        <input type="range" id="repulsionConstantSlider" min="0" max="100" value="10" step="1">
+      </div>
+      <div>
+        <div class="help-icon-container">
+          <span class="help-icon">i</span>
+          <div class="help-tooltip">
+            Shapes animate faster when higher.
+          </div>
+        </div>
+        <label for="timeStepSlider">Animation Speed: <span id="timeStepValue">47%</span></label>
+        <input type="range" id="timeStepSlider" min="0" max="100" value="47" step="1">
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals/Dialogs: About and Help -->
+  <div class="dialog-backdrop" id="aboutBackdrop">
+    <div class="dialog-content">
+      <p>blobSketch version 1.0</p>
+      <p>by Colin Reid</p>
+      <button id="closeAbout">OK</button>
+    </div>
+  </div>
+
+  <!-- ░ SAVE / IMPORT OPTION DIALOGS ░ -->
+<div class="dialog-backdrop" id="saveOptionsBackdrop">
+  <div class="dialog-content">
+    <h3>Save Options</h3>
+    <label><input type="checkbox" id="saveIncludeChains" checked> Blobs / Lines</label><br>
+    <label><input type="checkbox" id="saveIncludeCircles" checked> Circles</label><br>
+    <label><input type="checkbox" id="saveIncludeSettings"> Physics & UI Settings</label><br>
+    <button id="confirmSaveBtn">Save</button>
+    <button id="cancelSaveBtn">Cancel</button>
+  </div>
+</div>
+
+<div class="dialog-backdrop" id="importOptionsBackdrop">
+  <div class="dialog-content">
+    <h3>Import Options</h3>
+    <label><input type="checkbox" id="importIncludeChains" checked> Blobs / Lines</label><br>
+    <label><input type="checkbox" id="importIncludeCircles" checked> Circles</label><br>
+    <label><input type="checkbox" id="importIncludeSettings" checked> Physics & UI Settings</label><br>
+    <button id="confirmImportBtn">Import</button>
+    <button id="cancelImportBtn">Cancel</button>
+  </div>
+</div>
+<!-- ░ END DIALOGS ░ -->
+</div>
+<div id="circleInfo" style="
+     position:fixed; display:none; z-index:10000;
+     pointer-events:none; font:12px 'Courier New',monospace;
+     padding:3px 6px; background:#ffffcc;
+     border:1px solid #000; box-shadow:3px 3px 0 #000;">
+</div>
+<script>
+if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+  document.addEventListener("DOMContentLoaded", function() {
+    var warningDiv = document.createElement("div");
+    warningDiv.id = "mobileWarning";
+    warningDiv.innerHTML = '<h1>Desktop Only</h1><p>This application is best experienced on a desktop browser. Please switch to a desktop device.</p>';
+    document.body.appendChild(warningDiv);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  /* -----------------------------------
+     SHORTCUTS & UTILITIES
+  ----------------------------------- */
+  const $ = id => document.getElementById(id);
+  const circleInfo = $("circleInfo");
+  // Helper for converting from one numeric range to another
+  function mapRange(value, inMin, inMax, outMin, outMax) {
+    return outMin + (outMax - outMin) * ((value - inMin) / (inMax - inMin));
+  }
+
+  const hexToRGBA = hex => {
+    if (hex[0] === "#") hex = hex.slice(1);
+    const r = parseInt(hex.slice(0,2),16)/255,
+          g = parseInt(hex.slice(2,4),16)/255,
+          b = parseInt(hex.slice(4,6),16)/255;
+    return [r,g,b,1.0];
+  };
+
+  function anyEditModeOn() {
+  return slicingMode || dragMode || pinMode || freezeMode || deleteMode;
+}
+
+  /* -----------------------------------
+     SPLASH OVERLAY
+  ----------------------------------- */
+  $("splashOverlay").onclick = () => {
+    $("splashOverlay").style.display = "none";
+  };
+
+  /* -----------------------------------
+     DIALOG SETUP (ABOUT, HELP)
+  ----------------------------------- */
+  function setupDialog(openBtnId, backdropId, closeBtnId) {
+    const openBtn = $(openBtnId),
+          backdrop= $(backdropId),
+          closeBtn= $(closeBtnId);
+    openBtn.addEventListener("click", () => (backdrop.style.display = "flex"));
+    closeBtn.addEventListener("click", () => (backdrop.style.display = "none"));
+  }
+  setupDialog("menuAbout", "aboutBackdrop", "closeAbout");
+  document.getElementById("menuHelp").addEventListener("click", () => {
+     window.location.href = "help.html";
+   });
+
+  /* -----------------------------------
+     FILE & EXPORT MENU
+  ----------------------------------- */
+  function setupSubmenu(menuId, submenuId) {
+    const menu = $(menuId), submenu = $(submenuId);
+    let visible = false;
+    menu.addEventListener("click", (e) => {
+      e.stopPropagation();
+      visible = !visible;
+      submenu.style.display = visible ? "flex" : "none";
+    });
+    document.addEventListener("click", (e) => {
+      if (!menu.contains(e.target) && visible) {
+        visible = false;
+        submenu.style.display = "none";
+      }
+    });
+  }
+  setupSubmenu("menuFile", "fileSubmenu");
+  setupSubmenu("menuExport", "exportSubmenu");
+
+  /* -----------------------------------
+     WEBGL CONTEXT
+  ----------------------------------- */
+  const canvas = $("glCanvas");
+  const gl = canvas.getContext("webgl");
+  if (!gl) alert("WebGL not supported by your browser.");
+
+  /* -----------------------------------
+     GLOBALS & DATA
+  ----------------------------------- */
+  // Distinct "draw modes": 'blob', 'line', or 'circle'
+  let drawMode = 'blob';
+
+  // Each chain: { chain: [...], color, baseDotRadius, isClosed, frozen }
+  const chains = [];
+  // Each circle: { x, y, radius }
+  const circles = [];
+  let history = [];  // For undo
+
+  // Flags for drawing
+  let isDrawing          = false,
+      isCircleDrawing    = false,
+      currentCircle      = null,
+      draggingCircleIndex= null;
+
+  // Edit tool flags (only one can be active)
+  let slicingMode = false,
+      dragMode    = false,
+      pinMode     = false,
+      freezeMode  = false,
+      deleteMode  = false;
+
+  // For dragging chain points
+  let draggingChainIndex = null,
+      draggingDotIndex   = null;
+
+  // For hover highlight in pin/drag mode
+  let pinHoverChainIndex = null,
+      pinHoverDotIndex   = null;
+
+  // Physics parameters (defaults)
+  let springConstant      = 0.3,   // from slider ~30%
+      repulsionConstant   = 0.1,   // ~10%
+      damping             = 0.85,  // ~85%
+      timeStep            = 1.05,     // mapped from 47% => 0.1..2
+      dotScaleFactor      = 2.0,   // ~39% => 0.1..5
+      currentLineThickness= 5;
+      applyThicknessUI();
+
+  let prevDamping = damping;   // remembers the last non‑zero value
+
+  let globalRadiusAvg     = 4,
+      globalRadiusVar     = 2;
+
+  const colorInput        = $("blobColor");
+
+  /* -----------------------------------
+     ICON "ON" LABEL HELPER
+  ----------------------------------- */
+  function toggleActiveIcon(iconEl, isActive) {
+    iconEl.classList.toggle("icon-active", isActive);
+  }
+
+  // A helper to apply the “active” styling to edit-tool icons
+  function setIconActive(iconEl, isActive, activeTitle, inactiveTitle) {
+    iconEl.title = isActive ? activeTitle : inactiveTitle;
+    iconEl.style.backgroundColor = isActive ? "#D3D3D3" : "";
+    iconEl.style.fontWeight      = isActive ? "bold" : "normal";
+    iconEl.classList.toggle("icon-active", isActive);
+  }
+
+  // Ensure only one edit tool is active at a time
+  function setEditTool(toolName) {
+    // If the requested tool is already active, we’ll toggle it off
+    const isAlreadyActive =
+          (toolName === "slice"  && slicingMode) ||
+          (toolName === "drag"   && dragMode)    ||
+          (toolName === "pin"    && pinMode)     ||
+          (toolName === "freeze" && freezeMode)  ||
+          (toolName === "delete" && deleteMode);
+
+    // First, turn everything off:
+    slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+
+    // If the requested tool wasn’t already active, we turn it on:
+    if (!isAlreadyActive) {
+      if (toolName === "slice")  slicingMode = true;
+      if (toolName === "drag")   dragMode    = true;
+      if (toolName === "pin")    pinMode     = true;
+      if (toolName === "freeze") freezeMode  = true;
+      if (toolName === "delete") deleteMode  = true;
+    }
+
+    // Update icon states accordingly:
+    setIconActive($("iconSlice"),  slicingMode,
+                  "Slicing Mode (On)", "Slicing Mode (Off)");
+    setIconActive($("iconDrag"),   dragMode,
+                  "Disable Drag Mode", "Enable Drag Mode");
+    setIconActive($("iconPin"),    pinMode,
+                  "Disable Pin Mode", "Enable Pin Mode");
+    setIconActive($("iconFreeze"), freezeMode,
+                  "Disable Freeze Mode", "Enable Freeze Mode");
+    setIconActive($("iconDelete"), deleteMode,
+                  "Disable Delete Mode", "Enable Delete Mode");
+  // Update the canvas cursor
+    updateCanvasCursor();
+  }
+
+  /* -----------------------------------
+     DRAW MODE: BLOB / LINE / CIRCLE
+  ----------------------------------- */
+  function setDrawMode(mode) {
+    toggleActiveIcon($("iconBlob"),   false);
+    toggleActiveIcon($("iconLine"),   false);
+    toggleActiveIcon($("iconCircle"), false);
+
+    drawMode = mode;
+
+    if (mode === 'blob') {
+      toggleActiveIcon($("iconBlob"), true);
+    } else if (mode === 'line') {
+      toggleActiveIcon($("iconLine"), true);
+    } else if (mode === 'circle') {
+      toggleActiveIcon($("iconCircle"), true);
+    }
+    updateCanvasCursor();
+  }
+  // Initialize default draw mode
+  setDrawMode('blob');
+
+  /* -----------------------------------
+     EDIT TOOL ICONS (now calling setEditTool)
+  ----------------------------------- */
+  $("iconSlice").onclick = function() {
+    setEditTool("slice");
+  };
+  $("iconDrag").onclick = function() {
+    setEditTool("drag");
+  };
+  $("iconPin").onclick = function() {
+    setEditTool("pin");
+  };
+  $("iconFreeze").onclick = function() {
+    setEditTool("freeze");
+  };
+  $("iconDelete").onclick = function() {
+    setEditTool("delete");
+  };
+  /* -----------------------------------
+     THICKNESS & UNDO & RESET
+  ----------------------------------- */
+
+  function applyThicknessUI() {
+    const btn = $("iconThickness");
+    btn.title = currentLineThickness === 1
+      ? "Line Thickness: Thin"
+      : "Line Thickness: Thick";
+    btn.style.backgroundColor = currentLineThickness === 5 ? "#D3D3D3" : "";
+    btn.style.fontWeight      = currentLineThickness === 5 ? "bold" : "normal";
+    toggleActiveIcon(btn, currentLineThickness > 1);
+  }
+
+  $("iconThickness").onclick = () => {
+    currentLineThickness = (currentLineThickness === 1) ? 5 : 1;
+    applyThicknessUI();
+  };
+
+  $("iconUndo").onclick = () => {
+    if (history.length > 0) {
+      const last = history.pop();
+      if (last.type === "chain")  chains.pop();
+      if (last.type === "circle") circles.pop();
+    }
+  };
+
+  $("resetIcon").onclick = () => {
+    if (confirm("Are you sure you want to clear the entire canvas?")) {
+      chains.length = 0;
+      circles.length = 0;
+      history.length = 0;
+    }
+  };
+
+  let interRepelMult = 1;  // 1 = normal, 3 = boosted
+
+  $("iconDiffusion").onclick = () => {
+    interRepelMult = interRepelMult === 1 ? 3 : 1;
+    toggleActiveIcon($("iconDiffusion"), interRepelMult === 3);
+    $("iconDiffusion").title =
+      interRepelMult === 1
+        ? "Enable High Blob Repel"
+        : "Disable High Blob Repel";
+  };
+
+  /* -----------------------------------
+     DRAW MODE ICONS
+  ----------------------------------- */
+  $("iconBlob").onclick = () => setDrawMode('blob');
+  $("iconLine").onclick = () => {
+    if (drawMode === "line") {
+      setDrawMode("blob");
+    } else {
+      setDrawMode("line");
+    }
+  };
+  $("iconCircle").onclick = () => {
+    if (drawMode === "circle") {
+      setDrawMode("blob");
+    } else {
+      setDrawMode("circle");
+    }
+  };
+
+  /* -----------------------------------
+     UPDATE CANVAS CURSOR
+  ----------------------------------- */
+  function updateCanvasCursor() {
+    canvas.classList.remove(
+      "canvas-blob-mode",
+      "canvas-line-mode",
+      "canvas-circle-mode",
+      "canvas-drag-mode",
+      "canvas-pin-mode",
+      "canvas-slicing-mode",
+      "canvas-freeze-mode",
+      "canvas-delete-mode"
+    );
+    // Draw mode
+    if (drawMode === 'blob')   canvas.classList.add("canvas-blob-mode");
+    if (drawMode === 'line')   canvas.classList.add("canvas-line-mode");
+    if (drawMode === 'circle') canvas.classList.add("canvas-circle-mode");
+
+    // Edit tools
+    if (slicingMode) canvas.classList.add("canvas-slicing-mode");
+    if (dragMode)    canvas.classList.add("canvas-drag-mode");
+    if (pinMode)     canvas.classList.add("canvas-pin-mode");
+    if (freezeMode)  canvas.classList.add("canvas-freeze-mode");
+    if (deleteMode)  canvas.classList.add("canvas-delete-mode");
+  }
+
+  /* -----------------------------------
+     FILE MENU LOGIC (SAVE/LOAD)
+  ----------------------------------- */
+  function getCurrentSettings() {
+    return {
+      timeStep,
+      springConstant,
+      repulsionConstant,
+      damping,
+      dotScaleFactor,
+      currentLineThickness,
+      globalRadiusAvg,
+      globalRadiusVar,
+      colorValue: colorInput.value
+    };
+  }
+  function applySettings(obj) {
+    if (typeof obj.timeStep === "number") {
+      timeStep = obj.timeStep;
+      $("timeStepSlider").value = ((timeStep - 0.1) / (2 - 0.1)) * 100;
+      $("timeStepValue").textContent = $("timeStepSlider").value + "%";
+    }
+    if (typeof obj.springConstant === "number") {
+      springConstant = obj.springConstant;
+      $("springConstantSlider").value = springConstant * 100;
+      $("springConstantValue").textContent = $("springConstantSlider").value + "%";
+    }
+    if (typeof obj.repulsionConstant === "number") {
+      repulsionConstant = obj.repulsionConstant;
+      $("repulsionConstantSlider").value = repulsionConstant * 100;
+      $("repulsionConstantValue").textContent = $("repulsionConstantSlider").value + "%";
+    }
+    if (typeof obj.damping === "number") {
+      damping = obj.damping;
+      $("dampingSlider").value = damping * 100;
+      $("dampingValue").textContent = $("dampingSlider").value + "%";
+    }
+    if (typeof obj.dotScaleFactor === "number") {
+      dotScaleFactor = obj.dotScaleFactor;
+      $("dotScaleSlider").value = ((dotScaleFactor - 0.1)/(5 - 0.1))*100;
+      $("dotScaleValue").textContent = $("dotScaleSlider").value + "%";
+    }
+    if (typeof obj.currentLineThickness === "number") {
+      currentLineThickness = obj.currentLineThickness;
+      $("iconThickness").title = (currentLineThickness === 1)
+        ? "Line Thickness: Thin"
+        : "Line Thickness: Thick";
+      $("iconThickness").style.fontWeight      = (currentLineThickness === 5) ? "bold" : "normal";
+      $("iconThickness").style.backgroundColor = (currentLineThickness === 5) ? "#D3D3D3" : "";
+      toggleActiveIcon($("iconThickness"), currentLineThickness > 1);
+    }
+    if (typeof obj.globalRadiusAvg === "number") {
+      globalRadiusAvg = obj.globalRadiusAvg;
+      $("radiusAvgInput").value = obj.globalRadiusAvg;
+    }
+    if (typeof obj.globalRadiusVar === "number") {
+      globalRadiusVar = obj.globalRadiusVar;
+      $("radiusVarInput").value = obj.globalRadiusVar;
+    }
+    if (typeof obj.colorValue === "string") {
+      colorInput.value = obj.colorValue;
+    }
+  }
+  function downloadJSON(filename, dataObj) {
+    const dataStr = JSON.stringify(dataObj, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /* ---------- SAVE ---------- */
+  $("saveBlobsOption").onclick = e => {
+    e.stopPropagation();
+    $("fileSubmenu").style.display = "none";
+    $("saveOptionsBackdrop").style.display = "flex";
+  };
+  $("cancelSaveBtn").onclick = () =>
+    $("saveOptionsBackdrop").style.display = "none";
+
+  $("confirmSaveBtn").onclick = () => {
+    const payload = {};
+    if ($("saveIncludeChains").checked)  payload.chains  = chains;
+    if ($("saveIncludeCircles").checked) payload.circles = circles;
+    if ($("saveIncludeSettings").checked) payload.settings = getCurrentSettings();
+    downloadJSON("blobs.json", payload);
+    $("saveOptionsBackdrop").style.display = "none";
+  };
+
+  /* ---------- IMPORT (file ➜ dialog) ---------- */
+let pendingImport = null;   // temp storage
+
+$("loadBlobsOption").onclick = e => {
+  e.stopPropagation();
+  $("fileSubmenu").style.display = "none";
+
+  const fi = document.createElement("input");
+  fi.type = "file";
+  fi.accept = "application/json";
+
+  fi.onchange = ev => {
+    const file = ev.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      try {
+        pendingImport = JSON.parse(evt.target.result);
+
+        /* pre‑select / disable boxes based on what the file actually contains */
+        $("importIncludeChains").disabled   = !pendingImport.chains;
+        $("importIncludeCircles").disabled  = !pendingImport.circles;
+        $("importIncludeSettings").disabled = !pendingImport.settings;
+
+        $("importIncludeChains").checked   = !!pendingImport.chains;
+        $("importIncludeCircles").checked  = !!pendingImport.circles;
+        $("importIncludeSettings").checked = !!pendingImport.settings;
+
+        $("importOptionsBackdrop").style.display = "flex";
+      } catch {
+        alert("Error parsing JSON file!");
+      }
+    };
+    reader.readAsText(file);
+  };
+  fi.click();
+};
+
+/* user clicks Import / Cancel */
+$("confirmImportBtn").onclick = () => {
+  if (!pendingImport) return;
+
+  if ($("importIncludeChains").checked   && pendingImport.chains)
+    pendingImport.chains.forEach(c => chains.push(c));
+
+  if ($("importIncludeCircles").checked  && pendingImport.circles)
+    pendingImport.circles.forEach(c => circles.push(c));
+
+  if ($("importIncludeSettings").checked && pendingImport.settings)
+    applySettings(pendingImport.settings);
+
+  pendingImport = null;
+  $("importOptionsBackdrop").style.display = "none";
+};
+$("cancelImportBtn").onclick = () => {
+  pendingImport = null;
+  $("importOptionsBackdrop").style.display = "none";
+};
+
+
+
+  /* -----------------------------------
+     MOUSE EVENTS & DRAWING
+  ----------------------------------- */
+  let currentPathPoints = [];
+  let currentMouseX = 0, currentMouseY = 0;
+
+  canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    currentMouseX = e.clientX - rect.left;
+    currentMouseY = e.clientY - rect.top;
+
+    // If drawing a blob or line
+    if (isDrawing && (drawMode === 'blob' || drawMode === 'line')) {
+      const last = currentPathPoints[currentPathPoints.length - 1];
+      const dx = currentMouseX - last.x,
+            dy = currentMouseY - last.y;
+      if (Math.sqrt(dx*dx + dy*dy) > 1.5) {
+        currentPathPoints.push({
+          x: currentMouseX, y: currentMouseY,
+          vx:0, vy:0,
+          pinned:false
+        });
+      }
+    }
+
+    // If resizing a new circle
+    if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
+      const r = Math.sqrt(
+        (currentMouseX - currentCircle.x) ** 2 +
+        (currentMouseY - currentCircle.y) ** 2
+      );
+      currentCircle.radius = r;
+
+      circleInfo.textContent = "r: " + Math.round(r);
+      circleInfo.style.left  = (e.clientX + 14) + "px";
+      circleInfo.style.top   = (e.clientY + 18) + "px";
+      circleInfo.style.display = "block";
+    } else {
+      circleInfo.style.display = "none";
+    }
+
+    // If dragging an existing circle
+    if (dragMode && draggingCircleIndex !== null) {
+      const c = circles[draggingCircleIndex];
+      c.x = currentMouseX;
+      c.y = currentMouseY;
+      return;  // so it doesn’t also try to resize/create
+    }
+
+    // Highlight nearest dot if pinMode/dragMode
+    if ((pinMode || dragMode) && (e.movementX || e.movementY)) {
+      pinHoverChainIndex = null;
+      pinHoverDotIndex   = null;
+
+      let bestDist    = Infinity;
+      const hoverRad  = 20; // hover radius in px
+
+      for (let c=0; c<chains.length; c++) {
+        const ch = chains[c].chain;
+        for (let i=0; i<ch.length; i++) {
+          const dot = ch[i];
+          const dx  = currentMouseX - dot.x;
+          const dy  = currentMouseY - dot.y;
+          const dist= Math.sqrt(dx*dx + dy*dy);
+          if (dist < hoverRad && dist < bestDist) {
+            bestDist           = dist;
+            pinHoverChainIndex = c;
+            pinHoverDotIndex   = i;
+          }
+        }
+      }
+    }
+
+  });
+
+  function polygonArea(points) {
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    sum += points[i].x * points[j].y
+         - points[j].x * points[i].y;
+  }
+  return Math.abs(sum) / 2;
+ }
+  /**
+   * Ray-casting test for point-in-polygon
+   */
+  function pointInPolygon(px, py, polygon) {
+    let inside = false;
+    for (let i=0, j=polygon.length-1; i<polygon.length; j=i++) {
+      const xi = polygon[i].x, yi = polygon[i].y;
+      const xj = polygon[j].x, yj = polygon[j].y;
+      const intersect = ((yi>py) !== (yj>py)) &&
+        (px < (xj - xi)*(py - yi)/(yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  canvas.addEventListener("mousedown", e => {
+    if (e.button !== 0) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX= e.clientX - rect.left;
+    const mouseY= e.clientY - rect.top;
+
+    // Circle creation or circle dragging
+    if (dragMode) {
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i];
+        const dx = mouseX - c.x, dy = mouseY - c.y;
+        if (Math.hypot(dx, dy) < c.radius + 5) {
+          draggingCircleIndex = i;
+          return;
+        }
+      }
+      // no return here — fall through to other modes
+    }
+
+    // 2) Only start a new circle if drawMode==='circle' AND dragMode is OFF
+    if (drawMode === 'circle' && !anyEditModeOn()) {
+      isCircleDrawing = true;
+      currentCircle   = { x: mouseX, y: mouseY, radius: 0 };
+      return;
+    }
+
+    // Slicing mode
+    if (slicingMode) {
+      let bestChainIndex = null;
+      let bestDotIndex   = null;
+      let bestDist       = Infinity;
+      const sliceRadius  = 15;
+
+      for (let c=0; c<chains.length; c++) {
+        const ch = chains[c].chain;
+        for (let i=0; i<ch.length; i++) {
+          const dot = ch[i];
+          const dx  = mouseX - dot.x;
+          const dy  = mouseY - dot.y;
+          const dist= Math.sqrt(dx*dx + dy*dy);
+          if (dist < sliceRadius && dist < bestDist) {
+            bestDist       = dist;
+            bestChainIndex = c;
+            bestDotIndex   = i;
+          }
+        }
+      }
+      if (bestChainIndex !== null) {
+        const ch = chains[bestChainIndex].chain;
+        if (bestDotIndex > 0 && bestDotIndex < ch.length - 1) {
+          const firstHalf = ch.slice(0, bestDotIndex);
+          const secondHalf= ch.slice(bestDotIndex);
+          chains[bestChainIndex].chain = firstHalf;
+          chains.push({
+            ...chains[bestChainIndex],
+            chain: secondHalf
+          });
+          history.push({ type: "chain" });
+        }
+      }
+      return;
+    }
+
+    // Freeze mode
+    if (freezeMode) {
+      // 1) find all blobs under the mouse
+      const hits = [];
+      for (let i = 0; i < chains.length; i++) {
+        const ch = chains[i];
+        if (!ch.isClosed) continue;
+        if (pointInPolygon(mouseX, mouseY, ch.chain)) {
+          hits.push(i);
+        }
+      }
+
+      if (hits.length) {
+        // 2) pick the smallest one
+        let bestIndex = hits[0];
+        let bestArea  = polygonArea(chains[bestIndex].chain);
+
+        for (let k = 1; k < hits.length; k++) {
+          const idx = hits[k];
+          const area = polygonArea(chains[idx].chain);
+          if (area < bestArea) {
+            bestArea = area;
+            bestIndex = idx;
+          }
+        }
+
+    // 3) toggle only that blob
+    chains[bestIndex].frozen = !chains[bestIndex].frozen;
+  }
+  return;
+  }
+  // ----- DELETE MODE: remove the smallest blob under cursor -----
+  if (deleteMode) {
+
+    /* a) test circles first */
+    for (let i = 0; i < circles.length; i++) {
+      const c = circles[i],
+            dx = mouseX - c.x,
+            dy = mouseY - c.y;
+      if (Math.hypot(dx, dy) < c.radius) {
+        circles.splice(i, 1);
+        history.push({ type: "circle" });
+        return;
+      }
+    }
+
+    /* b) test open lines: nearest segment within 6 px */
+    const SEG_TOL = 6;
+    for (let k = 0; k < chains.length; k++) {
+      const obj = chains[k];
+      if (obj.isClosed) continue;              // skip blobs (do later)
+      const pts = obj.chain;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i],  b = pts[i + 1];
+        const t = ((mouseX - a.x)*(b.x - a.x) + (mouseY - a.y)*(b.y - a.y)) /
+                  ((b.x - a.x)**2 + (b.y - a.y)**2);
+        const clamped = Math.max(0, Math.min(1, t));
+        const px = a.x + clamped*(b.x - a.x);
+        const py = a.y + clamped*(b.y - a.y);
+        if (Math.hypot(mouseX - px, mouseY - py) < SEG_TOL) {
+          chains.splice(k, 1);
+          history.push({ type: "chain" });
+          return;
+        }
+      }
+    }
+
+    /* c) fall back to old “blob” logic (smallest closed shape) */
+    const hits = [];
+    for (let i = 0; i < chains.length; i++) {
+      if (!chains[i].isClosed) continue;
+      if (pointInPolygon(mouseX, mouseY, chains[i].chain)) hits.push(i);
+    }
+    if (hits.length) {
+      let best = hits[0], bestArea = polygonArea(chains[best].chain);
+      for (let j = 1; j < hits.length; j++) {
+        const area = polygonArea(chains[hits[j]].chain);
+        if (area < bestArea) { best = hits[j]; bestArea = area; }
+      }
+      chains.splice(best, 1);
+      history.push({ type: "chain" });
+    }
+    return;
+  }
+    // Pin mode
+    if (pinMode) {
+      let bestChainIndex = null;
+      let bestDotIndex   = null;
+      let bestDist       = Infinity;
+      const pickRadius   = 20;
+
+      for (let c=0; c<chains.length; c++) {
+        const ch = chains[c].chain;
+        for (let i=0; i<ch.length; i++) {
+          const dot = ch[i];
+          const dx  = mouseX - dot.x;
+          const dy  = mouseY - dot.y;
+          const dist= Math.sqrt(dx*dx + dy*dy);
+          if (dist < pickRadius && dist < bestDist) {
+            bestDist       = dist;
+            bestChainIndex = c;
+            bestDotIndex   = i;
+          }
+        }
+      }
+      if (bestChainIndex !== null) {
+        const dot = chains[bestChainIndex].chain[bestDotIndex];
+        dot.pinned = !dot.pinned;
+        return;
+      }
+      return;
+    }
+
+    // Drag mode
+    if (dragMode) {
+      let bestChainIndex = null;
+      let bestDotIndex   = null;
+      let bestDist       = Infinity;
+      const pickRadius   = 20;
+
+      for (let c=0; c<chains.length; c++) {
+        const ch = chains[c].chain;
+        for (let i=0; i<ch.length; i++) {
+          const dot = ch[i];
+          const dx  = mouseX - dot.x;
+          const dy  = mouseY - dot.y;
+          const dist= Math.sqrt(dx*dx + dy*dy);
+          if (dist < pickRadius && dist < bestDist) {
+            bestDist       = dist;
+            bestChainIndex = c;
+            bestDotIndex   = i;
+          }
+        }
+      }
+      if (bestChainIndex !== null) {
+        draggingChainIndex = bestChainIndex;
+        draggingDotIndex   = bestDotIndex;
+        return;
+      }
+    }
+
+    // Otherwise, if in blob or line mode, start freehand
+    if ((drawMode === 'blob' || drawMode === 'line') && !anyEditModeOn()) {
+      isDrawing = true;
+      currentPathPoints = [{
+        x: mouseX, y: mouseY,
+        vx:0, vy:0,
+        pinned:false
+      }];
+    }
+  });
+
+  window.addEventListener("mouseup", e => {
+    if (e.button !== 0) return;
+
+    // Finalize circle
+    if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
+      if (currentCircle.radius > 5) {
+        circles.push(currentCircle);
+        history.push({ type: "circle" });
+      }
+      isCircleDrawing     = false;
+      currentCircle       = null;
+      draggingCircleIndex = null;
+
+      circleInfo.style.display = "none";   // ← hide the live radius overlay
+      return;
+    }
+
+    // Finalize blob/line
+    if (isDrawing && currentPathPoints.length > 2 && (drawMode === 'blob' || drawMode === 'line')) {
+      let r = globalRadiusAvg + (Math.random()*2 - 1)*globalRadiusVar;
+      if (r < 1) r = 1;
+      const chosenColor = hexToRGBA(colorInput.value);
+
+      const isClosed = (drawMode === 'blob');
+      if (isClosed) {
+        // close shape
+        const f = currentPathPoints[0];
+        currentPathPoints.push({...f});
+      }
+
+      chains.push({
+        chain: currentPathPoints.slice(),
+        color: chosenColor,
+        baseDotRadius: r,
+        isClosed,
+        frozen: false
+      });
+      history.push({ type: "chain" });
+    }
+
+    // End all "mouseDown" states
+    isDrawing          = false;
+    draggingChainIndex = null;
+    draggingDotIndex   = null;
+    draggingCircleIndex= null;
+  });
+
+  window.addEventListener("mouseleave", () => {
+    isDrawing=false;
+    draggingChainIndex=null;
+    draggingDotIndex=null;
+    draggingCircleIndex=null;
+  });
+
+  /* -----------------------------------
+     SHADERS & PROGRAM
+  ----------------------------------- */
+  function compileShader(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      console.error("Shader compile error:", gl.getShaderInfoLog(s));
+      gl.deleteShader(s);
+      return null;
+    }
+    return s;
+  }
+  function createProgram(vsSrc, fsSrc) {
+    const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+    const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+    const p  = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+      console.error("Program link error:", gl.getProgramInfoLog(p));
+      return null;
+    }
+    return p;
+  }
+  const vsSource = `
+    attribute vec2 a_position;
+    uniform vec2 u_resolution;
+    void main(){
+      vec2 clipSpace = (a_position / u_resolution)*2.0 - 1.0;
+      clipSpace.y = -clipSpace.y;
+      gl_Position = vec4(clipSpace,0,1);
+    }
+  `;
+  const fsSource = `
+    precision mediump float;
+    uniform vec4 u_color;
+    void main(){
+      gl_FragColor = u_color;
+    }
+  `;
+  const lineProgram   = createProgram(vsSource, fsSource);
+  const linePosLoc    = gl.getAttribLocation(lineProgram, "a_position");
+  const lineResLoc    = gl.getUniformLocation(lineProgram, "u_resolution");
+  const lineColorLoc  = gl.getUniformLocation(lineProgram, "u_color");
+  const positionBuffer= gl.createBuffer();
+  let thickScratch = new Float32Array(0);
+  /* -----------------------------------
+     CATMULL–ROM SPLINE HELPERS
+  ----------------------------------- */
+  function getClosedSmoothCurve(points, seg=10) {
+    const n=points.length; if(n<2) return new Float32Array([]);
+    let out=[];
+    for(let i=0;i<n;i++){
+      const p0=points[(i-1+n)%n], p1=points[i],
+            p2=points[(i+1)%n],   p3=points[(i+2)%n];
+      for(let s=0;s<seg;s++){
+        const t=s/seg, t2=t*t, t3=t2*t;
+        const x=0.5*((2*p1.x)+(-p0.x+p2.x)*t + (2*p0.x-5*p1.x+4*p2.x-p3.x)*t2 + (-p0.x+3*p1.x-3*p2.x+p3.x)*t3);
+        const y=0.5*((2*p1.y)+(-p0.y+p2.y)*t + (2*p0.y-5*p1.y+4*p2.y-p3.y)*t2 + (-p0.y+3*p1.y-3*p2.y+p3.y)*t3);
+        out.push(x,y);
+      }
+    }
+    out.push(points[0].x, points[0].y);
+    return new Float32Array(out);
+  }
+  function getOpenSmoothCurve(points, seg=10) {
+    const n=points.length; if(n<2) return new Float32Array([]);
+    let out=[];
+    for(let i=0;i<n-1;i++){
+      const p0=(i===0 ? points[0] : points[i-1]),
+            p1=points[i],   p2=points[i+1],
+            p3=(i===n-2 ? points[n-1] : points[i+2]);
+      for(let s=0;s<seg;s++){
+        const t=s/seg, t2=t*t, t3=t2*t;
+        const x=0.5*((2*p1.x)+(-p0.x+p2.x)*t + (2*p0.x-5*p1.x+4*p2.x-p3.x)*t2 + (-p0.x+3*p1.x-3*p2.x+p3.x)*t3);
+        const y=0.5*((2*p1.y)+(-p0.y+p2.y)*t + (2*p0.y-5*p1.y+4*p2.y-p3.y)*t2 + (-p0.y+3*p1.y-3*p2.y+p3.y)*t3);
+        out.push(x,y);
+      }
+    }
+    out.push(points[n-1].x, points[n-1].y);
+    return new Float32Array(out);
+  }
+
+  function getThickLineVertices(splinePts, thickness) {
+    const n = splinePts.length >> 1;          // points count
+    const needed = n * 4;                     // 2 verts per point
+    if (thickScratch.length < needed) thickScratch = new Float32Array(needed);
+
+    const half = thickness * 0.5;
+    for (let i = 0; i < n; i++) {
+      const currX = splinePts[i*2],   currY = splinePts[i*2+1];
+      const prevX = splinePts[((i-1+n)%n)*2], prevY = splinePts[((i-1+n)%n)*2+1];
+      const nextX = splinePts[((i+1)%n)*2],   nextY = splinePts[((i+1)%n)*2+1];
+
+      // tangential = next - prev
+      const tx = nextX - prevX, ty = nextY - prevY;
+      const invLen = 1 / Math.hypot(tx, ty || 1);   // avoid /0
+      const nx = -ty * invLen, ny = tx * invLen;    // normal
+
+      const base = i * 4;
+      thickScratch[base    ] = currX + nx * half;
+      thickScratch[base + 1] = currY + ny * half;
+      thickScratch[base + 2] = currX - nx * half;
+      thickScratch[base + 3] = currY - ny * half;
+    }
+    return thickScratch.subarray(0, needed);
+  }
+
+  /* -----------------------------------
+     "DASHED" RENDER FOR FROZEN
+  ----------------------------------- */
+  function drawDashedSpline(spline, color) {
+    gl.useProgram(lineProgram);
+    gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+    gl.uniform4fv(lineColorLoc, color);
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+    const pts = spline;
+    for (let i=0; i<pts.length-3; i+=4) {
+      const sub = new Float32Array([
+        pts[i],   pts[i+1],
+        pts[i+2], pts[i+3]
+      ]);
+      gl.bufferData(gl.ARRAY_BUFFER, sub, gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(linePosLoc);
+      gl.vertexAttribPointer(linePosLoc,2,gl.FLOAT,false,0,0);
+      gl.drawArrays(gl.LINE_STRIP, 0, 2);
+    }
+  }
+
+  /* -----------------------------------
+     PHYSICS
+  ----------------------------------- */
+  function applySpring(chain, forces, i, j, restDist) {
+    const a=chain[i], b=chain[j];
+    let dx=b.x-a.x, dy=b.y-a.y, dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<1e-4) dist=1e-4;
+    const f = springConstant*(dist-restDist), nx=dx/dist, ny=dy/dist;
+    forces[i].x+=f*nx; forces[i].y+=f*ny;
+    forces[j].x-=f*nx; forces[j].y-=f*ny;
+  }
+
+  function simulateChain(chainObj, cIndex) {
+    if (chainObj.frozen) return; // skip frozen
+
+    const arr = chainObj.chain;
+    let forces = chainObj._forces;
+    // (re‑create if first time or if the point count changed)
+    if (!forces || forces.length !== arr.length) {
+      forces = chainObj._forces = Array.from({ length: arr.length },
+                                             () => ({ x: 0, y: 0 }));
+    }
+    // zero the existing vectors instead of allocating new objects
+    for (let i = 0; i < forces.length; i++) {
+      forces[i].x = 0;
+      forces[i].y = 0;
+    }
+    const dotR = chainObj.baseDotRadius*dotScaleFactor;
+    const restDist = dotR*0.7;
+
+    // Springs
+    if(chainObj.isClosed){
+      for(let i=0;i<arr.length;i++){
+        const j=(i+1)%arr.length;
+        applySpring(arr, forces, i, j, restDist);
+      }
+    } else {
+      for(let i=0;i<arr.length-1;i++){
+        applySpring(arr, forces, i, i+1, restDist);
+      }
+    }
+
+    // Self repulsion
+    for(let i=0;i<arr.length;i++){
+      for(let j=i+1;j<arr.length;j++){
+        const a=arr[i], b=arr[j];
+        const minD=dotR*2, dx=b.x-a.x, dy=b.y-a.y, dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist>0 && dist<minD){
+          const overlap = (minD-dist), nx=dx/dist, ny=dy/dist;
+          const f=repulsionConstant*overlap;
+          forces[i].x-=f*nx; forces[i].y-=f*ny;
+          forces[j].x+=f*nx; forces[j].y+=f*ny;
+        }
+      }
+    }
+
+    // Boundary push-back
+    for(let i=0;i<arr.length;i++){
+      const a=arr[i];
+      if(a.x<dotR) forces[i].x += (dotR-a.x)*0.5;
+      else if(a.x>canvas.width-dotR)  forces[i].x-= (a.x - (canvas.width-dotR))*0.5;
+
+      if(a.y<dotR) forces[i].y += (dotR-a.y)*0.5;
+      else if(a.y>canvas.height-dotR) forces[i].y-= (a.y - (canvas.height-dotR))*0.5;
+    }
+
+    // If this chain is currently being dragged
+    if(dragMode && cIndex===draggingChainIndex && draggingDotIndex!==null){
+      const dot=arr[draggingDotIndex],
+            dx=currentMouseX-dot.x,
+            dy=currentMouseY-dot.y,
+            dist=Math.sqrt(dx*dx + dy*dy);
+      if(dist>1e-4){
+        const nx=dx/dist, ny=dy/dist, f=0.2*dist;
+        forces[draggingDotIndex].x+=f*nx;
+        forces[draggingDotIndex].y+=f*ny;
+      }
+    }
+
+    // Integrate
+    for(let i=0;i<arr.length;i++){
+      const d=arr[i];
+      const isDraggingThisDot = (dragMode && cIndex === draggingChainIndex && i === draggingDotIndex);
+      if(d.pinned && !isDraggingThisDot){
+        d.vx=0; d.vy=0;
+        continue;
+      }
+      d.vx = (d.vx + forces[i].x*timeStep) * damping;
+      d.vy = (d.vy + forces[i].y*timeStep) * damping;
+      d.x  += d.vx*timeStep;
+      d.y  += d.vy*timeStep;
+    }
+  }
+
+  function simulateInterChainRepulsion() {
+    for(let a=0;a<chains.length;a++){
+      for(let b=a+1;b<chains.length;b++){
+        const A=chains[a], B=chains[b];
+        if(A.frozen && B.frozen) continue;
+
+        const rA=A.baseDotRadius*dotScaleFactor, rB=B.baseDotRadius*dotScaleFactor;
+        const minD=rA+rB;
+        for(let i=0;i<A.chain.length;i++){
+          for(let j=0;j<B.chain.length;j++){
+            const dA=A.chain[i], dB=B.chain[j];
+            const dx=dB.x-dA.x, dy=dB.y-dA.y, dist=Math.sqrt(dx*dx+dy*dy);
+            if(dist>0 && dist<minD){
+              const overlap=(minD-dist), nx=dx/dist, ny=dy/dist, f = repulsionConstant * interRepelMult * overlap;
+              if(!dA.pinned && !A.frozen){
+                dA.vx-=f*nx*timeStep; dA.vy-=f*ny*timeStep;
+              }
+              if(!dB.pinned && !B.frozen){
+                dB.vx+=f*nx*timeStep; dB.vy+=f*ny*timeStep;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function simulateCircleRepulsion() {
+    for(let c=0;c<circles.length;c++){
+      const circle=circles[c];
+      for(let ch=0;ch<chains.length;ch++){
+        if(chains[ch].frozen) continue;
+        const arr=chains[ch].chain;
+        for(let i=0;i<arr.length;i++){
+          const d=arr[i];
+          const dx=d.x-circle.x, dy=d.y-circle.y, dist=Math.sqrt(dx*dx+dy*dy);
+          if(dist>1e-4 && dist<circle.radius){
+            const f=repulsionConstant*(circle.radius-dist);
+            if(!d.pinned){
+              d.vx+=f*(dx/dist);
+              d.vy+=f*(dy/dist);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* -----------------------------------
+     RENDERING
+  ----------------------------------- */
+  function drawGrid(size=20) {
+    const w=canvas.width, h=canvas.height;
+    let gridVerts=[];
+    for(let x=0;x<=w;x+=size) {
+      gridVerts.push(x,0, x,h);
+    }
+    for(let y=0;y<=h;y+=size) {
+      gridVerts.push(0,y, w,y);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridVerts), gl.STATIC_DRAW);
+    gl.useProgram(lineProgram);
+    gl.enableVertexAttribArray(linePosLoc);
+    gl.vertexAttribPointer(linePosLoc,2,gl.FLOAT,false,0,0);
+    gl.uniform2f(lineResLoc, w,h);
+    gl.uniform4fv(lineColorLoc, [0.8,0.8,0.8,1]);
+    gl.drawArrays(gl.LINES, 0, gridVerts.length/2);
+  }
+
+  function drawPinnedIndicator(x, y) {
+    const seg=12, rad=4;
+    let verts=[];
+    for(let i=0;i<seg;i++){
+      const t=i*(2*Math.PI/seg);
+      const cx=x + rad*Math.cos(t), cy=y + rad*Math.sin(t);
+      verts.push(cx,cy);
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(linePosLoc,2,gl.FLOAT,false,0,0);
+    gl.uniform4fv(lineColorLoc, [1.0,0.0,0.0,1.0]); // red ring
+    gl.drawArrays(gl.LINE_LOOP, 0, seg);
+  }
+
+  function drawHoverIndicator(dot, isPinned) {
+    const seg=12, radius=8;
+    let verts=[];
+    for(let i=0;i<seg;i++){
+      const t=i*(2*Math.PI/seg);
+      verts.push(dot.x + radius*Math.cos(t),
+                 dot.y + radius*Math.sin(t));
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+    const color = isPinned ? [1.0, 0.2, 0.2, 1.0] : [0.2, 1.0, 0.2, 1.0];
+    gl.uniform4fv(lineColorLoc, color);
+    gl.drawArrays(gl.LINE_LOOP, 0, seg);
+  }
+
+  function drawChain(chainObj, chainIndex) {
+    const ch=chainObj.chain;
+    if(ch.length<2) return;
+
+    let spline = chainObj.isClosed ? getClosedSmoothCurve(ch,10)
+                                   : getOpenSmoothCurve(ch,10);
+    if(spline.length<4) return;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.useProgram(lineProgram);
+    gl.enableVertexAttribArray(linePosLoc);
+    gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+
+    if(chainObj.frozen) {
+      // dashed style
+      drawDashedSpline(spline, chainObj.color);
+    } else {
+      // normal stroke
+      gl.uniform4fv(lineColorLoc, chainObj.color);
+      if(currentLineThickness===1){
+        gl.bufferData(gl.ARRAY_BUFFER, spline, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(linePosLoc,2,gl.FLOAT,false,0,0);
+        gl.drawArrays(gl.LINE_STRIP,0, spline.length/2);
+      } else {
+        const thickVerts = getThickLineVertices(spline, currentLineThickness);
+        gl.bufferData(gl.ARRAY_BUFFER, thickVerts, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(linePosLoc,2,gl.FLOAT,false,0,0);
+        gl.drawArrays(gl.TRIANGLE_STRIP,0, thickVerts.length/2);
+      }
+    }
+
+    // pinned dots
+    for(let i=0;i<ch.length;i++){
+      if(ch[i].pinned){
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        drawPinnedIndicator(ch[i].x, ch[i].y);
+      }
+    }
+
+    // hover ring if this chain/dot is hovered in pinMode/dragMode
+    if((pinMode || dragMode) && chainIndex === pinHoverChainIndex && pinHoverDotIndex!==null){
+      const hoverDot = ch[pinHoverDotIndex];
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      drawHoverIndicator(hoverDot, hoverDot.pinned);
+    }
+  }
+
+  function drawCircle(circle) {
+    const seg=32;
+    let verts=[];
+    for(let i=0;i<seg;i++){
+      const t=i*(2*Math.PI/seg);
+      verts.push(
+        circle.x + circle.radius*Math.cos(t),
+        circle.y + circle.radius*Math.sin(t)
+      );
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+    gl.useProgram(lineProgram);
+    gl.enableVertexAttribArray(linePosLoc);
+    gl.vertexAttribPointer(linePosLoc,2,gl.FLOAT,false,0,0);
+    gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+    gl.uniform4fv(lineColorLoc, [0,0,0,1]);
+    gl.drawArrays(gl.LINE_LOOP, 0, seg);
+  }
+
+  function drawInProgressPath() {
+    if(!isDrawing || currentPathPoints.length<2) return;
+    const arr=[];
+    for(let i=0;i<currentPathPoints.length;i++){
+      arr.push(currentPathPoints[i].x, currentPathPoints[i].y);
+    }
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.DYNAMIC_DRAW);
+    gl.useProgram(lineProgram);
+    gl.enableVertexAttribArray(linePosLoc);
+    gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+    gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+    gl.uniform4fv(lineColorLoc, hexToRGBA(colorInput.value));
+    gl.drawArrays(gl.LINE_STRIP, 0, currentPathPoints.length);
+  }
+
+  function drawCurrentCircle() {
+    if(!isCircleDrawing || !currentCircle) return;
+    drawCircle(currentCircle);
+  }
+
+  /* -----------------------------------
+     ANIMATION LOOP
+  ----------------------------------- */
+  function animate() {
+    // Physics
+    chains.forEach((c,i)=>simulateChain(c,i));
+    simulateInterChainRepulsion();
+    simulateCircleRepulsion();
+
+    // Clear & draw
+    gl.clearColor(1,1,1,1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    drawGrid(20);
+
+    chains.forEach((chainObj, chainIndex) => {
+      drawChain(chainObj, chainIndex);
+    });
+    drawInProgressPath();
+    circles.forEach(drawCircle);
+    if(drawMode==='circle') drawCurrentCircle();
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  /* -----------------------------------
+     EXPORT HELPERS
+  ----------------------------------- */
+  function exportSVG(isFilled) {
+    const w=canvas.width, h=canvas.height;
+    const parts=[`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" style="background:white;">`];
+    chains.forEach(obj=>{
+      if(obj.chain.length<2) return;
+      const spline = obj.isClosed ? getClosedSmoothCurve(obj.chain,10)
+                                  : getOpenSmoothCurve(obj.chain,10);
+      if(spline.length<4) return;
+      const [rr,gg,bb] = obj.color.map(c=>Math.floor(c*255));
+      let d=`M ${spline[0]} ${spline[1]}`;
+      for(let i=2;i<spline.length;i+=2) {
+        d+=` L ${spline[i]} ${spline[i+1]}`;
+      }
+      if(obj.isClosed) d+=" Z";
+
+      if(isFilled){
+        parts.push(`<path d="${d}" stroke="rgb(${rr},${gg},${bb})" ${obj.isClosed?`fill="rgb(${rr},${gg},${bb})"`:'fill="none"'} stroke-width="${currentLineThickness}" stroke-linecap="round" stroke-linejoin="round" />`);
+      } else {
+        parts.push(`<path d="${d}" stroke="rgb(${rr},${gg},${bb})" fill="none" stroke-width="${currentLineThickness}" stroke-linecap="round" stroke-linejoin="round" />`);
+      }
+    });
+    parts.push("</svg>");
+    const blob=new Blob([parts.join("")],{type:"image/svg+xml"});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download = isFilled ? "blobs_filled.svg" : "blobs_stroked.svg";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportJPG(isFilled) {
+    const size=1500;
+    const offscreen=document.createElement("canvas");
+    offscreen.width=size;
+    offscreen.height=size;
+    const ctx=offscreen.getContext("2d");
+    ctx.fillStyle="#fff";
+    ctx.fillRect(0,0,size,size);
+    const scale=size/canvas.width;
+
+    chains.forEach(obj=>{
+      const ch=obj.chain;
+      if(ch.length<2) return;
+      const spline = obj.isClosed ? getClosedSmoothCurve(ch,10)
+                                  : getOpenSmoothCurve(ch,10);
+      if(spline.length<4) return;
+      const [rr,gg,bb] = obj.color.map(c=>Math.floor(c*255));
+      ctx.lineCap="round";
+      ctx.lineJoin="round";
+      ctx.beginPath();
+      ctx.moveTo(spline[0]*scale, spline[1]*scale);
+      for(let i=2;i<spline.length;i+=2){
+        ctx.lineTo(spline[i]*scale, spline[i+1]*scale);
+      }
+      if(obj.isClosed) ctx.closePath();
+      if(isFilled && obj.isClosed){
+        ctx.fillStyle=`rgb(${rr},${gg},${bb})`;
+        ctx.fill();
+      } else {
+        ctx.strokeStyle=`rgb(${rr},${gg},${bb})`;
+        ctx.lineWidth = currentLineThickness*scale;
+        ctx.stroke();
+      }
+    });
+
+    const url=offscreen.toDataURL("image/jpeg",1.0);
+    const link=document.createElement("a");
+    link.href=url;
+    link.download = isFilled ? "blobs_filled.jpg" : "blobs_stroked.jpg";
+    link.click();
+  }
+
+  $("exportStrokedOption").onclick = e => {
+    e.stopPropagation();
+    exportSVG(false);
+    $("exportSubmenu").style.display="none";
+  };
+  $("exportFilledOption").onclick = e => {
+    e.stopPropagation();
+    exportSVG(true);
+    $("exportSubmenu").style.display="none";
+  };
+  $("exportStrokedJPGOption").onclick = e => {
+    e.stopPropagation();
+    exportJPG(false);
+    $("exportSubmenu").style.display="none";
+  };
+  $("exportFilledJPGOption").onclick = e => {
+    e.stopPropagation();
+    exportJPG(true);
+    $("exportSubmenu").style.display="none";
+  };
+
+  /* -----------------------------------
+     SLIDER SETUP
+  ----------------------------------- */
+
+  // 1) Blob Scale slider (0..100 => 0.1..5)
+  {
+    const s = $("dotScaleSlider");
+    const v = $("dotScaleValue");
+    s.value = ((dotScaleFactor - 0.1)/(5 - 0.1)) * 100;
+    v.textContent = s.value + "%";
+    s.addEventListener("input", () => {
+      const percent = parseFloat(s.value);
+      dotScaleFactor = mapRange(percent, 0, 100, 0.1, 5);
+      v.textContent = Math.round(s.value) + "%";
+    });
+  }
+
+  // 2) Damping slider (0..100 => 0..1)
+  {
+    const s = $("dampingSlider");
+    const v = $("dampingValue");
+    s.value = damping * 100;
+    v.textContent = s.value + "%";
+    s.addEventListener("input", () => {
+      damping = parseFloat(s.value)/100;
+      v.textContent = Math.round(s.value) + "%";
+    });
+  }
+
+  // 3) Spring Constant slider (0..100 => 0..1)
+  {
+    const s = $("springConstantSlider");
+    const v = $("springConstantValue");
+    s.value = springConstant * 100;
+    v.textContent = s.value + "%";
+    s.addEventListener("input", () => {
+      springConstant = parseFloat(s.value)/100;
+      v.textContent = Math.round(s.value) + "%";
+    });
+  }
+
+  // 4) Repulsion slider (0..100 => 0..1)
+  {
+    const s = $("repulsionConstantSlider");
+    const v = $("repulsionConstantValue");
+    s.value = repulsionConstant * 200;
+    v.textContent = s.value + "%";
+    s.addEventListener("input", () => {
+      repulsionConstant = parseFloat(s.value)/200;
+      v.textContent = s.value + "%";
+    });
+  }
+
+  // 5) Simulation Speed slider (0..100 => 0.1..2)
+  {
+    const s = $("timeStepSlider");
+    const v = $("timeStepValue");
+    s.value = ((timeStep - 0.1) / (2 - 0.1)) * 100;
+    v.textContent = s.value + "%";
+    s.addEventListener("input", () => {
+      const percent = parseFloat(s.value);
+      timeStep = mapRange(percent, 0, 100, 0.1, 2);
+      v.textContent = s.value + "%";
+    });
+  }
+  window.addEventListener("keydown", e => {
+    if (e.code === "Space" && !e.repeat) {           // Space toggles
+      if (damping !== 0) {                           // turn OFF
+        prevDamping = damping;     // remember
+        damping = 0;
+      } else {                                       // turn ON
+        damping = prevDamping || 0.85;               // fallback default
+      }
+
+      // keep the UI slider in sync
+      const s = $("dampingSlider"),
+            v = $("dampingValue");
+      s.value = damping * 100;
+      v.textContent = Math.round(s.value) + "%";
+
+      e.preventDefault();            // stop the page from scrolling
+    }
+  });
+  // 6) Gap & ΔSize
+  $("radiusAvgInput").oninput = e => {
+    globalRadiusAvg = parseFloat(e.target.value);
+  };
+  $("radiusVarInput").oninput = e => {
+    globalRadiusVar = parseFloat(e.target.value);
+  };
+});
+</script>
+</body>
+</html>
