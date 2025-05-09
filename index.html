@@ -1167,18 +1167,7 @@ $("cancelImportBtn").onclick = () => {
     const mouseX= e.clientX - rect.left;
     const mouseY= e.clientY - rect.top;
 
-    // Circle creation or circle dragging
-    if (dragMode) {
-      for (let i = 0; i < circles.length; i++) {
-        const c = circles[i];
-        const dx = mouseX - c.x, dy = mouseY - c.y;
-        if (Math.hypot(dx, dy) < c.radius + 5) {
-          draggingCircleIndex = i;
-          return;
-        }
-      }
-      // no return here — fall through to other modes
-    }
+
 
     // 2) Only start a new circle if drawMode==='circle' AND dragMode is OFF
     if (drawMode === 'circle' && !anyEditModeOn()) {
@@ -1365,6 +1354,19 @@ $("cancelImportBtn").onclick = () => {
       }
     }
 
+    // Circle creation or circle dragging
+    if (dragMode) {
+      for (let i = 0; i < circles.length; i++) {
+        const c = circles[i];
+        const dx = mouseX - c.x, dy = mouseY - c.y;
+        if (Math.hypot(dx, dy) < c.radius + 5) {
+          draggingCircleIndex = i;
+          return;
+        }
+      }
+      // no return here — fall through to other modes
+    }
+    
     // Otherwise, if in blob or line mode, start freehand
     if ((drawMode === 'blob' || drawMode === 'line') && !anyEditModeOn()) {
       isDrawing = true;
