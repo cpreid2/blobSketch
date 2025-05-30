@@ -486,7 +486,7 @@
         <div class="icon-group">
           <div class="icon" id="iconThickness" title="Line Thickness: Thin">T</div>
           <div class="icon" id="iconUndo" title="Undo Last Item">⎌</div>
-          <div class="icon" id="iconDiffusion" title="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
+          <div class="icon" id="iconDiffusion" title="High Repel Mode"><img src="images/repel.png" alt="Overlap Guard" /></div>
         </div>
       </div>
     </div>
@@ -858,8 +858,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleActiveIcon($("iconDiffusion"), interRepelMult === 3);
     $("iconDiffusion").title =
       interRepelMult === 1
-        ? "Enable High Blob Repel"
-        : "Disable High Blob Repel";
+        ? "Enable High Repel Mode"
+        : "Disable High Repel Mode";
   };
 
   /* -----------------------------------
@@ -1695,11 +1695,23 @@ $("cancelImportBtn").onclick = () => {
         for(let i=0;i<arr.length;i++){
           const d=arr[i];
           const dx=d.x-circle.x, dy=d.y-circle.y, dist=Math.sqrt(dx*dx+dy*dy);
-          if(dist>1e-4 && dist<circle.radius){
-            const f=repulsionConstant*(circle.radius-dist);
-            if(!d.pinned){
-              d.vx+=f*(dx/dist);
-              d.vy+=f*(dy/dist);
+          const hardWall = (interRepelMult === 3);          // button ON → hard wall
+          if (hardWall) {                                   // ─── HARD mode ───
+            const dotR = chains[ch].baseDotRadius * dotScaleFactor;
+            const minD = circle.radius + dotR;
+            if (dist < minD) {
+              const nx = dx / dist, ny = dy / dist;
+              d.x = circle.x + nx * minD;
+              d.y = circle.y + ny * minD;
+              d.vx = d.vy = 0;
+            }
+          } else {                                          // ─── SOFT mode ───
+            if (dist > 1e-4 && dist < circle.radius) {
+              const f = repulsionConstant * (circle.radius - dist);
+              if (!d.pinned) {
+                d.vx += f * (dx / dist);
+                d.vy += f * (dy / dist);
+              }
             }
           }
         }
