@@ -2,390 +2,396 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>blobSketch version 1.0</title>
+  <title>blobSketch version 1.1</title>
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: "Courier New", monospace;
-      background-color: #efefef;
-      color: #000;
-    }
-    .window {
-      width: 800px;
-      margin: 40px auto;
-      border: 2px solid #000;
-      background-color: #fff;
-      box-shadow: 4px 4px 0px #000;
-      position: relative;
-    }
+  /* ───────── 1. Base / Reset ───────── */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Courier New", monospace;
+  background-color: #efefef;
+  color: #000;
+}
 
-    /* TITLE BAR */
-    .title-bar {
-      background-color: #c0c0c0;
-      border-bottom: 2px solid #000;
-      padding: 4px 8px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      position: relative;
-    }
-    .menu-bar {
-      display: flex;
-      gap: 16px;
-    }
-    .menu-bar span {
-      font-weight: bold;
-      cursor: pointer;
-      position: relative;
-    }
-    .menu-bar span:hover {
-      text-decoration: underline;
-    }
-    .submenu {
-      display: none;
-      position: absolute;
-      top: 24px;
-      left: 0;
-      background-color: #c0c0c0;
-      border: 2px solid #000;
-      padding: 4px;
-      flex-direction: column;
-      gap: 4px;
-      z-index: 999;
-    }
-    .submenu span {
-      display: block;
-      padding: 2px 6px;
-      cursor: pointer;
-    }
-    .submenu span:hover {
-      background-color: #d9d9d9;
-    }
-    #exportSubmenu { width: 160px; }
-    #fileSubmenu { width: 200px; }
+/* ───────── 2. Global Containers ──── */
+.window {
+  width: 800px;
+  margin: 40px auto;
+  border: 2px solid #000;
+  background-color: #fff;
+  box-shadow: 4px 4px 0px #000;
+  position: relative;
+}
 
-    #mobileWarning {
-       position: fixed;
-       top: 0;
-       left: 0;
-       width: 100%;
-       height: 100%;
-       background: #fff;
-       color: #000;
-       font-family: sans-serif;
-       display: flex;
-       align-items: center;
-       justify-content: center;
-       text-align: center;
-       z-index: 10000;
-       padding: 20px;
-     }
+.content {
+  display: flex;
+}
 
-    .reset-icon {
-      margin-left: auto;
-      font-weight: bold;
-      font-size: 18px;
-      cursor: pointer;
-      user-select: none;
-      text-decoration: none;
-      padding: 0 8px;
-    }
-    .reset-icon:hover {
-      background-color: #d9d9d9;
-    }
+/* ───────── 3. Title-bar & Menu ───── */
+.title-bar {
+  background-color: #c0c0c0;
+  border-bottom: 2px solid #000;
+  padding: 4px 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+}
 
-    /* CONTENT AREA */
-    .content {
-      display: flex;
-    }
+.menu-bar {
+  display: flex;
+  gap: 16px;
+}
+.menu-bar span {
+  font-weight: bold;
+  cursor: pointer;
+  position: relative;
+}
+.menu-bar span:hover {
+  text-decoration: underline;
+}
 
-    /* TOOLBAR with separate sections */
-    .toolbar {
-      width: 140px;
-      border-right: 2px solid #000;
-      background-color: #d9d9d9;
-      padding: 6px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+.submenu {
+  display: none;
+  position: absolute;
+  top: 24px;
+  left: 0;
+  background-color: #c0c0c0;
+  border: 2px solid #000;
+  padding: 4px;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 999;
+}
+.submenu span {
+  display: block;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.submenu span:hover {
+  background-color: #d9d9d9;
+}
+#exportSubmenu { width: 160px; }
+#fileSubmenu   { width: 200px; }
 
-    /* Generic section in the toolbar */
-    .toolbar-section {
-      border: 1px solid #000;
-      background-color: #efefef;
-      padding: 4px;
-      margin: 2px 0;
-    }
-    .toolbar-section h4 {
-      margin: 0 0 4px;
-      font-size: 12px;
-      font-weight: bold;
-      text-align: center;
-      background-color: #b0b0b0;
-      color: #000;
-      border: 1px solid #000;
-      padding: 2px;
-    }
-    .toolbar-section .icon-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      justify-content: center;
-    }
+.reset-icon {
+  margin-left: auto;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  padding: 0 8px;
+}
+.reset-icon:hover {
+  background-color: #d9d9d9;
+}
 
-    .icon {
-      width: 30px;
-      height: 30px;
-      border: 2px solid #000;
-      background-color: #fff;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      user-select: none;
-      font-weight: normal;
-      position: relative;
-    }
-    .icon img {
-      width: 30px;
-      height: 30px;
-    }
+/* ───────── 4. Workspace Layout ───── */
+/* 4-A  Toolbar shell */
+.toolbar {
+  width: 140px;
+  border-right: 2px solid #000;
+  background-color: #d9d9d9;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
-    /* "ON" label when .icon-active is present */
-    .icon.icon-active::after {
-      content: "ON";
-      position: absolute;
-      top: -8px;
-      right: -8px;
-      background-color: #ff0;
-      color: #000;
-      font-size: 10px;
-      font-weight: bold;
-      border: 1px solid #000;
-      padding: 2px 4px;
-      border-radius: 4px;
-      box-shadow: 2px 2px 0px #000;
-      z-index: 5;
-    }
+/* 4-B  Toolbar sections */
+.toolbar-section {
+  border: 1px solid #000;
+  background-color: #efefef;
+  padding: 4px;
+  margin: 2px 0;
+}
+.toolbar-section h4 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  background-color: #b0b0b0;
+  color: #000;
+  border: 1px solid #000;
+  padding: 2px;
+}
+.toolbar-section .icon-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
 
-    /* SHAPE SETTINGS */
-    .shape-settings {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-    }
-    .shape-settings label {
-      font-size: 12px;
-      text-align: center;
-      display: block;
-    }
-    .shape-settings input[type="color"],
-    .shape-settings input[type="number"] {
-      margin-top: 2px;
-      width: 70px;
-    }
+/* glowing outline when any edit mode is engaged */
+#editToolsSection.edit-on {
+  outline: 3px solid #ff3b3b;                  /* neon red */
+  box-shadow: 0 0 6px 2px #ff3b3b inset,
+              0 0 6px 2px #ff3b3b;             /* subtle outer glow */
+  transition: outline-color .2s, box-shadow .2s;
+}
 
-    /* MAIN DRAWING AREA */
-    .main-area {
-      flex: 1;
-      padding: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    #glCanvas {
-      width: 500px;
-      height: 500px;
-      border: 2px solid #000;
-      background-color: #fff;
-      display: block;
-      margin-bottom: 16px;
-    }
+/* 4-C  Icon buttons */
+.icon {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #000;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  user-select: none;
+  font-weight: normal;
+  position: relative;
+}
+.icon img {
+  width: 30px;
+  height: 30px;
+}
+#iconFill.icon-active {
+  background-color: #D3D3D3;
+  font-weight: bold;
+}
+/* “ON” label */
+.icon.icon-active::after {
+  content: "ON";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff0;
+  color: #000;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #000;
+  padding: 2px 4px;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0px #000;
+  z-index: 5;
+}
 
-    /* BOTTOM SLIDER PANEL */
-    .bottom-panel {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      border-top: 2px solid #000;
-      padding: 8px;
-      background-color: #c0c0c0;
-      text-align: center;
-    }
-    #sliders > div {
-      display: flex;
-      align-items: center;
-      margin: 8px 0;
-    }
-    #sliders label {
-      width: 250px;
-      text-align: center;
-      margin-right: 8px;
-    }
-    #sliders label span {
-      display: inline-block;
-      font-weight: bold;
-      vertical-align: middle;
-    }
-    input[type="range"] {
-      -webkit-appearance: none;
-      width: 300px;
-      background: #fff;
-      border: 1px solid #000;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 20px;
-      background: #c0c0c0;
-      border: 1px solid #000;
-      cursor: pointer;
-      margin-top: -7px;
-    }
+/* 4-D  Shape-settings mini-panel */
+.shape-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.shape-settings label {
+  font-size: 12px;
+  text-align: center;
+  display: block;
+}
+.shape-settings input[type="color"],
+.shape-settings input[type="number"] {
+  margin-top: 2px;
+  width: 70px;
+}
 
-    input[type="range"]::-moz-range-thumb {
-      width: 14px;
-      height: 20px;
-      background: #c0c0c0;
-      border: 1px solid #000;
-      cursor: pointer;
-    }
+/* ───────── 5. Main Drawing Area ──── */
+.main-area {
+  flex: 1;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#glCanvas {
+  width: 500px;
+  height: 500px;
+  border: 2px solid #000;
+  background-color: #fff;
+  display: block;
+  margin-bottom: 16px;
+}
 
-    /* DIALOGS */
-    .dialog-backdrop {
-      display: none;
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(0,0,0,0.4);
-      justify-content: center;
-      align-items: center;
-      z-index:99;
-    }
-    .dialog-content {
-      background-color: #fff;
-      border: 2px solid #000;
-      padding: 16px;
-      min-width: 200px;
-      text-align: center;
-      box-shadow: 4px 4px 0px #000;
-      font-family: "Courier New", monospace;
-    }
-    .dialog-content button {
-      margin-top: 12px;
-      font-family: inherit;
-      cursor: pointer;
-    }
+/* ───────── 6. Bottom Slider Panel ─ */
+.bottom-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  border-top: 2px solid #000;
+  padding: 8px;
+  background-color: #c0c0c0;
+  text-align: center;
+}
+#sliders > div {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+#sliders label {
+  width: 250px;
+  text-align: center;
+  margin-right: 8px;
+}
+#sliders label span {
+  display: inline-block;
+  font-weight: bold;
+  vertical-align: middle;
+}
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 300px;
+  background: #fff;
+  border: 1px solid #000;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 20px;
+  background: #c0c0c0;
+  border: 1px solid #000;
+  cursor: pointer;
+  margin-top: -7px;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 20px;
+  background: #c0c0c0;
+  border: 1px solid #000;
+  cursor: pointer;
+}
 
-    /* SPLASH OVERLAY */
-    #splashOverlay {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background-color: rgba(255, 255, 255, 0.8);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      cursor: pointer;
-    }
-    #splashOverlay img {
-      max-width: 50%;
-      max-height: 50%;
-      pointer-events: none;
-      margin-bottom: 50px;
-      border: 2px solid #000;
-      border-radius: 6px;
-      padding: 0px;
-    }
-    .splashText {
-      font-family: "Courier New", monospace;
-      font-size: 18px;
-      font-weight: bold;
-      color: #000;
-      background-color: #c0c0c0;
-      padding: 8px 12px;
-      border: 2px solid #000;
-      box-shadow: 4px 4px 0px #000;
-      user-select: none;
-    }
+/* ───────── 7. Dialogs & Modals ───── */
+.dialog-backdrop {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 99;
+}
+.dialog-content {
+  background-color: #fff;
+  border: 2px solid #000;
+  padding: 16px;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 4px 4px 0px #000;
+  font-family: "Courier New", monospace;
+}
+.dialog-content button {
+  margin-top: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
 
-    /* HELP ICON TOOLTIP */
-    .inline-icon {
-      width: 16px;
-      height: 16px;
-      vertical-align: middle;
-      margin: 0 4px;
-    }
-    .help-icon-container {
-      position: relative;
-      display: inline-block;
-    }
-    .help-icon {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background-color: #c0c0c0; /* retro style */
-      border: 1px solid #000;
-      color: #000;
-      font-size: 12px;
-      font-weight: bold;
-      text-align: center;
-      line-height: 16px;
-      cursor: help;
-      user-select: none;
-    }
-    .help-tooltip {
-      display: none;
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      min-width: 120px;
-      background-color: #efefef;
-      color: #000;
-      border: 1px solid #000;
-      padding: 4px;
-      font-size: 12px;
-      box-shadow: 4px 4px 0 #000;
-      z-index: 9999;
-    }
-    .help-icon-container:hover .help-tooltip {
-      display: block;
-    }
+/* ───────── 8. Splash Overlay ─────── */
+#splashOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+#splashOverlay img {
+  max-width: 50%;
+  max-height: 50%;
+  pointer-events: none;
+  margin-bottom: 50px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 0px;
+}
+.splashText {
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  background-color: #c0c0c0;
+  padding: 8px 12px;
+  border: 2px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  user-select: none;
+}
 
-    /* CURSOR STYLES FOR EACH MODE */
-    .canvas-blob-mode {
-      cursor: url("images/pencil.png"), auto;
-    }
-    .canvas-line-mode {
-      cursor: url("images/pencil.png"), auto;
-    }
-    .canvas-circle-mode {
-      cursor: url("images/CircleCursor.png"), auto;
-    }
-    .canvas-drag-mode {
-      cursor: url("images/glove.png"), auto;
-    }
-    .canvas-pin-mode {
-      cursor: url("images/PinCursor.png"), auto;
-    }
-    .canvas-slicing-mode {
-      cursor: url("images/trim.png"), auto;
-    }
-    .canvas-freeze-mode {
-      cursor: url("images/FreezeCursor.png"), auto;
-    }
-    .canvas-delete-mode {
-      cursor: url("images/DeleteCursor.png"), auto;
-    }
+/* ───────── 9. Help Icon & Tooltip ─ */
+.inline-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+.help-icon-container {
+  position: relative;
+  display: inline-block;
+}
+.help-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #c0c0c0;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 16px;
+  cursor: help;
+  user-select: none;
+}
+.help-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  min-width: 120px;
+  background-color: #efefef;
+  color: #000;
+  border: 1px solid #000;
+  padding: 4px;
+  font-size: 12px;
+  box-shadow: 4px 4px 0 #000;
+  z-index: 9999;
+}
+.help-icon-container:hover .help-tooltip {
+  display: block;
+}
+
+/* ───────── 10. Cursor Modes ──────── */
+.canvas-blob-mode    { cursor: url("images/Pencil.png"), auto; }
+.canvas-line-mode    { cursor: url("images/Pencil.png"), auto; }
+.canvas-circle-mode  { cursor: url("images/CircleCursor.png"), auto; }
+.canvas-drag-mode    { cursor: url("images/Glove.png"), auto; }
+.canvas-pin-mode     { cursor: url("images/PinCursor.png"), auto; }
+.canvas-slicing-mode { cursor: url("images/Trim.png"), auto; }
+.canvas-freeze-mode  { cursor: url("images/FreezeCursor.png"), auto; }
+.canvas-delete-mode  { cursor: url("images/DeleteCursor.png"), auto; }
+
+/* ───────── 11. Mobile-only Warning ─ */
+#mobileWarning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  color: #000;
+  font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
   </style>
 </head>
 <body>
@@ -431,32 +437,32 @@
             <img src="images/blob.png" alt="Blob Mode" />
           </div>
           <div class="icon" id="iconLine" title="Line Mode">
-            <img src="images/line.png" alt="Line Mode" />
+            <img src="images/Line.png" alt="Line Mode" />
           </div>
           <div class="icon" id="iconCircle" title="Circle Mode">
-            <img src="images/wrap.png" alt="Circle Mode" />
+            <img src="images/Wrap.png" alt="Circle Mode" />
           </div>
         </div>
       </div>
 
       <!-- EDIT TOOLS -->
-      <div class="toolbar-section">
+      <div class="toolbar-section"  id="editToolsSection">
         <h4>Edit Tools</h4>
         <div class="icon-group">
           <div class="icon" id="iconDrag" title="Enable Drag Mode">
-            <img src="images/gloveIcon.png" alt="Drag Mode" />
+            <img src="images/GloveIcon.png" alt="Drag Mode" />
           </div>
           <div class="icon" id="iconFreeze" title="Enable Freeze Mode">
-            <img src="images/freeze.png" alt="Freeze Mode" />
-          </div>
-          <div class="icon" id="iconSlice" title="Enable Slicing Mode">
-            <img src="images/cut.png" alt="Cut Mode" />
+            <img src="images/Freeze.png" alt="Freeze Mode" />
           </div>
           <div class="icon" id="iconPin" title="Enable Pin Mode">
-            <img src="images/pin.png" alt="Pin Mode" />
+            <img src="images/Pin.png" alt="Pin Mode" />
+          </div>
+          <div class="icon" id="iconSlice" title="Enable Slicing Mode">
+            <img src="images/Cut.png" alt="Cut Mode" />
           </div>
           <div class="icon" id="iconDelete" title="Enable Delete Mode">
-            <img src="images/delete.png" alt="Delete">
+            <img src="images/Delete.png" alt="Delete">
           </div>
         </div>
       </div>
@@ -467,7 +473,7 @@
         <div class="shape-settings">
           <div>
             <label for="blobColor">Color</label>
-            <input type="color" id="blobColor" value="#000000">
+            <input type="color" id="blobColor" value="#0066ff">
           </div>
           <div>
             <label for="radiusAvgInput">Size</label>
@@ -485,8 +491,9 @@
         <h4>Canvas</h4>
         <div class="icon-group">
           <div class="icon" id="iconThickness" title="Line Thickness: Thin">T</div>
+          <div class="icon" id="iconFill" title="Solid Fill Off">▣</div>
+          <div class="icon" id="iconDiffusion" title="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
           <div class="icon" id="iconUndo" title="Undo Last Item">⎌</div>
-          <div class="icon" id="iconDiffusion" title="High Repel Mode"><img src="images/repel.png" alt="Overlap Guard" /></div>
         </div>
       </div>
     </div>
@@ -556,7 +563,7 @@
   <!-- Modals/Dialogs: About and Help -->
   <div class="dialog-backdrop" id="aboutBackdrop">
     <div class="dialog-content">
-      <p>blobSketch version 1.0</p>
+      <p>blobSketch version 1.1</p>
       <p>by Colin Reid</p>
       <button id="closeAbout">OK</button>
     </div>
@@ -621,10 +628,15 @@ document.addEventListener("DOMContentLoaded", () => {
     return [r,g,b,1.0];
   };
 
-  function anyEditModeOn() {
-  return slicingMode || dragMode || pinMode || freezeMode || deleteMode;
-}
+  function setDotScale(percent) {
+    percent = Math.max(DOT_MIN_PERCENT,
+              Math.min(DOT_MAX_PERCENT, percent));
 
+    $("dotScaleSlider").value     = percent;
+    $("dotScaleValue").textContent= Math.round(percent) + "%";
+
+    dotScaleFactor = mapRange(percent, 0, 100, 0.1, 5);
+  }
   /* -----------------------------------
      SPLASH OVERLAY
   ----------------------------------- */
@@ -672,58 +684,65 @@ document.addEventListener("DOMContentLoaded", () => {
      WEBGL CONTEXT
   ----------------------------------- */
   const canvas = $("glCanvas");
-  const gl = canvas.getContext("webgl");
+  const gl = canvas.getContext("webgl", { stencil: true });
   if (!gl) alert("WebGL not supported by your browser.");
 
   /* -----------------------------------
      GLOBALS & DATA
   ----------------------------------- */
-  // Distinct "draw modes": 'blob', 'line', or 'circle'
-  let drawMode = 'blob';
 
-  // Each chain: { chain: [...], color, baseDotRadius, isClosed, frozen }
-  const chains = [];
-  // Each circle: { x, y, radius }
-  const circles = [];
-  let history = [];  // For undo
+  /* 1. Canvas draw-mode */
+  let drawMode = 'blob';           // 'blob' | 'line' | 'circle'
 
-  // Flags for drawing
-  let isDrawing          = false,
-      isCircleDrawing    = false,
-      currentCircle      = null,
-      draggingCircleIndex= null;
+  /* 2. Geometry collections */
+  const chains   = [];             // { chain:[…], color, baseDotRadius, isClosed, frozen }
+  const circles  = [];             // { x, y, radius }
+  let   history  = [];             // undo stack
 
-  // Edit tool flags (only one can be active)
+  /* 3. Live drawing state */
+  let isDrawing            = false;
+  let isCircleDrawing      = false;
+  let currentCircle        = null;
+  let draggingCircleIndex  = null;
+
+  /* 4. Active edit-tool flags (mutually exclusive) */
   let slicingMode = false,
       dragMode    = false,
       pinMode     = false,
       freezeMode  = false,
       deleteMode  = false;
 
-  // For dragging chain points
+  /* 5. Drag / hover helpers */
   let draggingChainIndex = null,
       draggingDotIndex   = null;
-
-  // For hover highlight in pin/drag mode
   let pinHoverChainIndex = null,
       pinHoverDotIndex   = null;
 
-  // Physics parameters (defaults)
-  let springConstant      = 0.3,   // from slider ~30%
-      repulsionConstant   = 0.1,   // ~10%
-      damping             = 0.85,  // ~85%
-      timeStep            = 1.05,     // mapped from 47% => 0.1..2
-      dotScaleFactor      = 2.0,   // ~39% => 0.1..5
-      currentLineThickness= 5;
-      applyThicknessUI();
+  /* 6. Render options */
+  let solidFillMode = true;       // false = outline, true = filled
 
-  let prevDamping = damping;   // remembers the last non‑zero value
+  /* 7. Physics parameters (defaults) */
+  let springConstant       = 0.3,  // ~30 %
+      repulsionConstant    = 0.1,  // ~10 %
+      damping              = 0.85, // ~85 %
+      timeStep             = 1.05, // slider 47 % → 0.1‒2
+      dotScaleFactor       = 2.0,  // slider 39 % → 0.1‒5
+      currentLineThickness = 1;
+  applyThicknessUI();              // sync UI immediately
+  toggleActiveIcon($("iconFill"), solidFillMode);   // add this line
+  $("iconFill").title = "Solid Fill On";            // correct tooltip
 
-  let globalRadiusAvg     = 4,
-      globalRadiusVar     = 2;
+  let prevDamping = damping;       // remembers last non-zero value
 
-  const colorInput        = $("blobColor");
+  /* 8. Global shape settings */
+  let globalRadiusAvg = 4,
+      globalRadiusVar = 2;
 
+  /* 9. UI element references */
+  const colorInput = $("blobColor");
+  const DOT_SCROLL_STEP   = 0.01;   // lower = finer control
+  const DOT_MIN_PERCENT   = 0;
+  const DOT_MAX_PERCENT   = 100;
   /* -----------------------------------
      ICON "ON" LABEL HELPER
   ----------------------------------- */
@@ -761,6 +780,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (toolName === "delete") deleteMode  = true;
     }
 
+    const editFrame = $("editToolsSection");
+    const anyEditOn = slicingMode || dragMode || pinMode || freezeMode || deleteMode;
+    editFrame.classList.toggle("edit-on", anyEditOn);
     // Update icon states accordingly:
     setIconActive($("iconSlice"),  slicingMode,
                   "Slicing Mode (On)", "Slicing Mode (Off)");
@@ -816,6 +838,12 @@ document.addEventListener("DOMContentLoaded", () => {
   $("iconDelete").onclick = function() {
     setEditTool("delete");
   };
+
+  $("iconFill").onclick = () => {
+  solidFillMode = !solidFillMode;
+  $("iconFill").title = solidFillMode ? "Solid Fill On" : "Solid Fill Off";
+  toggleActiveIcon($("iconFill"), solidFillMode);
+};
   /* -----------------------------------
      THICKNESS & UNDO & RESET
   ----------------------------------- */
@@ -858,8 +886,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleActiveIcon($("iconDiffusion"), interRepelMult === 3);
     $("iconDiffusion").title =
       interRepelMult === 1
-        ? "Enable High Repel Mode"
-        : "Disable High Repel Mode";
+        ? "Enable High Blob Repel"
+        : "Disable High Blob Repel";
   };
 
   /* -----------------------------------
@@ -1068,6 +1096,21 @@ $("cancelImportBtn").onclick = () => {
   let currentPathPoints = [];
   let currentMouseX = 0, currentMouseY = 0;
 
+  const dotSlider = $("dotScaleSlider");
+
+  /* Wheel on canvas */
+  canvas.addEventListener("wheel", handleDotWheel, { passive:false });
+  /* Wheel directly on the slider (nice for trackpads) */
+  dotSlider.addEventListener("wheel", handleDotWheel, { passive:false });
+
+  function handleDotWheel(e) {
+    e.preventDefault();                    // stop page scroll
+    const delta = e.deltaY;                // +120, −120, etc.
+    const current = parseFloat(dotSlider.value);
+    const next    = current - delta * DOT_SCROLL_STEP;
+    setDotScale(next);
+  }
+
   canvas.addEventListener("mousemove", e => {
     const rect = canvas.getBoundingClientRect();
     currentMouseX = e.clientX - rect.left;
@@ -1104,11 +1147,9 @@ $("cancelImportBtn").onclick = () => {
     }
 
     // If dragging an existing circle
-    if (dragMode && draggingCircleIndex !== null) {
-      const c = circles[draggingCircleIndex];
-      c.x = currentMouseX;
-      c.y = currentMouseY;
-      return;  // so it doesn’t also try to resize/create
+    if (drawMode === 'circle' && dragMode && draggingCircleIndex !== null) {
+      circles[draggingCircleIndex].x = currentMouseX;
+      circles[draggingCircleIndex].y = currentMouseY;
     }
 
     // Highlight nearest dot if pinMode/dragMode
@@ -1167,13 +1208,30 @@ $("cancelImportBtn").onclick = () => {
     const mouseX= e.clientX - rect.left;
     const mouseY= e.clientY - rect.top;
 
+    // Circle creation or circle dragging
+    if (drawMode === 'circle') {
+      if (dragMode) {
+        // If we're in dragMode AND circle draw mode, we only do circle dragging:
+        // (Try to pick up an existing circle but do NOT create a new one)
+        for (let i = 0; i < circles.length; i++) {
+          const c = circles[i];
+          const dx = mouseX - c.x;
+          const dy = mouseY - c.y;
+          if (Math.sqrt(dx * dx + dy * dy) < c.radius + 5) {
+            draggingCircleIndex = i;
+            return;
+          }
+        }
 
+        // If we didn’t find a circle to drag, just return without creating one:
+        return;
 
-    // 2) Only start a new circle if drawMode==='circle' AND dragMode is OFF
-    if (drawMode === 'circle' && !anyEditModeOn()) {
-      isCircleDrawing = true;
-      currentCircle   = { x: mouseX, y: mouseY, radius: 0 };
-      return;
+      } else {
+        // Otherwise (dragMode is OFF), start a new circle
+        isCircleDrawing = true;
+        currentCircle = { x: mouseX, y: mouseY, radius: 0 };
+        return;
+      }
     }
 
     // Slicing mode
@@ -1354,21 +1412,8 @@ $("cancelImportBtn").onclick = () => {
       }
     }
 
-    // Circle creation or circle dragging
-    if (dragMode) {
-      for (let i = 0; i < circles.length; i++) {
-        const c = circles[i];
-        const dx = mouseX - c.x, dy = mouseY - c.y;
-        if (Math.hypot(dx, dy) < c.radius + 5) {
-          draggingCircleIndex = i;
-          return;
-        }
-      }
-      // no return here — fall through to other modes
-    }
-    
     // Otherwise, if in blob or line mode, start freehand
-    if ((drawMode === 'blob' || drawMode === 'line') && !anyEditModeOn()) {
+    if ((drawMode === 'blob' || drawMode === 'line') && !dragMode) {
       isDrawing = true;
       currentPathPoints = [{
         x: mouseX, y: mouseY,
@@ -1516,6 +1561,20 @@ $("cancelImportBtn").onclick = () => {
     }
     out.push(points[n-1].x, points[n-1].y);
     return new Float32Array(out);
+  }
+
+  function buildStencilTris(flat, outX, outY) {
+    // flat = [x0,y0,x1,y1, ... ,xn,yn]  (closed, last!=first)
+    const segs = flat.length / 2;
+    const arr  = new Float32Array(segs * 3 * 2);   // 3 verts × 2 coords
+    let p = 0;
+    for (let i = 0; i < segs; i++) {
+      const i2 = (i + 1) % segs;
+      arr[p++] = flat[i*2];     arr[p++] = flat[i*2+1];
+      arr[p++] = flat[i2*2];    arr[p++] = flat[i2*2+1];
+      arr[p++] = outX;          arr[p++] = outY;          // far point
+    }
+    return arr;
   }
 
   function getThickLineVertices(splinePts, thickness) {
@@ -1765,23 +1824,95 @@ $("cancelImportBtn").onclick = () => {
     }
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
     gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
-    const color = isPinned ? [1.0, 0.2, 0.2, 1.0] : [0.2, 1.0, 0.2, 1.0];
+    const color = isPinned ? [1.0, 0.2, 0.2, 1.0] :	[0.00, 1.00, 0.50, 1];
     gl.uniform4fv(lineColorLoc, color);
     gl.drawArrays(gl.LINE_LOOP, 0, seg);
   }
 
   function drawChain(chainObj, chainIndex) {
-    const ch=chainObj.chain;
-    if(ch.length<2) return;
+    const ch = chainObj.chain;
+    if (ch.length < 2) return;
 
-    let spline = chainObj.isClosed ? getClosedSmoothCurve(ch,10)
-                                   : getOpenSmoothCurve(ch,10);
-    if(spline.length<4) return;
+    const spline = chainObj.isClosed
+        ? getClosedSmoothCurve(ch, 10)
+        : getOpenSmoothCurve(ch, 10);
+    if (spline.length < 4) return;
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.useProgram(lineProgram);
     gl.enableVertexAttribArray(linePosLoc);
     gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+    gl.uniform4fv(lineColorLoc, chainObj.color);
+
+    /* NEW — solid-fill branch */
+    if (solidFillMode && chainObj.isClosed) {
+        gl.clear(gl.STENCIL_BUFFER_BIT);
+      // 1) toggle stencil wherever an edge wedge passes
+      gl.enable(gl.STENCIL_TEST);
+      gl.colorMask(false, false, false, false);
+      gl.stencilFunc(gl.ALWAYS, 0, 1);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
+
+      const OUT_X = -9999, OUT_Y = -9999;          // any point off-canvas
+      const tris  = buildStencilTris(spline, OUT_X, OUT_Y);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, tris, gl.DYNAMIC_DRAW);
+      gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+      gl.uniform4fv(lineColorLoc, chainObj.color);  // colour doesn’t matter
+      gl.drawArrays(gl.TRIANGLES, 0, tris.length / 2);
+
+      // 2) draw one big quad wherever stencil==1  (the filled blob)
+      gl.colorMask(true, true, true, true);
+      gl.stencilFunc(gl.EQUAL, 1, 1);
+      gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+
+      const quad = new Float32Array([
+         0,0,  canvas.width,0,  canvas.width,canvas.height,
+         0,0,  canvas.width,canvas.height,  0,canvas.height
+      ]);
+      gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+      gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+      gl.disable(gl.STENCIL_TEST);
+
+      /* --- overlays drawn on top of the filled blob ----------------- */
+      // pinned dots
+      for (let i = 0; i < ch.length; i++) {
+        if (ch[i].pinned) {
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          drawPinnedIndicator(ch[i].x, ch[i].y);
+        }
+      }
+      // hover ring in drag / pin mode
+      if ((pinMode || dragMode) &&
+          chainIndex === pinHoverChainIndex &&
+          pinHoverDotIndex !== null) {
+        const hoverDot = ch[pinHoverDotIndex];
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        drawHoverIndicator(hoverDot, hoverDot.pinned);
+      }
+      /* ---------------------------------------------------------------- */
+      return;                                // done with this blob
+                                // done with this blob
+    }
+
+    /* --- existing outline code below --- */
+    if (chainObj.frozen) {
+      drawDashedSpline(spline, chainObj.color);
+    } else {
+      if (currentLineThickness === 1) {
+        gl.bufferData(gl.ARRAY_BUFFER, spline, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.LINE_STRIP, 0, spline.length / 2);
+      } else {
+        const thickVerts = getThickLineVertices(spline, currentLineThickness);
+        gl.bufferData(gl.ARRAY_BUFFER, thickVerts, gl.DYNAMIC_DRAW);
+        gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, thickVerts.length / 2);
+      }
+    }
 
     if(chainObj.frozen) {
       // dashed style
@@ -1862,6 +1993,7 @@ $("cancelImportBtn").onclick = () => {
      ANIMATION LOOP
   ----------------------------------- */
   function animate() {
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
     // Physics
     chains.forEach((c,i)=>simulateChain(c,i));
     simulateInterChainRepulsion();
@@ -1992,9 +2124,7 @@ $("cancelImportBtn").onclick = () => {
     s.value = ((dotScaleFactor - 0.1)/(5 - 0.1)) * 100;
     v.textContent = s.value + "%";
     s.addEventListener("input", () => {
-      const percent = parseFloat(s.value);
-      dotScaleFactor = mapRange(percent, 0, 100, 0.1, 5);
-      v.textContent = Math.round(s.value) + "%";
+      setDotScale(parseFloat(s.value));
     });
   }
 
