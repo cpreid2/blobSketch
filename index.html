@@ -686,7 +686,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const canvas = $("glCanvas");
   const gl = canvas.getContext("webgl", { stencil: true });
   if (!gl) alert("WebGL not supported by your browser.");
-
+  gl.enable(gl.BLEND);
+  gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+                       gl.ONE,         gl.ONE_MINUS_SRC_ALPHA);
   /* -----------------------------------
      GLOBALS & DATA
   ----------------------------------- */
@@ -1299,6 +1301,7 @@ $("cancelImportBtn").onclick = () => {
 
     // 3) toggle only that blob
     chains[bestIndex].frozen = !chains[bestIndex].frozen;
+    chains[bestIndex].alpha  = chains[bestIndex].frozen ? 0.3 : 1.0;
   }
   return;
   }
@@ -1862,6 +1865,10 @@ $("cancelImportBtn").onclick = () => {
       gl.uniform4fv(lineColorLoc, chainObj.color);  // colour doesn’t matter
       gl.drawArrays(gl.TRIANGLES, 0, tris.length / 2);
 
+      const rgba = chainObj.color.slice();              // copy
+      rgba[3] = chainObj.alpha ?? 1.0;                  // use 0.3 if frozen
+      gl.uniform4fv(lineColorLoc, rgba);
+      
       // 2) draw one big quad wherever stencil==1  (the filled blob)
       gl.colorMask(true, true, true, true);
       gl.stencilFunc(gl.EQUAL, 1, 1);
