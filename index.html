@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>blobSketch version 1.11</title>
+  <title>blobSketch version 1.12</title>
   <style>
   /* ───────── 1. Base / Reset ───────── */
 body {
@@ -475,6 +475,50 @@ input[type="range"]::-moz-range-thumb {
   box-shadow:0 0 8px 3px #ffe600 !important;
 }
 
+/* --- prettier Presets gallery ---------------------------------- */
+.presets-gallery{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+  gap:12px;
+  padding:4px;
+  max-height:60vh;              /* scroll if many presets */
+  overflow-y:auto;
+}
+
+.preset-card{
+  aspect-ratio:1/1;             /* always square */
+  background:#fafafa;
+  border:2px solid #000;
+  box-shadow:3px 3px 0 #000;
+  position:relative;
+  transition:transform .15s, box-shadow .15s;
+}
+.preset-card:hover{
+  transform:translateY(-3px);
+  box-shadow:5px 5px 0 #000;
+}
+.preset-card:active{ transform:translateY(0); }
+
+.preset-card img,
+.preset-card svg{ width:100%; height:100%; object-fit:cover; display:block; }
+
+.preset-card figcaption{
+  position:absolute; inset:0;
+  background:rgba(0,0,0,.58);
+  color:#fff; font:12px "Courier New",monospace;
+  display:flex; align-items:center; justify-content:center;
+  text-align:center; padding:4px;
+  opacity:0; transition:opacity .15s;
+}
+.preset-card:hover figcaption{ opacity:1; }
+
+/* highlight the card the user just applied */
+.preset-card.card-selected{
+  outline:3px solid #ffe600;
+  box-shadow:0 0 10px 3px #ffe600;
+  transform:none;
+}
+
   </style>
 </head>
 <body>
@@ -511,6 +555,7 @@ input[type="range"]::-moz-range-thumb {
           <span id="exportFilledJPGOption">...Fill&gt;JPG</span>
         </div>
       </span>
+      <span id="menuPresets">Presets</span>
       <span id="menuAbout">About</span>
       <span id="menuHelp">Help</span>
     </div>
@@ -655,10 +700,113 @@ input[type="range"]::-moz-range-thumb {
     </div>
   </div>
 
+  <!-- ░ PRESETS DIALOG ░ -->
+  <div class="dialog-backdrop" id="presetsBackdrop">
+    <div class="dialog-content presets-dialog">
+      <h3>Select a Preset</h3>
+
+      <div id="presetsGallery" class="presets-gallery">
+        <!-- Grid preset card -->
+        <div class="preset-card" id="presetGrid">
+          <svg viewBox="0 0 100 100" width="100%" height="100%">
+            <rect width="100" height="100" fill="#fff"/>
+            <g stroke="#000" stroke-width="2" fill="none">
+              <!-- 5 × 5 grid preview -->
+              <circle cx="10" cy="10" r="8"/>
+              <circle cx="30" cy="10" r="8"/>
+              <circle cx="50" cy="10" r="8"/>
+              <circle cx="70" cy="10" r="8"/>
+              <circle cx="90" cy="10" r="8"/>
+
+              <circle cx="10" cy="30" r="8"/>
+              <circle cx="30" cy="30" r="8"/>
+              <circle cx="50" cy="30" r="8"/>
+              <circle cx="70" cy="30" r="8"/>
+              <circle cx="90" cy="30" r="8"/>
+
+              <circle cx="10" cy="50" r="8"/>
+              <circle cx="30" cy="50" r="8"/>
+              <circle cx="50" cy="50" r="8"/>
+              <circle cx="70" cy="50" r="8"/>
+              <circle cx="90" cy="50" r="8"/>
+
+              <circle cx="10" cy="70" r="8"/>
+              <circle cx="30" cy="70" r="8"/>
+              <circle cx="50" cy="70" r="8"/>
+              <circle cx="70" cy="70" r="8"/>
+              <circle cx="90" cy="70" r="8"/>
+
+              <circle cx="10" cy="90" r="8"/>
+              <circle cx="30" cy="90" r="8"/>
+              <circle cx="50" cy="90" r="8"/>
+              <circle cx="70" cy="90" r="8"/>
+              <circle cx="90" cy="90" r="8"/>
+            </g>
+          </svg>
+          <figcaption>Grid of Circles</figcaption>
+        </div>
+        <div class="preset-card" id="presetBlobGrid">
+        <img src="images/grid_of_blobs.png" alt="Grid of Blobs">
+        <figcaption>Grid of Blobs</figcaption>
+</div>
+      </div>
+
+      <button id="closePresets">Close</button>
+    </div>
+  </div>
+
+  <div class="dialog-backdrop" id="gridBackdrop">
+    <div class="dialog-content">
+      <h3>Grid of Circles</h3>
+
+      <label>Count
+        <input type="number" id="gridCount" value="5" min="1" max="12">
+      </label><br>
+
+      <label>
+        <input type="checkbox" id="autoRadius" checked>
+        Fit circles to canvas
+      </label><br>
+
+      <div id="radiusRow" style="display:none;">
+        <label>Radius
+          <input type="number" id="gridRadius" value="20" min="2" max="200">
+        </label><br>
+      </div>
+
+      <button id="applyGrid">Apply</button>
+      <button id="cancelGrid">Cancel</button>
+    </div>
+
+</div>
+<div class="dialog-backdrop" id="blobGridBackdrop">
+  <div class="dialog-content">
+    <h3>Grid of Blobs</h3>
+
+    <label>Count (rows = cols)
+      <input type="number" id="blobGridCount" value="5" min="1" max="10">
+    </label><br>
+
+    <label>
+      <input type="checkbox" id="blobAutoSize" checked>
+      Fit blobs to canvas
+    </label><br>
+
+    <div id="blobSizeRow" style="display:none;">
+      <label>Base Radius
+        <input type="number" id="blobBaseRadius" value="20" min="4" max="120">
+      </label><br>
+    </div>
+
+    <button id="applyBlobGrid">Apply</button>
+    <button id="cancelBlobGrid">Cancel</button>
+  </div>
+  </div>
+
   <!-- Modals/Dialogs: About and Help -->
   <div class="dialog-backdrop" id="aboutBackdrop">
     <div class="dialog-content">
-      <p>blobSketch version 1.11</p>
+      <p>blobSketch version 1.12</p>
       <p>by Colin Reid</p>
       <button id="closeAbout">OK</button>
     </div>
@@ -798,6 +946,174 @@ function toast(msg, ms = 2200) {
   }
   setupSubmenu("menuFile", "fileSubmenu");
   setupSubmenu("menuExport", "exportSubmenu");
+
+
+  /* ---------- PRESETS ---------- */
+  $("menuPresets").onclick = () => {
+    $("presetsBackdrop").style.display = "flex";
+  };
+
+  /* close gallery */
+  $("closePresets").onclick = () =>
+    $("presetsBackdrop").style.display = "none";
+
+  /* show the Grid-options dialog when the card is clicked */
+  $("presetGrid").onclick = () => {
+    $("presetsBackdrop").style.display = "none";
+    $("gridBackdrop").style.display    = "flex";
+  };
+
+  /* cancel grid dialog */
+  $("cancelGrid").onclick = () =>
+    $("gridBackdrop").style.display = "none";
+
+    /* show / hide the custom-radius row */
+    $("autoRadius").onchange = () =>
+      $("radiusRow").style.display = $("autoRadius").checked ? "none" : "block";
+
+  /* apply grid */
+  $("applyGrid").onclick = () => {
+    const count = Math.min(12,
+                  Math.max(1, parseInt($("gridCount").value, 10) || 1));
+    /* this radius would make circles kiss each other and the edges */
+    const maxR = Math.min(canvas.width, canvas.height) / (count * 2);
+
+    /* the actual radius – either maxR or a user-supplied smaller one */
+    const radius = $("autoRadius").checked
+      ? maxR
+      : Math.min(parseFloat($("gridRadius").value) || 2, maxR);
+
+    /* IMPORTANT:  spacing is based on maxR so the centres never move   */
+    const spacing = 2 * maxR;
+
+    for (let r = 0; r < count; r++) {
+      for (let c = 0; c < count; c++) {
+        circles.push({
+          x: maxR + c * spacing,
+          y: maxR + r * spacing,
+          radius                      // may be < maxR ⇒ nice margin
+        });
+        history.push({ type: "circle" });
+      }
+    }
+
+    /* set Blob Size slider to 0 % and Excitability to 85 % */
+    setDotScale(0);                            // updates UI + dotScaleFactor
+    damping = 0.85;
+    $("dampingSlider").value = 85;
+    $("dampingValue").textContent = "85%";
+    /* ── 1. High Repulsion ON ── */
+    if (interRepelMult !== 3) {               // 1 = normal, 3 = high
+      interRepelMult = 3;
+      toggleActiveIcon($("iconDiffusion"), true);
+    }
+
+    /* ── 2. Blob draw-mode ── */
+    setDrawMode("blob");                      // switches UI + cursor
+
+    /* ── 3. Edit tools OFF ── */
+    slicingMode = dragMode = pinMode =
+    freezeMode  = deleteMode = false;         // clear flags
+    $("editToolsSection").classList.remove("edit-on");
+    ["iconSlice","iconDrag","iconPin","iconFreeze","iconDelete"]
+      .forEach(id=>setIconActive($(id),false,"",""));
+    updateCanvasCursor();
+
+    if (!solidFillMode) {
+      solidFillMode = true;
+      $("iconFill").title = "Solid Fill On";
+      toggleActiveIcon($("iconFill"), true);
+    }
+
+    toast(`Grid (${count}×${count}) added`, 1600);
+    $("gridBackdrop").style.display = "none";
+  };
+
+
+  /* === GRID-OF-BLOBS PRESET ======================================== */
+  $("presetBlobGrid").onclick = () => {
+    $("presetsBackdrop").style.display = "none";   // ✨ hide gallery
+    $("blobGridBackdrop").style.display = "flex";  // show blob-dialog
+  };
+
+  /* toggle custom size row */
+  $("blobAutoSize").onchange = () =>
+    $("blobSizeRow").style.display = $("blobAutoSize").checked ? "none" : "block";
+
+  /* helper to create a simple circular blob (you could swap in fancier math) */
+  function makeCircleBlob(cx, cy, r, colorArr) {
+    const steps = 48;
+    const pts = [];
+    for (let i = 0; i < steps; i++) {
+      const θ = i / steps * 2 * Math.PI;
+      pts.push({
+        x: cx + r * Math.cos(θ),
+        y: cy + r * Math.sin(θ),
+        vx: 0, vy: 0, pinned: false
+      });
+    }
+    return {
+      chain: pts,
+      color: colorArr,
+      baseDotRadius: r * 0.12,
+      isClosed: true,
+      frozen: false
+    };
+  }
+
+  /* Apply button */
+  $("applyBlobGrid").onclick = () => {
+    /* 1 ─ grid sizing */
+    const cnt = Math.min(10,
+                Math.max(1, parseInt($("blobGridCount").value, 10) || 1));
+    const maxR = Math.min(canvas.width, canvas.height) / (cnt * 2);
+
+    const baseR = $("blobAutoSize").checked
+        ? maxR
+        : Math.min(parseFloat($("blobBaseRadius").value) || 4, maxR);
+
+    const spacing = 2 * maxR;           // centres stay fixed
+
+    const chosenColor = hexToRGBA($("blobColor").value);
+    /* 2 ─ add blobs */
+    for (let r = 0; r < cnt; r++) {
+      for (let c = 0; c < cnt; c++) {
+        const cx = maxR + c * spacing;
+        const cy = maxR + r * spacing;
+        const blob = makeCircleBlob(cx, cy, baseR, chosenColor);
+        chains.push(blob);
+        history.push({ type: "chain" });
+      }
+    }
+
+    /* 3 ─ snap UI states exactly like circle-grid did */
+    {
+      if (interRepelMult !== 3) {
+        interRepelMult = 3;
+        toggleActiveIcon($("iconDiffusion"), true);
+      }
+      setDrawMode("blob");
+      $("dampingSlider").value = 40;
+      $("dampingValue").textContent = "40%";
+      setDotScale(12);
+      damping = 0.40;
+      if (!solidFillMode) {
+        solidFillMode = true;
+        $("iconFill").title = "Solid Fill On";
+        toggleActiveIcon($("iconFill"), true);
+      }
+      slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+      $("editToolsSection").classList.remove("edit-on");
+      ["iconSlice","iconDrag","iconPin","iconFreeze","iconDelete"]
+        .forEach(id=>setIconActive($(id),false,"",""));
+      updateCanvasCursor();
+    }
+
+    toast(`Blob grid (${cnt}×${cnt}) added`, 1600);
+    $("blobGridBackdrop").style.display = "none";
+  };
+  $("cancelBlobGrid").onclick = () =>
+    $("blobGridBackdrop").style.display = "none";
 
   /* -----------------------------------
      WEBGL CONTEXT
