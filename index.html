@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>blobSketch version 1.1</title>
+  <title>blobSketch version 1.11</title>
   <style>
   /* ───────── 1. Base / Reset ───────── */
 body {
@@ -90,7 +90,7 @@ body {
 /* ───────── 4. Workspace Layout ───── */
 /* 4-A  Toolbar shell */
 .toolbar {
-  width: 140px;
+  width: 150px;
   border-right: 2px solid #000;
   background-color: #d9d9d9;
   padding: 6px;
@@ -134,8 +134,8 @@ body {
 
 /* 4-C  Icon buttons */
 .icon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border: 2px solid #000;
   background-color: #fff;
   cursor: pointer;
@@ -146,10 +146,14 @@ body {
   user-select: none;
   font-weight: normal;
   position: relative;
+  /* rounded corners */
+border-radius: 6px;        /* or 50% for perfect circles */
+overflow: visible;         /* ← allow the ON badge to stick out */
 }
 .icon img {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
+  border-radius: inherit;
 }
 #iconFill.icon-active {
   background-color: #D3D3D3;
@@ -364,6 +368,8 @@ input[type="range"]::-moz-range-thumb {
   display: block;
 }
 
+
+
 /* ───────── 10. Cursor Modes ──────── */
 .canvas-blob-mode    { cursor: url("images/pencil.png"), auto; }
 .canvas-line-mode    { cursor: url("images/pencil.png"), auto; }
@@ -392,6 +398,83 @@ input[type="range"]::-moz-range-thumb {
   padding: 20px;
 }
 
+.icon:focus-visible { outline: 3px solid #ffbf00; }
+
+.icon[data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: -24px;                /* small gap below the icon */
+  left: 50%;
+  translate: -50% 0;
+  font: 12px "Courier New", monospace;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 50;                  /* sit above everything in the toolbar */
+}
+.icon:hover::before,
+.icon:focus-visible::before { opacity: 1; }
+
+/* ---------- toast notifications ---------- */
+#toastStack {
+  position: absolute;
+  top: 48px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  pointer-events: none;         /* clicks fall through */
+  z-index: 2000;
+}
+.toast {
+  font: 14px "Courier New", monospace;
+  background: #000;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .2s, transform .2s;
+}
+.toast.show {
+  opacity: .9;
+  transform: translateY(0);
+}
+
+.title-actions {
+  margin-left: auto;            /* pushes the pair to the far right */
+  display: flex;
+  gap: 6px;                     /* neat 6-px gap between the two icons */
+}
+
+/* ---------- guided tour ---------- */
+#tourOverlay{
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:3000; pointer-events:none;
+}
+#tourTip{
+  position:fixed; z-index:3001;
+  max-width:320px; font:13px "Courier New",monospace;
+  background:#fff; color:#000;
+  border:2px solid #000; border-radius:6px;
+  padding:10px 12px; box-shadow:4px 4px 0 #000;
+}
+#tourCtrls{ margin-top:8px; text-align:right; }
+#tourCtrls button{
+  font:inherit; margin-left:4px; cursor:pointer;
+}
+.tour-highlight{
+  outline:3px solid #ffe600 !important;
+  box-shadow:0 0 8px 3px #ffe600 !important;
+}
+
   </style>
 </head>
 <body>
@@ -401,7 +484,16 @@ input[type="range"]::-moz-range-thumb {
     <img src="images/splash.png" alt="Splash Image" />
     <div class="splashText">Click and Drag to Start Blobbing</div>
   </div>
-
+<div id="toastStack"></div>
+<div id="tourOverlay" style="display:none;"></div>
+<div id="tourTip" style="display:none;">
+  <div id="tourText"></div>
+  <div id="tourCtrls">
+    <button id="tourPrev">◀ Prev</button>
+    <button id="tourNext">Next ▶</button>
+    <button id="tourExit">End ✖</button>
+  </div>
+</div>
   <!-- Title Bar -->
   <div class="title-bar">
     <div class="menu-bar">
@@ -422,7 +514,10 @@ input[type="range"]::-moz-range-thumb {
       <span id="menuAbout">About</span>
       <span id="menuHelp">Help</span>
     </div>
-    <span id="resetIcon" class="reset-icon" title="Reset Canvas">⟳</span>
+    <div class="title-actions">
+      <span id="resetIcon" class="reset-icon" title="Reset Canvas">⟳</span>
+      <span id="notifToggle" class="reset-icon" title="Disable tips">🔔</span>
+    </div>
   </div>
 
   <!-- Main Content -->
@@ -433,13 +528,13 @@ input[type="range"]::-moz-range-thumb {
       <div class="toolbar-section">
         <h4>Draw Tools</h4>
         <div class="icon-group">
-          <div class="icon" id="iconBlob" title="Blob Mode">
+          <div class="icon" id="iconBlob" data-label="Blob (Q)">
             <img src="images/blob.png" alt="Blob Mode" />
           </div>
-          <div class="icon" id="iconLine" title="Line Mode">
+          <div class="icon" id="iconLine" data-label="Line (W)">
             <img src="images/line.png" alt="Line Mode" />
           </div>
-          <div class="icon" id="iconCircle" title="Circle Mode">
+          <div class="icon" id="iconCircle" data-label="Circle (E)">
             <img src="images/wrap.png" alt="Circle Mode" />
           </div>
         </div>
@@ -449,19 +544,19 @@ input[type="range"]::-moz-range-thumb {
       <div class="toolbar-section"  id="editToolsSection">
         <h4>Edit Tools</h4>
         <div class="icon-group">
-          <div class="icon" id="iconDrag" title="Enable Drag Mode">
+          <div class="icon" id="iconDrag" data-label="Drag (A)">
             <img src="images/gloveIcon.png" alt="Drag Mode" />
           </div>
-          <div class="icon" id="iconFreeze" title="Enable Freeze Mode">
+          <div class="icon" id="iconFreeze" data-label="Freeze (S)">
             <img src="images/freeze.png" alt="Freeze Mode" />
           </div>
-          <div class="icon" id="iconPin" title="Enable Pin Mode">
+          <div class="icon" id="iconPin" data-label="Pin (D)">
             <img src="images/pin.png" alt="Pin Mode" />
           </div>
-          <div class="icon" id="iconSlice" title="Enable Slicing Mode">
+          <div class="icon" id="iconSlice" data-label="Slice (Z)">
             <img src="images/cut.png" alt="Cut Mode" />
           </div>
-          <div class="icon" id="iconDelete" title="Enable Delete Mode">
+          <div class="icon" id="iconDelete" data-label="Delete (X)">
             <img src="images/delete.png" alt="Delete">
           </div>
         </div>
@@ -490,10 +585,10 @@ input[type="range"]::-moz-range-thumb {
       <div class="toolbar-section">
         <h4>Canvas</h4>
         <div class="icon-group">
-          <div class="icon" id="iconThickness" title="Line Thickness: Thin">T</div>
-          <div class="icon" id="iconFill" title="Solid Fill Off">▣</div>
-          <div class="icon" id="iconDiffusion" title="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
-          <div class="icon" id="iconUndo" title="Undo Last Item">⎌</div>
+          <div class="icon" id="iconThickness" data-label="Line Thickness">T</div>
+          <div class="icon" id="iconFill" data-label="Solid Fill">▣</div>
+          <div class="icon" id="iconDiffusion" data-label="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
+          <div class="icon" id="iconUndo" data-label="Undo Last Item">⎌</div>
         </div>
       </div>
     </div>
@@ -563,7 +658,7 @@ input[type="range"]::-moz-range-thumb {
   <!-- Modals/Dialogs: About and Help -->
   <div class="dialog-backdrop" id="aboutBackdrop">
     <div class="dialog-content">
-      <p>blobSketch version 1.1</p>
+      <p>blobSketch version 1.11</p>
       <p>by Colin Reid</p>
       <button id="closeAbout">OK</button>
     </div>
@@ -591,6 +686,7 @@ input[type="range"]::-moz-range-thumb {
     <button id="cancelImportBtn">Cancel</button>
   </div>
 </div>
+
 <!-- ░ END DIALOGS ░ -->
 </div>
 <div id="circleInfo" style="
@@ -637,6 +733,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
     dotScaleFactor = mapRange(percent, 0, 100, 0.1, 5);
   }
+
+  /* ---------- toast notifications ---------- */
+let tipsEnabled = false;
+$("notifToggle").onclick = () => {
+  tipsEnabled = !tipsEnabled;
+  $("notifToggle").textContent = tipsEnabled ? "🔔" : "🔕";
+  $("notifToggle").title       = tipsEnabled ? "Disable tips" : "Enable tips";
+};
+/* 2 ▸ ensure the bell shows the muted state on first load */
+$("notifToggle").textContent = "🔕";
+$("notifToggle").title       = "Enable tips";
+function toast(msg, ms = 2200) {
+  if (!tipsEnabled) return;
+  const el = document.createElement("div");
+  el.className = "toast";
+  el.textContent = msg;
+  $("toastStack").appendChild(el);
+  requestAnimationFrame(() => el.classList.add("show"));   // fade in
+  setTimeout(() => {
+    el.classList.remove("show");                           // fade out
+    el.addEventListener("transitionend", () => el.remove(), { once:true });
+  }, ms);
+}
+
   /* -----------------------------------
      SPLASH OVERLAY
   ----------------------------------- */
@@ -655,9 +775,8 @@ document.addEventListener("DOMContentLoaded", () => {
     closeBtn.addEventListener("click", () => (backdrop.style.display = "none"));
   }
   setupDialog("menuAbout", "aboutBackdrop", "closeAbout");
-  document.getElementById("menuHelp").addEventListener("click", () => {
-     window.location.href = "help.html";
-   });
+  $("menuHelp").addEventListener("click", startTour);
+  window.addEventListener("keydown", e => { if (e.key==="h"||e.key==="H") startTour(); });
 
   /* -----------------------------------
      FILE & EXPORT MENU
@@ -798,6 +917,10 @@ document.addEventListener("DOMContentLoaded", () => {
                   "Disable Delete Mode", "Enable Delete Mode");
   // Update the canvas cursor
     updateCanvasCursor();
+
+    const msg = isAlreadyActive ? "Edit tools off"
+                            : `Edit mode: ${toolName.toUpperCase()}`;
+  toast(msg, 1800);
   }
 
   /* -----------------------------------
@@ -809,6 +932,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleActiveIcon($("iconCircle"), false);
 
     drawMode = mode;
+
+    toast(`Draw mode: ${mode.toUpperCase()}`, 1800);
 
     if (mode === 'blob') {
       toggleActiveIcon($("iconBlob"), true);
@@ -845,6 +970,7 @@ document.addEventListener("DOMContentLoaded", () => {
   solidFillMode = !solidFillMode;
   $("iconFill").title = solidFillMode ? "Solid Fill On" : "Solid Fill Off";
   toggleActiveIcon($("iconFill"), solidFillMode);
+  toast(solidFillMode ? "Fill: ON" : "Fill: OFF", 1600);
 };
   /* -----------------------------------
      THICKNESS & UNDO & RESET
@@ -852,17 +978,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function applyThicknessUI() {
     const btn = $("iconThickness");
-    btn.title = currentLineThickness === 1
-      ? "Line Thickness: Thin"
-      : "Line Thickness: Thick";
-    btn.style.backgroundColor = currentLineThickness === 5 ? "#D3D3D3" : "";
-    btn.style.fontWeight      = currentLineThickness === 5 ? "bold" : "normal";
     toggleActiveIcon(btn, currentLineThickness > 1);
   }
 
   $("iconThickness").onclick = () => {
     currentLineThickness = (currentLineThickness === 1) ? 5 : 1;
     applyThicknessUI();
+      toast(currentLineThickness === 1 ? "Stroke: Thin" : "Stroke: Thick", 1600);
   };
 
   $("iconUndo").onclick = () => {
@@ -871,6 +993,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (last.type === "chain")  chains.pop();
       if (last.type === "circle") circles.pop();
     }
+    toast("Undo", 1200);
   };
 
   $("resetIcon").onclick = () => {
@@ -879,6 +1002,7 @@ document.addEventListener("DOMContentLoaded", () => {
       circles.length = 0;
       history.length = 0;
     }
+  toast("Canvas cleared", 1600);
   };
 
   let interRepelMult = 1;  // 1 = normal, 3 = boosted
@@ -886,10 +1010,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("iconDiffusion").onclick = () => {
     interRepelMult = interRepelMult === 1 ? 3 : 1;
     toggleActiveIcon($("iconDiffusion"), interRepelMult === 3);
-    $("iconDiffusion").title =
-      interRepelMult === 1
-        ? "Enable High Blob Repel"
-        : "Disable High Blob Repel";
+    toast(interRepelMult === 3 ? "High Repel: ON" : "High Repel: OFF", 1600);
   };
 
   /* -----------------------------------
@@ -1868,7 +1989,7 @@ $("cancelImportBtn").onclick = () => {
       const rgba = chainObj.color.slice();              // copy
       rgba[3] = chainObj.alpha ?? 1.0;                  // use 0.3 if frozen
       gl.uniform4fv(lineColorLoc, rgba);
-      
+
       // 2) draw one big quad wherever stencil==1  (the filled blob)
       gl.colorMask(true, true, true, true);
       gl.stencilFunc(gl.EQUAL, 1, 1);
@@ -2022,6 +2143,105 @@ $("cancelImportBtn").onclick = () => {
     requestAnimationFrame(animate);
   }
   animate();
+
+
+  /* ---------- guided tour engine ---------- */
+  const tourSteps = [
+    /* 0 ─ Title-bar */
+    {
+      el: "#splashOverlay + .title-bar",
+      text: "Title bar: File (save/load), Export (SVG/JPG), About, Help."
+    },
+
+    /* 1 ─ Draw Tools */
+    {
+      el: ".toolbar-section:first-of-type",
+      text: "Choose what you create on the canvas: Blobs, Lines, or Repulsion Circles. Select which one you'd like then click-drag on the canvas to draw."
+    },
+
+    /* 2 ─ Edit Tools */
+    {
+      el: "#editToolsSection",
+      text: "Edit items on the canvas with these tools: Drag, Freeze, Pin, Slice, or Delete existing items. Only one edit mode can be active at a time."
+    },
+
+    /* 3 ─ Shape Settings */
+    {
+      el: ".toolbar-section:nth-of-type(3)",
+      text: "Set colour, average blob size, and variation before each draw."
+    },
+
+    /* 4 ─ Canvas Tools */
+    {
+      el: ".toolbar-section:nth-of-type(4)",
+      text: "The canvas tools toggle stroke thickness, solid fill, high repulsion mode, or undo the last action."
+    },
+
+    /* 5 ─ Main Canvas */
+    {
+      el: "#glCanvas",
+      text: "Canvas: the main playground: draw, drag, and experiment here."
+    },
+
+    /* 6 ─ Physics Sliders */
+    {
+      el: ".bottom-panel",
+      text: "Physics Sliders: fine-tune the blob behaviour. Hover the ⓘ buttons to see what each slider does."
+    }
+  ];
+
+  let tourIndex = -1;
+
+  function startTour(){
+    if (tourIndex !== -1) return;              // already running
+    tourIndex = 0;
+    $("tourOverlay").style.display = $("tourTip").style.display = "block";
+    document.addEventListener("keydown", tourKey);
+    showStep();
+  }
+  function endTour(){
+    clearHighlight();
+    $("tourOverlay").style.display = $("tourTip").style.display = "none";
+    document.removeEventListener("keydown", tourKey);
+    tourIndex = -1;
+  }
+  function showStep(){
+    clearHighlight();
+    const step = tourSteps[tourIndex];
+    const el = document.querySelector(step.el);
+    if (!el){ nextStep(); return; }
+    el.classList.add("tour-highlight");
+    $("tourText").textContent = step.text;
+    positionTip(el);
+    $("tourPrev").disabled = tourIndex===0;
+    $("tourNext").textContent = tourIndex===tourSteps.length-1 ? "Done ✔" : "Next ▶";
+  }
+  function positionTip(target){
+    const rect = target.getBoundingClientRect();
+    const tip  = $("tourTip");
+    const left = rect.right + 12 < window.innerWidth-330
+               ? rect.right + 12 : rect.left - 332;
+    tip.style.left = (left<8?8:left) + "px";
+    tip.style.top  = rect.top + "px";
+  }
+  function clearHighlight(){
+    document.querySelectorAll(".tour-highlight").forEach(e=>e.classList.remove("tour-highlight"));
+  }
+  function nextStep(){
+    if (tourIndex < tourSteps.length-1){ tourIndex++; showStep(); }
+    else endTour();
+  }
+  function prevStep(){
+    if (tourIndex>0){ tourIndex--; showStep(); }
+  }
+  function tourKey(e){
+    if (e.key==="Escape") endTour();
+    else if (e.key==="ArrowRight") nextStep();
+    else if (e.key==="ArrowLeft")  prevStep();
+  }
+  $("tourNext").onclick = nextStep;
+  $("tourPrev").onclick = prevStep;
+  $("tourExit").onclick = endTour;
 
   /* -----------------------------------
      EXPORT HELPERS
@@ -2183,6 +2403,28 @@ $("cancelImportBtn").onclick = () => {
       v.textContent = s.value + "%";
     });
   }
+
+  window.addEventListener("keydown", e => {
+    // ignore ⇧/⌥/⌘ combos and when user is typing in an input / textarea
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tgt = e.target;
+    if (tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA")) return;
+
+    switch (e.key.toLowerCase()) {
+      /* draw modes */
+      case "q": setDrawMode("blob");   break;   // Blob
+      case "w": setDrawMode("line");   break;   // Line
+      case "e": setDrawMode("circle"); break;   // Circle
+
+      /* edit tools (toggle off if already on) */
+      case "a": setEditTool("drag");   break;   // Drag
+      case "s": setEditTool("freeze"); break;   // Freeze
+      case "d": setEditTool("pin");    break;   // Pin
+      case "z": setEditTool("slice");  break;   // Slice
+      case "x": setEditTool("delete"); break;   // Delete
+    }
+  });
+
   window.addEventListener("keydown", e => {
     if (e.code === "Space" && !e.repeat) {           // Space toggles
       if (damping !== 0) {                           // turn OFF
