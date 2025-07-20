@@ -748,7 +748,12 @@ input[type="range"]::-moz-range-thumb {
         <div class="preset-card" id="presetBlobGrid">
         <img src="images/grid_of_blobs.png" alt="Grid of Blobs">
         <figcaption>Grid of Blobs</figcaption>
-</div>
+        </div>
+        <div class="preset-card" id="presetAnthro">
+  <!-- tiny 100×100 PNG or SVG is fine; use any placeholder for now -->
+        <img src="images/anthro_blobs.png" alt="Anthro Blobs">
+        <figcaption>Blob Face</figcaption>
+      </div>
       </div>
 
       <button id="closePresets">Close</button>
@@ -1029,6 +1034,100 @@ function toast(msg, ms = 2200) {
     $("gridBackdrop").style.display = "none";
   };
 
+  /* === ANTHRO BLOBS PRESET =========================================== */
+  $("presetAnthro").onclick = () => {
+    $("presetsBackdrop").style.display = "none";   // close gallery
+    addAnthroBlobs(8);                             // draw 8 faces by default
+  };
+
+  /* helper: main face + eyes + pupils + mouth ------------------------- */
+  function addAnthroBlobs(count = 8) {
+
+  /* clamp Excitability (damping) to 0 % */
+  damping = 0;
+  $("dampingSlider").value = 0;
+  $("dampingValue").textContent = "0%";
+
+  const palette = ["#ff3333", "#ffd700", "#0066ff", "#000000"]; // red, yellow, blue, black
+  const placed  = [];                                           // remember centres
+
+  for (let k = 0; k < count; k++) {
+
+    /* find a free, non-overlapping position (≤100 tries) */
+    let cx, cy, R, ok, tries = 100;
+    do {
+      R  = 30 + Math.random() * 40;                              // 30‒70 px radius
+      cx = R + Math.random() * (canvas.width  - 2 * R);
+      cy = R + Math.random() * (canvas.height - 2 * R);
+
+      ok = true;
+      for (const p of placed) {
+        const minGap = R + p.R + 6;                              // 6 px padding
+        if (Math.hypot(cx - p.cx, cy - p.cy) < minGap) { ok = false; break; }
+      }
+    } while (!ok && --tries);
+    if (!ok) continue;                                           // couldn’t place
+
+    placed.push({ cx, cy, R });
+
+    /* 1 ─ base face blob */
+    const faceCol = palette[Math.floor(Math.random() * palette.length)];
+    const faceArr = hexToRGBA(faceCol);
+    chains.push(makeCircleBlob(cx, cy, R, faceArr));
+    history.push({ type: "chain" });
+
+    /* 2 ─ eyes & pupils */
+    const eyeDX   = R * 0.30, eyeDY = -R * 0.20, eyeR = R * 0.18;
+    const pupilR  = eyeR * 0.40;
+    const white   = hexToRGBA("#ffffff");
+    const pupilArr = hexToRGBA("#000000");   // pupils always black
+
+    // left eye
+    chains.push(makeCircleBlob(cx - eyeDX, cy + eyeDY, eyeR, white, 10));
+    chains.push(makeCircleBlob(cx - eyeDX, cy + eyeDY, pupilR, pupilArr, 8));
+    // right eye
+    chains.push(makeCircleBlob(cx + eyeDX, cy + eyeDY, eyeR, white, 10));
+    chains.push(makeCircleBlob(cx + eyeDX, cy + eyeDY, pupilR, pupilArr, 8));
+    history.push({ type: "chain" }, { type: "chain" },
+                 { type: "chain" }, { type: "chain" });
+
+   /* 3 ─ mouth (more-dots straight line) ----------------------------- */
+   const mouthY  = cy + R * 0.25,
+         mouthW  = R * 0.75,        // width already bumped
+         mouthArr = hexToRGBA(faceCol === "#000000" ? "#ffffff" : "#000000");
+
+   /* roughly 8 points across the span (left → right) */
+   const mouthPts = [];
+   const segments = 7;              // 7 gaps ⇒ 8 dots
+   for (let i = 0; i <= segments; i++) {
+     const t = i / segments;        // 0 … 1
+     mouthPts.push({
+       x: cx - mouthW + 2 * mouthW * t,   // linear x-interpolation
+       y: mouthY,                         // keep flat (straight line)
+       vx: 0, vy: 0, pinned: false
+     });
+   }
+
+   chains.push({
+     chain: mouthPts,
+     color: mouthArr,
+     baseDotRadius: R * 0.06,
+     isClosed: false,
+     frozen: false
+   });
+   history.push({ type: "chain" });
+  }
+
+  /* make sure fill mode + Blob draw-mode are active */
+  if (!solidFillMode) {
+    solidFillMode = true;
+    $("iconFill").title = "Solid Fill On";
+    toggleActiveIcon($("iconFill"), true);
+  }
+  setDrawMode("blob");
+
+  toast(`Anthro blobs (${count}) added`, 1600);
+}
 
   /* === GRID-OF-BLOBS PRESET ======================================== */
   $("presetBlobGrid").onclick = () => {
@@ -1041,8 +1140,7 @@ function toast(msg, ms = 2200) {
     $("blobSizeRow").style.display = $("blobAutoSize").checked ? "none" : "block";
 
   /* helper to create a simple circular blob (you could swap in fancier math) */
-  function makeCircleBlob(cx, cy, r, colorArr) {
-    const steps = 48;
+  function makeCircleBlob(cx, cy, r, colorArr, steps = 48) {
     const pts = [];
     for (let i = 0; i < steps; i++) {
       const θ = i / steps * 2 * Math.PI;
