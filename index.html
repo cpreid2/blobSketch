@@ -1752,6 +1752,19 @@ $("cancelImportBtn").onclick = () => {
     const mouseX= e.clientX - rect.left;
     const mouseY= e.clientY - rect.top;
 
+    if (dragMode && drawMode !== "circle") {
+      for (let i = 0; i < circles.length; i++) {
+        const c  = circles[i],
+              dx = mouseX - c.x,
+              dy = mouseY - c.y;
+        if (Math.hypot(dx, dy) < c.radius + 5) {   // inside any circle?
+          toast("Hint: turn Circle draw mode ON to move circles.",
+                3000);
+          break;                                  
+        }
+      }
+    }
+    
     // Circle creation or circle dragging
     if (drawMode === 'circle') {
       if (dragMode) {
