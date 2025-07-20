@@ -1048,6 +1048,12 @@ function toast(msg, ms = 2200) {
   $("dampingSlider").value = 0;
   $("dampingValue").textContent = "0%";
 
+  /* step 0 ─ turn High-Repel ON (keeps blobs apart) */
+  if (interRepelMult !== 3) {          // 1 = normal, 3 = boosted
+    interRepelMult = 3;                // physics flag
+    toggleActiveIcon($("iconDiffusion"), true);  // light the toolbar icon
+  }
+    
   const palette = ["#ff3333", "#ffd700", "#0066ff", "#000000"]; // red, yellow, blue, black
   const placed  = [];                                           // remember centres
 
