@@ -1845,19 +1845,87 @@
      border:1px solid #000; box-shadow:3px 3px 0 #000;">
 	</div>
 	<script>
-		(function () {
-		  var ua = navigator.userAgent || "";
-		  var isIPhone = /iPhone|iPod/i.test(ua);
-		
-		  if (isIPhone) {
-		    document.body.innerHTML = `
-		      <div id="mobileWarning">
-		        <h1>Desktop or iPad Only</h1>
-		        <p>This app isn’t supported on iPhone. Please use an iPad or desktop.</p>
-		      </div>`;
-		    throw new Error("iPhone not supported");
-		  }
-		})();
+		 (function () {
+    var ua = navigator.userAgent || "";
+    var isIPhone = /iPhone|iPod/i.test(ua);
+
+    if (!isIPhone) return;
+
+    document.documentElement.innerHTML = `
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Not Supported on iPhone</title>
+        <style>
+          :root {
+            --bg1: #ffffff;
+            --bg2: #e9eef9;
+            --fg: #000;
+            --border: #000;
+          }
+          html, body { height: 100%; margin: 0; }
+          body {
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(140% 100% at 50% 0%, var(--bg2), var(--bg1) 60%);
+            color: var(--fg);
+            font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Courier New", monospace;
+          }
+          .splash {
+            box-sizing: border-box;
+            max-width: 640px; width: calc(100% - 40px);
+            background: #f3f4f6;
+            border: 2px solid var(--border);
+            box-shadow: 8px 8px 0 #000;
+            border-radius: 10px;
+            padding: 22px;
+            text-align: center;
+          }
+          .badge {
+            display:inline-block;
+            padding: 6px 10px;
+            border:2px solid var(--border);
+            border-radius:8px;
+            background:#fff;
+            box-shadow: 3px 3px 0 #000;
+            font-weight: 700;
+            margin-bottom: 14px;
+          }
+          h1 {
+            margin: 8px 0 6px;
+            font-size: 26px;
+            letter-spacing: 0.3px;
+          }
+          p { margin: 8px 0; }
+          .hint {
+            margin-top: 14px;
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          .btn {
+            margin-top: 16px;
+            display: inline-block;
+            padding: 10px 14px;
+            background: #2563eb;
+            color: #fff;
+            text-decoration: none;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 3px 3px 0 #000;
+            font-weight: 700;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="splash" role="alert" aria-live="polite">
+          <div class="badge">BlobSketch</div>
+          <h1>Not supported on iPhone</h1>
+          <p>This experience is designed for larger screens.</p>
+          <p>Please use an <strong>iPad</strong> or <strong>desktop</strong> browser.</p>
+        </div>
+      </body>
+    `;
+    throw new Error("Blocked on iPhone");
+  })();
 		
 		if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 			document.addEventListener("DOMContentLoaded", function() {
