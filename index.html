@@ -1845,6 +1845,20 @@
      border:1px solid #000; box-shadow:3px 3px 0 #000;">
 	</div>
 	<script>
+		(function () {
+		  var ua = navigator.userAgent || "";
+		  var isIPhone = /iPhone|iPod/i.test(ua);
+		
+		  if (isIPhone) {
+		    document.body.innerHTML = `
+		      <div id="mobileWarning">
+		        <h1>Desktop or iPad Only</h1>
+		        <p>This app isn’t supported on iPhone. Please use an iPad or desktop.</p>
+		      </div>`;
+		    throw new Error("iPhone not supported");
+		  }
+		})();
+		
 		if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 			document.addEventListener("DOMContentLoaded", function() {
 				var warningDiv = document.createElement("div");
