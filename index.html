@@ -6,644 +6,722 @@
 	<title>blobSketch version 1.2</title>
 
 	<style>
-		/* ---------- Desktop defaults ---------- */
-		/* Source: desktop.css */
-
-		/* ───────── 1. Base / Reset ───────── */
-		body {
-			margin: 0;
-			padding: 0;
-			font-family: "Courier New", monospace;
-			background-color: #efefef;
-			color: #000;
-		}
-
-		/* ───────── 2. Global Containers ──── */
-		.window {
-			width: 800px;
-			margin: 40px auto;
-			border: 2px solid #000;
-			background-color: #fff;
-			box-shadow: 4px 4px 0px #000;
-			position: relative;
-		}
-
-		.content {
-			display: flex;
-		}
-
-		/* ───────── 3. Title-bar & Menu ───── */
-		.title-bar {
-			background-color: #c0c0c0;
-			border-bottom: 2px solid #000;
-			padding: 4px 8px;
-			display: flex;
-			gap: 12px;
-			align-items: center;
-			position: relative;
-		}
-
-		.menu-bar {
-			display: flex;
-			gap: 16px;
-		}
-
-		.menu-bar span {
-			font-weight: bold;
-			cursor: pointer;
-			position: relative;
-		}
-
-		.menu-bar span:hover {
-			text-decoration: underline;
-		}
-
-		.submenu {
-			display: none;
-			position: absolute;
-			top: 24px;
-			left: 0;
-			background-color: #c0c0c0;
-			border: 2px solid #000;
-			padding: 4px;
-			flex-direction: column;
-			gap: 4px;
-			z-index: 999;
-		}
-
-		.submenu span {
-			display: block;
-			padding: 2px 6px;
-			cursor: pointer;
-		}
-
-		.submenu span:hover {
-			background-color: #d9d9d9;
-		}
-
-		#exportSubmenu {
-			width: 160px;
-		}
-
-		#fileSubmenu {
-			width: 200px;
-		}
-
-		.reset-icon {
-			margin-left: auto;
-			font-weight: bold;
-			font-size: 18px;
-			cursor: pointer;
-			user-select: none;
-			text-decoration: none;
-			padding: 0 8px;
-		}
-
-		.reset-icon:hover {
-			background-color: #d9d9d9;
-		}
-
-		/* ───────── 4. Workspace Layout ───── */
-		/* 4-A  Toolbar shell */
-		.toolbar {
-			width: 150px;
-			border-right: 2px solid #000;
-			background-color: #d9d9d9;
-			padding: 6px;
-			box-sizing: border-box;
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-		}
-
-		/* 4-B  Toolbar sections */
-		.toolbar-section {
-			border: 1px solid #000;
-			background-color: #efefef;
-			padding: 4px;
-			margin: 2px 0;
-		}
-
-		.toolbar-section h4 {
-			margin: 0 0 4px;
-			font-size: 12px;
-			font-weight: bold;
-			text-align: center;
-			background-color: #b0b0b0;
-			color: #000;
-			border: 1px solid #000;
-			padding: 2px;
-		}
-
-		.toolbar-section .icon-group {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 4px;
-			justify-content: center;
-		}
-
-		/* glowing outline when any edit mode is engaged */
-		#editToolsSection.edit-on {
-			outline: 3px solid #ff3b3b;
-			/* neon red */
-			box-shadow: 0 0 6px 2px #ff3b3b inset,
-				0 0 6px 2px #ff3b3b;
-			/* subtle outer glow */
-			transition: outline-color .2s, box-shadow .2s;
-		}
-
-		/* 4-C  Icon buttons */
-		.icon {
-			width: 32px;
-			height: 32px;
-			border: 2px solid #000;
-			background-color: #fff;
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 18px;
-			user-select: none;
-			font-weight: normal;
-			position: relative;
-			/* rounded corners */
-			border-radius: 6px;
-			/* or 50% for perfect circles */
-			overflow: visible;
-			/* ← allow the ON badge to stick out */
-		}
-
-		.icon img {
-			width: 32px;
-			height: 32px;
-			border-radius: inherit;
-		}
-
-		#iconFill.icon-active {
-			background-color: #D3D3D3;
-			font-weight: bold;
-		}
-
-		/* “ON” label */
-		.icon.icon-active::after {
-			content: "ON";
-			position: absolute;
-			top: -8px;
-			right: -8px;
-			background-color: #ff0;
-			color: #000;
-			font-size: 10px;
-			font-weight: bold;
-			border: 1px solid #000;
-			padding: 2px 4px;
-			border-radius: 4px;
-			box-shadow: 2px 2px 0px #000;
-			z-index: 5;
-		}
-
-		/* 4-D  Shape-settings mini-panel */
-		.shape-settings {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 6px;
-		}
-
-		.shape-settings label {
-			font-size: 12px;
-			text-align: center;
-			display: block;
-		}
-
-		.shape-settings input[type="color"],
-		.shape-settings input[type="number"] {
-			margin-top: 2px;
-			width: 40px;
-			min-width: 0;
-		}
-		.window.ipad input[type="color"]{
-			border: 1px solid;
-			padding: 0;
-		}
-
-		/* ───────── 5. Main Drawing Area ──── */
-		.main-area {
-			flex: 1;
-			padding: 8px;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-		}
-
-		#glCanvas {
-			width: 500px;
-			height: 500px;
-			border: 2px solid #000;
-			background-color: #fff;
-			display: block;
-			margin-bottom: 16px;
-			-webkit-user-select: none;
-			-moz-user-select: none;
-			user-select: none;
-			-webkit-user-drag: none;
-			-khtml-user-drag: none;
-			touch-action: none;
-		}
-
-		/* ───────── 6. Bottom Slider Panel ─ */
-		.bottom-panel {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			flex-direction: column;
-			border-top: 2px solid #000;
-			padding: 8px;
-			background-color: #c0c0c0;
-			text-align: center;
-		}
-
-		#sliders>div {
-			display: flex;
-			align-items: center;
-			margin: 8px 0;
-		}
-
-		#sliders label {
-			width: 250px;
-			text-align: center;
-			margin-right: 8px;
-		}
-
-		#sliders label span {
-			display: inline-block;
-			font-weight: bold;
-			vertical-align: middle;
-		}
-
-		input[type="range"] {
-			-webkit-appearance: none;
-			width: 300px;
-			background: #fff;
-			border: 1px solid #000;
-		}
-
-		input[type="range"]::-webkit-slider-thumb {
-			-webkit-appearance: none;
-			width: 14px;
-			height: 20px;
-			background: #c0c0c0;
-			border: 1px solid #000;
-			cursor: pointer;
-			margin-top: -7px;
-		}
-
-		input[type="range"]::-moz-range-thumb {
-			width: 14px;
-			height: 20px;
-			background: #c0c0c0;
-			border: 1px solid #000;
-			cursor: pointer;
-		}
-
-		/* ───────── 7. Dialogs & Modals ───── */
-		.dialog-backdrop {
-			display: none;
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.4);
-			justify-content: center;
-			align-items: center;
-			z-index: 99;
-		}
-
-		.dialog-content {
-			background-color: #fff;
-			border: 2px solid #000;
-			padding: 16px;
-			min-width: 200px;
-			text-align: center;
-			box-shadow: 4px 4px 0px #000;
-			font-family: "Courier New", monospace;
-		}
-
-		.dialog-content button {
-			margin-top: 12px;
-			font-family: inherit;
-			cursor: pointer;
-		}
-
-		/* ───────── 8. Splash Overlay ─────── */
-		#splashOverlay {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(255, 255, 255, 0.8);
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			z-index: 9999;
-			cursor: pointer;
-		}
-
-		#splashOverlay img {
-			max-width: 50%;
-			max-height: 50%;
-			pointer-events: none;
-			margin-bottom: 50px;
-			border: 2px solid #000;
-			border-radius: 6px;
-			padding: 0px;
-		}
-
-		.splashText {
-			font-family: "Courier New", monospace;
-			font-size: 18px;
-			font-weight: bold;
-			color: #000;
-			background-color: #c0c0c0;
-			padding: 8px 12px;
-			border: 2px solid #000;
-			box-shadow: 4px 4px 0px #000;
-			user-select: none;
-		}
-
-		/* ───────── 9. Help Icon & Tooltip ─ */
-		.inline-icon {
-			width: 16px;
-			height: 16px;
-			vertical-align: middle;
-			margin: 0 4px;
-		}
-
-		.help-icon-container {
-			position: relative;
-			display: inline-block;
-		}
-
-		.help-icon {
-			display: inline-block;
-			width: 16px;
-			height: 16px;
-			border-radius: 50%;
-			background-color: #c0c0c0;
-			border: 1px solid #000;
-			color: #000;
-			font-size: 12px;
-			font-weight: bold;
-			text-align: center;
-			line-height: 16px;
-			cursor: help;
-			user-select: none;
-		}
-
-		.help-tooltip {
-			display: none;
-			position: absolute;
-			bottom: 20px;
-			left: 0;
-			min-width: 120px;
-			background-color: #efefef;
-			color: #000;
-			border: 1px solid #000;
-			padding: 4px;
-			font-size: 12px;
-			box-shadow: 4px 4px 0 #000;
-			z-index: 9999;
-		}
-
-		.help-icon-container:hover .help-tooltip {
-			display: block;
-		}
-
-
-
-		/* ───────── 10. Cursor Modes ──────── */
-		.canvas-blob-mode {
-			cursor: url("images/pencil.png"), auto;
-		}
-
-		.canvas-line-mode {
-			cursor: url("images/pencil.png"), auto;
-		}
-
-		.canvas-circle-mode {
-			cursor: url("images/CircleCursor.png"), auto;
-		}
-
-		.canvas-drag-mode {
-			cursor: url("images/glove.png"), auto;
-		}
-
-		.canvas-pin-mode {
-			cursor: url("images/PinCursor.png"), auto;
-		}
-
-		.canvas-slicing-mode {
-			cursor: url("images/trim.png"), auto;
-		}
-
-		.canvas-freeze-mode {
-			cursor: url("images/FreezeCursor.png"), auto;
-		}
-
-		.canvas-delete-mode {
-			cursor: url("images/DeleteCursor.png"), auto;
-		}
-
-		/* ───────── 11. Mobile-only Warning ─ */
-		#mobileWarning {
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background: #fff;
-			color: #000;
-			font-family: sans-serif;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			text-align: center;
-			z-index: 10000;
-			padding: 20px;
-		}
-
-		.icon:focus-visible {
-			outline: 3px solid #ffbf00;
-		}
-
-		.icon[data-label]::before {
-			content: attr(data-label);
-			position: absolute;
-			bottom: -24px;
-			/* small gap below the icon */
-			left: 50%;
-			translate: -50% 0;
-			font: 12px "Courier New", monospace;
-			background: #000;
-			color: #fff;
-			padding: 2px 6px;
-			border-radius: 4px;
-			white-space: nowrap;
-			pointer-events: none;
-			opacity: 0;
-			transition: opacity .15s;
-			z-index: 50;
-			/* sit above everything in the toolbar */
-		}
-
-		.icon:hover::before,
-		.icon:focus-visible::before {
-			opacity: 1;
-		}
-
-		/* ---------- toast notifications ---------- */
-		#toastStack {
-			position: absolute;
-			top: 48px;
-			right: 10px;
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-			align-items: flex-end;
-			pointer-events: none;
-			/* clicks fall through */
-			z-index: 2000;
-		}
-
-		.toast {
-			font: 14px "Courier New", monospace;
-			background: #000;
-			color: #fff;
-			padding: 6px 10px;
-			border-radius: 6px;
-			opacity: 0;
-			transform: translateY(-8px);
-			transition: opacity .2s, transform .2s;
-		}
-
-		.toast.show {
-			opacity: .9;
-			transform: translateY(0);
-		}
-
-		.title-actions {
-			margin-left: auto;
-			/* pushes the pair to the far right */
-			display: flex;
-			gap: 6px;
-			/* neat 6-px gap between the two icons */
-		}
-
-		/* ---------- guided tour ---------- */
-		#tourOverlay {
-			position: fixed;
-			inset: 0;
-			background: rgba(0, 0, 0, .55);
-			z-index: 3000;
-			pointer-events: none;
-		}
-
-		#tourTip {
-			position: fixed;
-			z-index: 3001;
-			max-width: 320px;
-			font: 13px "Courier New", monospace;
-			background: #fff;
-			color: #000;
-			border: 2px solid #000;
-			border-radius: 6px;
-			padding: 10px 12px;
-			box-shadow: 4px 4px 0 #000;
-		}
-
-		#tourCtrls {
-			margin-top: 8px;
-			text-align: right;
-		}
-
-		#tourCtrls button {
-			font: inherit;
-			margin-left: 4px;
-			cursor: pointer;
-		}
-
-		.tour-highlight {
-			outline: 3px solid #ffe600 !important;
-			box-shadow: 0 0 8px 3px #ffe600 !important;
-		}
-
-		/* --- prettier Presets gallery ---------------------------------- */
-		.presets-gallery {
-			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-			gap: 12px;
-			padding: 4px;
-			max-height: 60vh;
-			/* scroll if many presets */
-			overflow-y: auto;
-		}
-
-		.preset-card {
-			aspect-ratio: 1/1;
-			/* always square */
-			background: #fafafa;
-			border: 2px solid #000;
-			box-shadow: 3px 3px 0 #000;
-			position: relative;
-			transition: transform .15s, box-shadow .15s;
-		}
-
-		.preset-card:hover {
-			transform: translateY(-3px);
-			box-shadow: 5px 5px 0 #000;
-		}
-
-		.preset-card:active {
-			transform: translateY(0);
-		}
-
-		.preset-card img,
-		.preset-card svg {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-			display: block;
-		}
-
-		.preset-card figcaption {
-			position: absolute;
-			inset: 0;
-			background: rgba(0, 0, 0, .58);
-			color: #fff;
-			font: 12px "Courier New", monospace;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			text-align: center;
-			padding: 4px;
-			opacity: 0;
-			transition: opacity .15s;
-		}
-
-		.preset-card:hover figcaption {
-			opacity: 1;
-		}
-
-		/* highlight the card the user just applied */
-		.preset-card.card-selected {
-			outline: 3px solid #ffe600;
-			box-shadow: 0 0 10px 3px #ffe600;
-			transform: none;
-		}
-
-
+	/* ---------- Desktop defaults: Retro Beige Console ---------- */
+
+/* 1. Base / Reset */
+body {
+  margin: 0;
+  padding: 14px;
+  font-family: "Courier New", monospace;
+  background-color: #6e6b60;        /* console background */
+  color: #000;
+  display: flex;
+  justify-content: center;          /* center .window horizontally */
+  align-items: flex-start;          /* keep it near the top vertically */
+  min-height: 100vh;                /* so flex centering works */
+	  overflow: hidden;
+}
+
+
+/* 2. Outer console shell (window) */
+.window {
+  width: 800px;
+  margin: 0;                        /* was: 0 auto */
+  background: #e2dbc8;
+  border-radius: 22px;
+  padding: 8px;
+  border: 3px solid #6b6558;
+  box-shadow:
+    8px 10px 0 #000,
+    inset -3px -3px 6px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+
+/* 3. Title-bar & Menu (kept, but styled to match console rim) */
+.title-bar {
+  background: #d3cbb7;
+  border-bottom: 3px solid #4b463f;
+  padding: 4px 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+  z-index: 2000;
+  border-radius: 10px 10px 4px 4px;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+}
+
+.menu-bar {
+  display: flex;
+  gap: 16px;
+}
+
+.menu-bar span {
+  font-weight: bold;
+  cursor: pointer;
+  position: relative;
+}
+
+.menu-bar span:hover {
+  text-decoration: underline;
+}
+
+/* dropdowns still work; just recolor to match beige */
+.submenu {
+  display: none;
+  position: absolute;
+  top: 22px;
+  left: 0;
+  background-color: #f3ecda;
+  border: 2px solid #4b463f;
+  padding: 4px;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 999;
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.submenu span {
+  display: block;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.submenu span:hover {
+  background-color: #e0d8c8;
+}
+
+#exportSubmenu {
+  width: 160px;
+}
+#fileSubmenu {
+  width: 200px;
+}
+
+/* Title-bar right-side actions */
+.title-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.reset-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  padding: 0 8px;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  background: #f7f2e4;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.reset-icon:hover {
+  background-color: #e0d8c8;
+}
+
+/* 4. Workspace Layout */
+.content {
+  display: flex;
+  gap: 21px;
+  margin-top: 12px;
+}
+
+/* 4-A Left console panel / toolbar shell */
+.toolbar {
+  width: 180px;
+  border-right: none;
+  background: #ddd6c5;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 12px;
+  border: 3px solid #4b463f;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+}
+
+/* 4-B Panel sections (Draw, Edit, Shape, Canvas) */
+.toolbar-section {
+  border-radius: 6px;
+  background: #f3ecda;
+  border: 1px solid #4b463f;
+  padding: 8px;
+  margin: 0;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+  display: flex;                    /* NEW */
+  flex-direction: column;           /* NEW */
+}
+
+
+
+
+.toolbar-section h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: bold;
+  text-align: left;
+  background: #3c3c3c;
+  color: #fff;
+  border-radius: 3px;
+  padding: 3px 6px;
+  border: none;
+}
+
+.toolbar-section .icon-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;          /* NEW: center horizontally */
+  align-items: center;              /* NEW: center vertically in the section */
+  flex: 1;                          /* take remaining height so centering is obvious */
+}
+
+/* Edit tools neon outline when active group is engaged */
+#editToolsSection.edit-on {
+  outline: 3px solid #ff3b3b;
+  box-shadow:
+    0 0 6px 2px #ff3b3b inset,
+    0 0 6px 2px #ff3b3b;
+  transition: outline-color .2s, box-shadow .2s;
+}
+
+/* 4-C Icon buttons – 3D beige console style */
+.icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #000;
+  background: #fffdfa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  user-select: none;
+  font-weight: normal;
+  position: relative;
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 #000;
+  overflow: visible;
+}
+
+.icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* Active icon: keep ON badge but allow rim tweak if desired */
+#iconFill.icon-active {
+  background-color: #d3d3d3;
+  font-weight: bold;
+}
+
+/* “ON” label */
+.icon.icon-active::after {
+  content: "ON";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff0;
+  color: #000;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #000;
+  padding: 2px 4px;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0px #000;
+  z-index: 1555;
+}
+
+/* Pressed / active state 3D effect */
+.icon:active {
+  box-shadow: inset 3px 3px 0 #000;
+  background: #e0d8c8;
+}
+
+/* Keyboard focus */
+.icon:focus-visible {
+  outline: 3px solid #ffbf00;
+}
+
+/* small tooltip under icons */
+.icon[data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  translate: -50% 0;
+  font: 12px "Courier New", monospace;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 10000;
+}
+
+.icon:hover::before,
+.icon:focus-visible::before {
+  opacity: 1;
+}
+
+/* 4-D Shape settings mini-panel */
+.shape-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.shape-settings label {
+  font-size: 12px;
+  text-align: center;
+  display: block;
+}
+
+.shape-settings input[type="color"],
+.shape-settings input[type="number"] {
+  margin-top: 2px;
+  width: 40px;
+  min-width: 0;
+}
+
+.window.ipad input[type="color"] {
+  border: 1px solid;
+  padding: 0;
+}
+
+/* 5. Main Drawing Area – CRT-style screen */
+.main-area {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;              /* horizontal center */
+  justify-content: center;          /* vertical center */
+}
+
+
+/* Screen bezel */
+.main-area::before {
+  content: "";
+  display: block;
+}
+
+/* Screen wrapper look using the canvas itself + padding */
+#glCanvas {
+  width: 500px;
+  height: 500px;
+  border-radius: 6px;
+  border: 3px solid #000;
+  background:
+    repeating-linear-gradient(
+      to right,
+      #000 0,
+      #000 1px,
+      #adb79a 1px,
+      #adb79a 24px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      #000 0,
+      #000 1px,
+      #adb79a 1px,
+      #adb79a 24px
+    );
+  display: block;
+  margin: 0 auto 8px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+  box-shadow:
+    0 0 0 6px #4b463f
+}
+
+
+/* 6. Bottom Slider Panel – console lower bay */
+.bottom-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  border-top: 4px solid #6b6558;
+  padding: 4px;
+  background: #d6cfbe;
+  text-align: center;
+  border-radius: 12px;
+  margin-top: 18px;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+#sliders > div {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+/* labels */
+#sliders label {
+  width: 250px;
+  text-align: center;
+  margin-right: 8px;
+	color: #1a1a1a;
+font-weight: 700;
+letter-spacing: 0.7px;
+-webkit-text-stroke: 0.4px #000;
+}
+
+#sliders label span {
+  display: inline-block;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+/* range track + thumb: 3D hardware slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 300px;
+  background: #efe7d4;
+  border: 3px solid #000;
+  height: 16px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 28px;
+  background: #b0a999;
+  border: 3px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow: 3px 3px 0 #000;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 26px;
+  background: #b0a999;
+  border: 3px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #000;
+}
+
+/* 7. Dialogs & Modals (desktop look, keep behavior) */
+.dialog-backdrop {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+.dialog-content {
+  background-color: #f3ecda;
+  border: 3px solid #4b463f;
+  padding: 16px;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 4px 4px 0px #000;
+  font-family: "Courier New", monospace;
+  border-radius: 8px;
+}
+
+.dialog-content button {
+  margin-top: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 2px solid #000;
+  background: #f7f2e4;
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* 8. Splash Overlay */
+#splashOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+#splashOverlay img {
+  max-width: 50%;
+  max-height: 50%;
+  pointer-events: none;
+  margin-bottom: 50px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 0px;
+}
+
+.splashText {
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  background-color: #d3cbb7;
+  padding: 8px 12px;
+  border: 2px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  user-select: none;
+}
+
+/* 9. Help Icon & Tooltip */
+.inline-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+
+.help-icon-container {
+  position: relative;
+  display: inline-block;
+}
+
+.help-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #d3cbb7;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 20px;
+  cursor: help;
+  user-select: none;
+}
+
+.help-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  min-width: 120px;
+  background-color: #f3ecda;
+  color: #000;
+  border: 1px solid #000;
+  padding: 4px;
+  font-size: 12px;
+  box-shadow: 4px 4px 0 #000;
+  z-index: 999999;
+}
+
+.help-icon-container:hover .help-tooltip {
+  display: block;
+  z-index: 99999;
+}
+
+/* 10. Cursor Modes (unchanged behavior) */
+.canvas-blob-mode {
+  cursor: url("images/pencil.png"), auto;
+}
+.canvas-line-mode {
+  cursor: url("images/pencil.png"), auto;
+}
+.canvas-circle-mode {
+  cursor: url("images/CircleCursor.png"), auto;
+}
+.canvas-drag-mode {
+  cursor: url("images/glove.png"), auto;
+}
+.canvas-pin-mode {
+  cursor: url("images/PinCursor.png"), auto;
+}
+.canvas-slicing-mode {
+  cursor: url("images/trim.png"), auto;
+}
+.canvas-freeze-mode {
+  cursor: url("images/FreezeCursor.png"), auto;
+}
+.canvas-delete-mode {
+  cursor: url("images/DeleteCursor.png"), auto;
+}
+
+#iconSlice {
+    display: none !important;
+}
+
+/* 11. Mobile-only Warning (kept as-is) */
+#mobileWarning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  color: #000;
+  font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+/* 12. Toast notifications (keep placement, recolor) */
+#toastStack {
+  position: absolute;
+  top: 48px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 2000;
+}
+
+.toast {
+  font: 14px "Courier New", monospace;
+  background: #000;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .2s, transform .2s;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.toast.show {
+  opacity: .9;
+  transform: translateY(0);
+}
+
+/* 13. Guided tour highlight (unchanged) */
+#tourOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  z-index: 3000;
+  pointer-events: none;
+}
+
+#tourTip {
+  position: fixed;
+  z-index: 3001;
+  max-width: 320px;
+  font: 13px "Courier New", monospace;
+  background: #f3ecda;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 4px 4px 0 #000;
+}
+
+#tourCtrls {
+  margin-top: 8px;
+  text-align: right;
+}
+
+#tourCtrls button {
+  font: inherit;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+.tour-highlight {
+  outline: 3px solid #ffe600 !important;
+  box-shadow: 0 0 8px 3px #ffe600 !important;
+}
+
+/* 14. Presets gallery (frame matches console) */
+.presets-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 4px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.preset-card {
+  aspect-ratio: 1/1;
+  background: #fafafa;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  position: relative;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.preset-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 5px 5px 0 #000;
+}
+
+.preset-card:active {
+  transform: translateY(0);
+}
+
+.preset-card img,
+.preset-card svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preset-card figcaption {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .58);
+  color: #fff;
+  font: 12px "Courier New", monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.preset-card:hover figcaption {
+  opacity: 1;
+}
+
+.preset-card.card-selected {
+  outline: 3px solid #ffe600;
+  box-shadow: 0 0 10px 3px #ffe600;
+  transform: none;
+}
 
 
 		/* ---------- iPad overrides (full ipad.css wrapped; no transformation) ---------- */
@@ -935,7 +1013,7 @@
 					pointer-events: none;
 					opacity: 0;
 					transition: opacity .15s;
-					z-index: 500;
+					z-index: 10000;
 				}
 
 				.icon:hover::before,
@@ -1124,6 +1202,7 @@
 				.help-icon-container {
 					position: relative;
 					display: inline-block;
+					z-index:9999;
 				}
 
 				.help-icon {
@@ -1158,6 +1237,7 @@
 
 				.help-icon-container:hover .help-tooltip {
 					display: block;
+					z-index: 99999;
 				}
 
 				/* Toasts */
@@ -1355,7 +1435,7 @@
 
 					/* Grid rows: title | canvas | tools | sliders */
 					display: grid;
-					grid-template-rows: 40px 1fr 110px 210px;
+					grid-template-rows: 40px 1fr 100px 240px;
 				}
 
 				.window.ipad .title-bar {
@@ -1390,12 +1470,16 @@
 					grid-auto-columns: max-content;
 					align-items: start;
 					justify-content: center;
-					gap: 10px;
-					padding: 6px 10px;
+					gap: 6px;
+					padding: 6px 6px;
 					border-right: 0;
 					overflow-x: auto;
+
 					/* was overflow: hidden */
 					overflow-y: hidden;
+					  overflow: visible !important;
+  position: relative;
+  z-index: 1;
 					-webkit-overflow-scrolling: touch;
 					scrollbar-gutter: stable both-edges;
 					/* optional: avoids layout shift */
@@ -1414,10 +1498,27 @@
 
 				.window.ipad .toolbar-section {
 					margin: 0;
-					padding: 8px;
+					padding: 6px;
 					border: 1px solid var(--border);
 					border-radius: var(--radius-lg);
 				}
+
+				.window.ipad .toolbar-section h4 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  /* new “chip” styling to match the UI */
+  background: linear-gradient(180deg, #ffffff, #f5f6f1);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px 8px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
+}
 
 
 				.window.ipad .icon,
@@ -1430,6 +1531,7 @@
 				.window.ipad .bottom-panel {
 					align-items: stretch;
 					padding: 8px 80px;
+
 					/* symmetric breathing room */
 				}
 
@@ -1634,6 +1736,7 @@
 						<div class="icon" id="iconFill" data-label="Solid Fill">▣</div>
 						<div class="icon" id="iconDiffusion" data-label="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
 						<div class="icon" id="iconUndo" data-label="Undo Last Item">⎌</div>
+						<div class="icon" id="iconGravity" data-label="Gravity (G)">G</div>
 					</div>
 				</div>
 			</div>
@@ -1668,13 +1771,21 @@
 					<input type="range" id="dampingSlider" min="0" max="100" value="85" step="0.5">
 				</div>
 				<div>
+	<div class="help-icon-container">
+		<span class="help-icon">i</span>
+		<div class="help-tooltip">Simulated internal fluid pushing outward. Closed blobs inflate uniformly.</div>
+	</div>
+	<label for="turgorPressureSlider">Inflation: <span id="turgorPressureValue">0%</span></label>
+	<input type="range" id="turgorPressureSlider" min="0" max="100" value="0" step="1">
+</div>
+				<div>
 					<div class="help-icon-container">
 						<span class="help-icon">i</span>
 						<div class="help-tooltip">
 							Higher = tighter shapes.
 						</div>
 					</div>
-					<label for="springConstantSlider">Rigidity: <span id="springConstantValue">30%</span></label>
+					<label for="springConstantSlider">Stiffness: <span id="springConstantValue">30%</span></label>
 					<input type="range" id="springConstantSlider" min="0" max="100" value="30" step="1">
 				</div>
 				<div>
@@ -1684,7 +1795,7 @@
 							Higher = more expansion.
 						</div>
 					</div>
-					<label for="repulsionConstantSlider">Turmoil: <span id="repulsionConstantValue">10%</span></label>
+					<label for="repulsionConstantSlider">Chaos: <span id="repulsionConstantValue">10%</span></label>
 					<input type="range" id="repulsionConstantSlider" min="0" max="100" value="10" step="1">
 				</div>
 				<div>
@@ -1694,9 +1805,12 @@
 							Shapes animate faster when higher.
 						</div>
 					</div>
-					<label for="timeStepSlider">Animation Speed: <span id="timeStepValue">47%</span></label>
+					<label for="timeStepSlider">Simulation Speed: <span id="timeStepValue">47%</span></label>
 					<input type="range" id="timeStepSlider" min="0" max="100" value="47" step="1">
 				</div>
+
+
+
 			</div>
 		</div>
 
@@ -1811,7 +1925,7 @@
 		<!-- Modals/Dialogs: About and Help -->
 		<div class="dialog-backdrop" id="aboutBackdrop">
 			<div class="dialog-content">
-				<p>blobSketch version 1.2</p>
+				<p>blobSketch version 1.3</p>
 				<p>by Colin Reid</p>
 				<button id="closeAbout">OK</button>
 			</div>
@@ -1930,7 +2044,7 @@
     `;
     throw new Error("Blocked on iPhone");
   })();
-		
+
 		if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
 			document.addEventListener("DOMContentLoaded", function() {
 				var warningDiv = document.createElement("div");
@@ -1941,6 +2055,7 @@
 		}
 
 		document.addEventListener("DOMContentLoaded", () => {
+			
 			/* -----------------------------------
 			   SHORTCUTS & UTILITIES
 			----------------------------------- */
@@ -2326,6 +2441,13 @@
 					$("dampingValue").textContent = "40%";
 					setDotScale(12);
 					damping = 0.40;
+					turgorPressure = 0;
+					const tpSlider = $("turgorPressureSlider");
+					const tpValue  = $("turgorPressureValue");
+					if (tpSlider && tpValue) {
+						tpSlider.value = 0;
+						tpValue.textContent = "0%";
+					}
 					if (!solidFillMode) {
 						solidFillMode = true;
 						$("iconFill").title = "Solid Fill On";
@@ -2793,7 +2915,7 @@
 			/* square canvas that fits the middle row (cap at 1000) */
 			function fitCanvasForIPad() {
 
-				const size = 700; //Math.min(1000, Math.floor(Math.min(availW, availH) * CANVAS_SCALE));
+				const size = 640; //Math.min(1000, Math.floor(Math.min(availW, availH) * CANVAS_SCALE));
 
 				canvas.style.width = size + "px";
 				canvas.style.height = size + "px";
@@ -2868,7 +2990,7 @@
 
 			/* 7. Physics parameters (defaults) */
 			let springConstant = 0.3, // ~30 %
-				repulsionConstant = 0.1, // ~10 %
+				repulsionConstant = 0.09, // ~10 %
 				damping = 0.85, // ~85 %
 				timeStep = 1.05, // slider 47 % → 0.1‒2
 				dotScaleFactor = 2.0, // slider 39 % → 0.1‒5
@@ -2882,6 +3004,13 @@
 			/* 8. Global shape settings */
 			let globalRadiusAvg = 4,
 				globalRadiusVar = 0;
+
+				let turgorPressure = 0.0; // 0..1 — 0 = no inflation, 1 = max
+
+			// --- Gravity Mode ---
+			let gravityEnabled = false;
+			// Pixels per second^2; feels good across your current timestep range
+			let gravityAccel = 15;
 
 			/* 9. UI element references */
 			const colorInput = $("blobColor");
@@ -3037,6 +3166,17 @@
 				toast(interRepelMult === 3 ? "High Repel: ON" : "High Repel: OFF", 1600);
 			};
 
+			$("iconGravity").addEventListener("click", () => {
+  gravityEnabled = !gravityEnabled;
+  $("iconGravity").classList.toggle("icon-active", gravityEnabled);
+  toast(gravityEnabled ? "Gravity ON" : "Gravity OFF");
+});
+
+// Optional keyboard shortcut: G
+window.addEventListener("keydown", (e) => {
+  if (e.key === "g" || e.key === "G") $("iconGravity").click();
+});
+
 			/* -----------------------------------
 			   DRAW MODE ICONS
 			----------------------------------- */
@@ -3087,18 +3227,20 @@
 			   FILE MENU LOGIC (SAVE/LOAD)
 			----------------------------------- */
 			function getCurrentSettings() {
-				return {
-					timeStep,
-					springConstant,
-					repulsionConstant,
-					damping,
-					dotScaleFactor,
-					currentLineThickness,
-					globalRadiusAvg,
-					globalRadiusVar,
-					colorValue: colorInput.value
-				};
+			    return {
+			        timeStep,
+			        springConstant,
+			        repulsionConstant,
+			        damping,
+			        dotScaleFactor,
+			        currentLineThickness,
+			        globalRadiusAvg,
+			        globalRadiusVar,
+			        colorValue: colorInput.value,
+			        turgorPressure      // NEW: 0..1
+			    };
 			}
+
 
 			function applySettings(obj) {
 				if (typeof obj.timeStep === "number") {
@@ -3113,7 +3255,7 @@
 				}
 				if (typeof obj.repulsionConstant === "number") {
 					repulsionConstant = obj.repulsionConstant;
-					$("repulsionConstantSlider").value = repulsionConstant * 100;
+					$("repulsionConstantSlider").value = repulsionConstant * 200;
 					$("repulsionConstantValue").textContent = $("repulsionConstantSlider").value + "%";
 				}
 				if (typeof obj.damping === "number") {
@@ -3146,6 +3288,19 @@
 				if (typeof obj.colorValue === "string") {
 					colorInput.value = obj.colorValue;
 				}
+				if (typeof obj.turgorPressure === "number") {
+			    // clamp just in case incoming JSON is slightly out of range
+			    turgorPressure = Math.max(0, Math.min(1, obj.turgorPressure));
+
+			    const s = $("turgorPressureSlider");
+			    const v = $("turgorPressureValue");
+
+			    if (s && v) {
+			        s.value = Math.round(turgorPressure * 100);
+			        v.textContent = s.value + "%";
+			    }
+			}
+
 			}
 
 			function downloadJSON(filename, dataObj) {
@@ -3364,6 +3519,22 @@
 				}
 				return Math.abs(sum) / 2;
 			}
+
+			function measurePerimeterArea(pts, isClosed=true) {
+  const N = pts.length;
+  if (N < 2) return { L: 0, A: 0 };
+  let L = 0, twiceA = 0;
+  const M = isClosed ? N : N - 1;
+  for (let i = 0; i < M; i++) {
+    const j = (i + 1) % N;
+    const ex = pts[j].x - pts[i].x;
+    const ey = pts[j].y - pts[i].y;
+    L += Math.hypot(ex, ey);
+    twiceA += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+  }
+  return { L, A: 0.5 * twiceA };
+}
+
 			/**
 			 * Ray-casting test for point-in-polygon
 			 */
@@ -3653,11 +3824,19 @@
 						currentPathPoints.push({ ...f });
 					}
 
+					// NEW: initialize reference geometry for turgor controller
+				   const { L, A } = measurePerimeterArea(currentPathPoints, isClosed);
+				   const _L0 = Math.max(L, 1e-6);
+				   const _A0 = Math.max(Math.abs(A), 1e-6);
+
+
 					chains.push({
 						chain: currentPathPoints.slice(),
 						color: chosenColor,
 						baseDotRadius: r,
 						isClosed,
+						_L0,
+						_A0,
 						frozen: false
 					});
 					history.push({ type: "chain" });
@@ -3824,24 +4003,28 @@
 			/* -----------------------------------
 			   "DASHED" RENDER FOR FROZEN
 			----------------------------------- */
-			function drawDashedSpline(spline, color) {
-				gl.useProgram(lineProgram);
-				gl.uniform2f(lineResLoc, canvas.width, canvas.height);
-				gl.uniform4fv(lineColorLoc, color);
-				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			const dashBuf = new Float32Array(4); // x1,y1,x2,y2
 
-				const pts = spline;
-				for (let i = 0; i < pts.length - 3; i += 4) {
-					const sub = new Float32Array([
-						pts[i], pts[i + 1],
-						pts[i + 2], pts[i + 3]
-					]);
-					gl.bufferData(gl.ARRAY_BUFFER, sub, gl.DYNAMIC_DRAW);
-					gl.enableVertexAttribArray(linePosLoc);
-					gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
-					gl.drawArrays(gl.LINE_STRIP, 0, 2);
-				}
+			function drawDashedSpline(spline, color) {
+			    gl.useProgram(lineProgram);
+			    gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+			    gl.uniform4fv(lineColorLoc, color);
+			    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			    gl.enableVertexAttribArray(linePosLoc);
+			    gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+
+			    const pts = spline;
+			    for (let i = 0; i < pts.length - 3; i += 4) {
+			        dashBuf[0] = pts[i];
+			        dashBuf[1] = pts[i + 1];
+			        dashBuf[2] = pts[i + 2];
+			        dashBuf[3] = pts[i + 3];
+
+			        gl.bufferData(gl.ARRAY_BUFFER, dashBuf, gl.DYNAMIC_DRAW);
+			        gl.drawArrays(gl.LINE_STRIP, 0, 2);
+			    }
 			}
+
 
 			/* -----------------------------------
 			   PHYSICS
@@ -3878,7 +4061,7 @@
 					forces[i].y = 0;
 				}
 				const dotR = chainObj.baseDotRadius * dotScaleFactor;
-				const restDist = dotR * 0.7;
+				const restDist = Math.max(dotR, 4) * 0.7;
 
 				// Springs
 				if (chainObj.isClosed) {
@@ -3924,6 +4107,164 @@
 					else if (a.y > canvas.height - dotR) forces[i].y -= (a.y - (canvas.height - dotR)) * 0.5;
 				}
 
+				// --- Internal vs External Pressure Equilibrium (runaway-proof) ---
+		if (chainObj.isClosed && turgorPressure > 0) {
+		  const pts = chainObj.chain; const N = pts.length; if (N >= 3) {
+
+				// Perimeter & orientation
+				let L = 0, twiceA = 0;
+				for (let i = 0; i < N; i++) {
+				  const j  = (i + 1) % N;
+				  const ex = pts[j].x - pts[i].x;
+				  const ey = pts[j].y - pts[i].y;
+				  L       += Math.hypot(ex, ey);
+				  twiceA  += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+				}
+				const A   = 0.5 * twiceA;
+				const sgn = (A >= 0) ? 1 : -1;
+
+				// --- perimeter baseline: still used for membrane tension ---
+				if (chainObj._L0 == null || chainObj._L0 < 1e-6) {
+				  chainObj._L0 = Math.max(L, 1e-6);
+				}
+				const L0 = chainObj._L0;
+
+				// keep the size-follow logic for membrane tension
+				if (chainObj._dotScale0 == null) chainObj._dotScale0 = dotScaleFactor;
+				const sizeScale = dotScaleFactor / chainObj._dotScale0;
+				const L0_eff    = L0 * sizeScale;
+
+				// --- AREA-BASED baseline from the *drawn* shape ---
+				// Use the precomputed A0 from finalize; fall back to current area if missing.
+				const Aabs = Math.abs(A);
+				const A0   = (chainObj._A0 && chainObj._A0 > 1e-6) ? chainObj._A0 : Aabs;
+
+				// Baseline area = the drawn blob; turgor is "how much bigger than drawn"
+				const A_base = A0;
+
+				// How much extra area at full turgor (0–1 slider)
+				const areaGain = 1.5;  // tweak to taste
+
+				// Target area at this turgor
+				const A_goal = A_base * (1 + areaGain * turgorPressure);
+
+
+				// Base stiffness for the area controller
+				const kA = springConstant * 0.12;
+
+				// ------------------------------
+				// 1) "Balloon" mode (original-ish)
+				// ------------------------------
+				const areaErr   = A_goal - Aabs;
+				const P_balloon = 1.25 * kA * (areaErr / Math.max(A_base, 1e-6));
+
+				// ------------------------------
+				// 2) "Soft" mode (saturated)
+				// ------------------------------
+				const relErrRaw = areaErr / Math.max(A_base, 1e-6);
+
+				// How quickly saturation kicks in:
+				//   bigger satWidth => more balloon-like, less clamp
+				//   smaller satWidth => gentler, more clamp
+				const satWidth = 3.0;  // try 1.5–3.0
+
+				// Overall strength of soft mode pressure
+				const pressureScale = 1.3; // try 1.0–1.6
+
+				const relErr   = Math.tanh(relErrRaw * satWidth);
+				const P_soft   = pressureScale * kA * relErr;
+
+				// ------------------------------
+				// 3) Blend based on turgor slider
+				// ------------------------------
+				// Below blendStart: 100% soft
+				// Above blendEnd:   100% balloon
+				const blendStart = 0.0;  // where balloon influence starts
+				const blendEnd   = 0.5;  // where it's fully balloon
+
+				let blend;
+				if (turgorPressure <= blendStart) {
+				  blend = 0.0;
+				} else if (turgorPressure >= blendEnd) {
+				  blend = 1.0;
+				} else {
+				  blend = (turgorPressure - blendStart) / (blendEnd - blendStart);
+				}
+
+				// Final pressure: linear mix of soft + balloon
+				let P_in = (1.0 - blend) * P_soft + blend * P_balloon;
+
+		    // ---- EXTERNAL membrane tension (resists stretch) ----
+		    // Hookean surface tension: grows with perimeter strain.
+		    // kT sets stiffness of the membrane; tune 0.20–0.50.
+		    const strain = Math.max(0, (L - L0_eff) / L0_eff);    // 0 when at/below rest length
+		    const kT = springConstant * 0.30;             // membrane tension coefficient
+		    const P_tension = kT * strain;                // also force/length
+
+		    // Effective pressure
+		    let P_eff = P_in - P_tension;
+
+		    // Small hysteresis: if we overshoot a bit, allow mild inward pressure
+		    // to pull back; otherwise clamp to avoid oscillation at rest.
+		    const hysteresis = 0.03; // 3% perimeter over baseline
+		    if (L <= L0_eff * (1 + hysteresis)) {
+		      if (P_eff < 0) P_eff = 0;
+		    } else {
+		      // allow inward up to 50% of springConstant scale
+		      const inwardCap = springConstant * 0.05;
+		      if (P_eff < -inwardCap) P_eff = -inwardCap;
+		    }
+
+		    // Optional: light damping to avoid breathing
+		    const hasVel = !!(chainObj._vel || (pts[0] && ("vx" in pts[0] || "xv" in pts[0])));
+		    const kd = 0.5 * springConstant * 0.02;
+
+		    // Apply along outward normals (split to endpoints)
+		    for (let i = 0; i < N; i++) {
+		      const j = (i + 1) % N;
+
+		      const ex = pts[j].x - pts[i].x;
+		      const ey = pts[j].y - pts[i].y;
+		      let elen = Math.hypot(ex, ey);
+		      if (elen < 1e-12) continue;
+
+		      // outward unit normal (winding-aware)
+		      let nx =  ey / elen;
+		      let ny = -ex / elen;
+		      nx *= sgn; ny *= sgn;
+
+		      // base pressure on this edge
+		      let fMag = P_eff * elen;
+
+		      // damping against normal motion at the edge midpoint
+		      if (hasVel && kd > 0) {
+		        const vi = (chainObj._vel && chainObj._vel[i]) ? chainObj._vel[i] : pts[i];
+		        const vj = (chainObj._vel && chainObj._vel[j]) ? chainObj._vel[j] : pts[j];
+		        const vix = ("vx" in vi) ? vi.vx : ("xv" in vi ? vi.xv : 0);
+		        const viy = ("vy" in vi) ? vi.vy : ("yv" in vi ? vi.yv : 0);
+		        const vjx = ("vx" in vj) ? vj.vx : ("xv" in vj ? vj.xv : 0);
+		        const vjy = ("vy" in vj) ? vj.vy : ("yv" in vj ? vj.yv : 0);
+		        const vmx = 0.5 * (vix + vjx), vmy = 0.5 * (viy + vjy);
+		        const vNormal = vmx * nx + vmy * ny; // outward positive
+		        fMag -= kd * vNormal * elen;
+		      }
+
+		      // per-edge safety clamp
+		      const maxPerEdge = springConstant * 0.15 * elen;
+		      if (fMag >  maxPerEdge) fMag =  maxPerEdge;
+		      if (fMag < -maxPerEdge) fMag = -maxPerEdge;
+
+		      const fx = (fMag * nx) * 0.5;
+		      const fy = (fMag * ny) * 0.5;
+
+		      if (!pts[i].pinned) { chainObj._forces[i].x += fx; chainObj._forces[i].y += fy; }
+		      if (!pts[j].pinned) { chainObj._forces[j].x += fx; chainObj._forces[j].y += fy; }
+		    }
+		  }
+		}
+		// --- end equilibrium ---
+
+
 				// If this chain is currently being dragged
 				if (dragMode && cIndex === draggingChainIndex && draggingDotIndex !== null) {
 					const dot = arr[draggingDotIndex],
@@ -3948,8 +4289,12 @@
 						d.vy = 0;
 						continue;
 					}
+					if (gravityEnabled) {
+						d.vy += gravityAccel * (timeStep / 60);
+					}
 					d.vx = (d.vx + forces[i].x * timeStep) * damping;
 					d.vy = (d.vy + forces[i].y * timeStep) * damping;
+
 					d.x += d.vx * timeStep;
 					d.y += d.vy * timeStep;
 				}
@@ -3974,32 +4319,53 @@
 							if (!neighborPoints) continue;
 
 							for (let nPt of neighborPoints) {
-								if (nPt.c === pt.c) continue; // skip same chain here
-								const B = chains[nPt.c];
-								if (B.frozen) continue;
-								const dotB = nPt.p;
-								const rB = nPt.r;
-								const minD = rA + rB;
+							    const sameChain = (nPt.c === pt.c);
 
-								const dx = dotB.x - dotA.x;
-								const dy = dotB.y - dotA.y;
-								const dist = Math.hypot(dx, dy);
+							    // If it's the same chain, only repel non-neighbor vertices.
+							    if (sameChain) {
+							        const idxA = pt.i;
+							        const idxB = nPt.i;
+							        const chainLen = chains[pt.c].chain.length;
 
-								if (dist > 0 && dist < minD) {
-									const overlap = (minD - dist);
-									const nx = dx / dist;
-									const ny = dy / dist;
-									const f = repulsionConstant * interRepelMult * overlap;
-									if (!dotA.pinned) {
-										dotA.vx -= f * nx * timeStep;
-										dotA.vy -= f * ny * timeStep;
-									}
-									if (!dotB.pinned) {
-										dotB.vx += f * nx * timeStep;
-										dotB.vy += f * ny * timeStep;
-									}
-								}
+							        // shortest index distance on a closed loop
+							        let di = Math.abs(idxA - idxB);
+							        di = Math.min(di, chainLen - di);
+
+							        // skip immediate neighbors – springs handle them
+							        if (di <= 1) continue;
+							    }
+
+							    const B = chains[nPt.c];
+							    if (B.frozen) continue;
+							    const dotB = nPt.p;
+							    const rB = nPt.r;
+							    const minD = rA + rB;
+
+							    const dx = dotB.x - dotA.x;
+							    const dy = dotB.y - dotA.y;
+							    const dist = Math.hypot(dx, dy);
+
+							    if (dist > 0 && dist < minD) {
+							        const overlap = (minD - dist);
+							        const nx = dx / dist;
+							        const ny = dy / dist;
+
+							        // Same-chain vs inter-blob multiplier
+							        const repelMult = sameChain ? 1.0 : interRepelMult;
+
+							        const f = repulsionConstant * repelMult * overlap;
+							        if (!dotA.pinned) {
+							            dotA.vx -= f * nx * timeStep;
+							            dotA.vy -= f * ny * timeStep;
+							        }
+							        if (!dotB.pinned) {
+							            dotB.vx += f * nx * timeStep;
+							            dotB.vy += f * ny * timeStep;
+							        }
+							    }
 							}
+
+
 						}
 					}
 				}
@@ -4060,7 +4426,7 @@
 				gl.enableVertexAttribArray(linePosLoc);
 				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
 				gl.uniform2f(lineResLoc, w, h);
-				gl.uniform4fv(lineColorLoc, [0.8, 0.8, 0.8, 1]);
+				gl.uniform4fv(lineColorLoc, [0.45, 0.50, 0.45, 1.0]);
 				gl.drawArrays(gl.LINES, 0, gridVerts.length / 2);
 			}
 
@@ -4241,14 +4607,26 @@
 				gl.drawArrays(gl.LINE_LOOP, 0, seg);
 			}
 
+			let inProgressBuf = new Float32Array(1024); // or start small
+
 			function drawInProgressPath() {
-				if (!isDrawing || currentPathPoints.length < 2) return;
-				const arr = [];
-				for (let i = 0; i < currentPathPoints.length; i++) {
-					arr.push(currentPathPoints[i].x, currentPathPoints[i].y);
-				}
-				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.DYNAMIC_DRAW);
+			    const n = currentPathPoints.length;
+			    if (!isDrawing || n < 2) return;
+
+			    const needed = n * 2;
+			    if (inProgressBuf.length < needed) {
+			        // grow to next power-of-two-ish
+			        inProgressBuf = new Float32Array(needed * 2);
+			    }
+
+			    for (let i = 0, j = 0; i < n; i++) {
+			        const p = currentPathPoints[i];
+			        inProgressBuf[j++] = p.x;
+			        inProgressBuf[j++] = p.y;
+			    }
+
+			    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			    gl.bufferData(gl.ARRAY_BUFFER, inProgressBuf.subarray(0, needed), gl.DYNAMIC_DRAW);
 				gl.useProgram(lineProgram);
 				gl.enableVertexAttribArray(linePosLoc);
 				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
@@ -4261,20 +4639,27 @@
 				if (!isCircleDrawing || !currentCircle) return;
 				drawCircle(currentCircle);
 			}
-
+            const isIpad = document.querySelector(".window").classList.contains("ipad");
 			/* -----------------------------------
 			   ANIMATION LOOP
 			----------------------------------- */
+			if (isIpad) {
+			    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+			} else {
+			    gl.clearColor(0.75, 0.80, 0.67, 1.0);
+			}
+
+
 			function animate() {
-				gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
 				// Physics
 				chains.forEach((c, i) => simulateChain(c, i));
 				simulateInterChainRepulsion();
 				simulateCircleRepulsion();
 
 				// Clear & draw
-				gl.clearColor(1, 1, 1, 1);
-				gl.clear(gl.COLOR_BUFFER_BIT);
+
+				gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
 				drawGrid(20);
 
@@ -4313,7 +4698,7 @@
 				/* 3 ─ Shape Settings */
 				{
 					el: ".toolbar-section:nth-of-type(3)",
-					text: "Set colour, average blob size, and variation before each draw."
+					text: "Set colour and average blob size before each draw."
 				},
 
 				/* 4 ─ Canvas Tools */
@@ -4561,6 +4946,19 @@
 					v.textContent = s.value + "%";
 				});
 			}
+
+			// 6) Turgor Pressure slider (0..100 => 0..1)
+{
+  const s = $("turgorPressureSlider");
+  const v = $("turgorPressureValue");
+  s.value = Math.round(turgorPressure * 100);
+  v.textContent = s.value + "%";
+  s.addEventListener("input", () => {
+    turgorPressure = parseFloat(s.value) / 100;
+    v.textContent = s.value + "%";
+  });
+}
+
 
 			window.addEventListener("keydown", e => {
 				// ignore ⇧/⌥/⌘ combos and when user is typing in an input / textarea
