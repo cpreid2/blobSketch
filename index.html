@@ -2055,7 +2055,7 @@ input[type="range"]::-moz-range-thumb {
 		}
 
 		document.addEventListener("DOMContentLoaded", () => {
-			
+
 			/* -----------------------------------
 			   SHORTCUTS & UTILITIES
 			----------------------------------- */
@@ -2682,31 +2682,45 @@ input[type="range"]::-moz-range-thumb {
 					return; // stop further handling
 				}
 
-				if (dragMode) {
-					let bestChainIndex = null;
-					let bestDotIndex = null;
-					let bestDist = Infinity;
-					const pickRadius = 20;
+				const wantDrag = (dragMode || drawMode === "none");
 
-					for (let c = 0; c < chains.length; c++) {
-						const ch = chains[c].chain;
-						for (let i = 0; i < ch.length; i++) {
-							const dx = x - ch[i].x,
-								dy = y - ch[i].y;
-							const dist = Math.hypot(dx, dy);
-							if (dist < pickRadius && dist < bestDist) {
-								bestDist = dist;
-								bestChainIndex = c;
-								bestDotIndex = i;
-							}
-						}
-					}
-					if (bestChainIndex !== null) {
-						draggingChainIndex = bestChainIndex;
-						draggingDotIndex = bestDotIndex;
-						return; // we’re dragging; stop here
-					}
+				if (wantDrag) {
+				  // 1) Prefer dragging blob dots first
+				  let bestChainIndex = null;
+				  let bestDotIndex = null;
+				  let bestDist = Infinity;
+				  const pickRadius = 20;
+
+				  for (let c = 0; c < chains.length; c++) {
+				    const ch = chains[c].chain;
+				    for (let i = 0; i < ch.length; i++) {
+				      const dot = ch[i];
+				      const dx = x - dot.x;
+				      const dy = y - dot.y;
+				      const dist = Math.sqrt(dx * dx + dy * dy);
+				      if (dist < pickRadius && dist < bestDist) {
+				        bestDist = dist;
+				        bestChainIndex = c;
+				        bestDotIndex = i;
+				      }
+				    }
+				  }
+
+				  if (bestChainIndex !== null) {
+				    draggingChainIndex = bestChainIndex;
+				    draggingDotIndex = bestDotIndex;
+				    return;
+				  }
+
+				  // 2) Only if no blob dot was hit, allow circle dragging
+				  const circlePad = 3; // was effectively 5; smaller reduces accidental grabs
+				  const ci = pickCircleIndex(x, y, circlePad);
+				  if (ci !== null) {
+				    draggingCircleIndex = ci;
+				    return;
+				  }
 				}
+
 
 
 
@@ -2783,10 +2797,9 @@ input[type="range"]::-moz-range-thumb {
 					currentCircle.radius = Math.hypot(x - currentCircle.x, y - currentCircle.y);
 				}
 
-				// drag existing circle (when in circle+drag)
-				if (drawMode === 'circle' && dragMode && draggingCircleIndex !== null) {
-					circles[draggingCircleIndex].x = x;
-					circles[draggingCircleIndex].y = y;
+				if ((dragMode || drawMode === "none") && draggingCircleIndex !== null) {
+				  circles[draggingCircleIndex].x = x;
+				  circles[draggingCircleIndex].y = y;
 				}
 
 				// pin/drag hover highlight
@@ -3032,74 +3045,117 @@ input[type="range"]::-moz-range-thumb {
 				iconEl.classList.toggle("icon-active", isActive);
 			}
 
-			// Ensure only one edit tool is active at a time
-			function setEditTool(toolName) {
-				// If the requested tool is already active, we’ll toggle it off
-				const isAlreadyActive =
-					(toolName === "slice" && slicingMode) ||
-					(toolName === "drag" && dragMode) ||
-					(toolName === "pin" && pinMode) ||
-					(toolName === "freeze" && freezeMode) ||
-					(toolName === "delete" && deleteMode);
-
-				// First, turn everything off:
-				slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
-
-				// If the requested tool wasn’t already active, we turn it on:
-				if (!isAlreadyActive) {
-					if (toolName === "slice") slicingMode = true;
-					if (toolName === "drag") dragMode = true;
-					if (toolName === "pin") pinMode = true;
-					if (toolName === "freeze") freezeMode = true;
-					if (toolName === "delete") deleteMode = true;
-				}
-
-				const editFrame = $("editToolsSection");
-				const anyEditOn = slicingMode || dragMode || pinMode || freezeMode || deleteMode;
-				editFrame.classList.toggle("edit-on", anyEditOn);
-				// Update icon states accordingly:
-				setIconActive($("iconSlice"), slicingMode,
-					"Slicing Mode (On)", "Slicing Mode (Off)");
-				setIconActive($("iconDrag"), dragMode,
-					"Disable Drag Mode", "Enable Drag Mode");
-				setIconActive($("iconPin"), pinMode,
-					"Disable Pin Mode", "Enable Pin Mode");
-				setIconActive($("iconFreeze"), freezeMode,
-					"Disable Freeze Mode", "Enable Freeze Mode");
-				setIconActive($("iconDelete"), deleteMode,
-					"Disable Delete Mode", "Enable Delete Mode");
-				// Update the canvas cursor
-				updateCanvasCursor();
-
-				const msg = isAlreadyActive ? "Edit tools off" :
-					`Edit mode: ${toolName.toUpperCase()}`;
-				toast(msg, 1800);
+			function pickCircleIndex(x, y, pad = 5) {
+			  // iterate backwards so “topmost / newest” circle wins
+			  for (let i = circles.length - 1; i >= 0; i--) {
+			    const c = circles[i];
+			    if (Math.hypot(x - c.x, y - c.y) <= c.radius + pad) return i;
+			  }
+			  return null;
 			}
+
+
+			// Ensure only one edit tool is active at a time
+			function setEditTool(toolName, opts = {}) {
+			  const forceOn = !!opts.forceOn;
+
+			  const isAlreadyActive = !forceOn && (
+			    (toolName === "slice"  && slicingMode) ||
+			    (toolName === "drag"   && dragMode)    ||
+			    (toolName === "pin"    && pinMode)     ||
+			    (toolName === "freeze" && freezeMode)  ||
+			    (toolName === "delete" && deleteMode)
+			  );
+
+			  // Turn everything off first
+			  slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+
+			  // Turn the requested tool on (unless user toggled it off)
+			  if (forceOn || !isAlreadyActive) {
+			    if (toolName === "slice")  slicingMode = true;
+			    if (toolName === "drag")   dragMode = true;
+			    if (toolName === "pin")    pinMode = true;
+			    if (toolName === "freeze") freezeMode = true;
+			    if (toolName === "delete") deleteMode = true;
+			  }
+
+			  // ✅ If no draw mode is active, we ALWAYS fall back to drag
+			  const anyEditOn = slicingMode || dragMode || pinMode || freezeMode || deleteMode;
+
+				if (anyEditOn) {
+  // ✅ If any edit tool is active, drawing must be OFF
+  clearDrawModeUIOnly();
+}
+			  if (!anyEditOn && drawMode === "none") {
+			    dragMode = true;
+			  }
+
+			  // UI updates (same as your existing code)
+			  const editFrame = $("editToolsSection");
+			  editFrame.classList.toggle("edit-on", slicingMode || dragMode || pinMode || freezeMode || deleteMode);
+
+			  setIconActive($("iconSlice"),  slicingMode, "Slicing Mode (On)", "Slicing Mode (Off)");
+			  setIconActive($("iconDrag"),   dragMode,    "Disable Drag Mode", "Enable Drag Mode");
+			  setIconActive($("iconPin"),    pinMode,     "Disable Pin Mode",  "Enable Pin Mode");
+			  setIconActive($("iconFreeze"), freezeMode,  "Disable Freeze Mode","Enable Freeze Mode");
+			  setIconActive($("iconDelete"), deleteMode,  "Disable Delete Mode","Enable Delete Mode");
+
+			  updateCanvasCursor();
+
+			  const msg =
+			    forceOn ? "Drag mode" :
+			    (isAlreadyActive ? "Edit tools off" : `Edit mode: ${toolName.toUpperCase()}`);
+
+			  toast(msg, 1800);
+			}
+
 
 			/* -----------------------------------
 			   DRAW MODE: BLOB / LINE / CIRCLE
 			----------------------------------- */
-			function setDrawMode(mode) {
-				toggleActiveIcon($("iconBlob"), false);
-				toggleActiveIcon($("iconLine"), false);
-				toggleActiveIcon($("iconCircle"), false);
-
-				drawMode = mode;
-
-				toast(`Draw mode: ${mode.toUpperCase()}`, 1800);
-
-				if (mode === 'blob') {
-					toggleActiveIcon($("iconBlob"), true);
-				} else if (mode === 'line') {
-					toggleActiveIcon($("iconLine"), true);
-				} else if (mode === 'circle') {
-					toggleActiveIcon($("iconCircle"), true);
-				}
-				updateCanvasCursor();
+			function clearAllEditToolsUIOnly() {
+			  const editFrame = $("editToolsSection");
+			  editFrame.classList.remove("edit-on");
+			  setIconActive($("iconSlice"),  false, "Slicing Mode (On)", "Slicing Mode (Off)");
+			  setIconActive($("iconDrag"),   false, "Disable Drag Mode", "Enable Drag Mode");
+			  setIconActive($("iconPin"),    false, "Disable Pin Mode",  "Enable Pin Mode");
+			  setIconActive($("iconFreeze"), false, "Disable Freeze Mode","Enable Freeze Mode");
+			  setIconActive($("iconDelete"), false, "Disable Delete Mode","Enable Delete Mode");
 			}
-			// Initialize default draw mode
-			setDrawMode('blob');
 
+			function clearDrawModeUIOnly() {
+			  drawMode = "none";
+			  toggleActiveIcon($("iconBlob"), false);
+			  toggleActiveIcon($("iconLine"), false);
+			  toggleActiveIcon($("iconCircle"), false);
+			}
+
+
+			function setDrawMode(mode) {
+			  // Toggle: clicking the same draw mode turns drawing OFF
+			  drawMode = (drawMode === mode) ? "none" : mode;
+
+			  toggleActiveIcon($("iconBlob"),   drawMode === "blob");
+			  toggleActiveIcon($("iconLine"),   drawMode === "line");
+			  toggleActiveIcon($("iconCircle"), drawMode === "circle");
+
+			  if (drawMode === "none") {
+			    // ✅ When draw is off, drag becomes the default interaction
+			    setEditTool("drag", { forceOn: true });
+			    toast("Draw: OFF (Drag)", 1600);
+			  } else {
+			    // Entering a draw mode: turn off edit tools to avoid blocking drawing
+			    slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+			    clearAllEditToolsUIOnly();
+			    toast(`Draw mode: ${drawMode.toUpperCase()}`, 1600);
+			  }
+
+			  updateCanvasCursor();
+			}
+
+			// Initialize default draw mode
+			setDrawMode("none");
+			setDrawMode("blob");
 			/* -----------------------------------
 			   EDIT TOOL ICONS (now calling setEditTool)
 			----------------------------------- */
@@ -3181,20 +3237,8 @@ window.addEventListener("keydown", (e) => {
 			   DRAW MODE ICONS
 			----------------------------------- */
 			$("iconBlob").onclick = () => setDrawMode('blob');
-			$("iconLine").onclick = () => {
-				if (drawMode === "line") {
-					setDrawMode("blob");
-				} else {
-					setDrawMode("line");
-				}
-			};
-			$("iconCircle").onclick = () => {
-				if (drawMode === "circle") {
-					setDrawMode("blob");
-				} else {
-					setDrawMode("circle");
-				}
-			};
+			$("iconLine").onclick   = () => setDrawMode("line");
+			$("iconCircle").onclick = () => setDrawMode("circle");
 
 			/* -----------------------------------
 			   UPDATE CANVAS CURSOR
@@ -3479,10 +3523,11 @@ window.addEventListener("keydown", (e) => {
 				}
 
 				// If dragging an existing circle
-				if (drawMode === 'circle' && dragMode && draggingCircleIndex !== null) {
-					circles[draggingCircleIndex].x = currentMouseX;
-					circles[draggingCircleIndex].y = currentMouseY;
+				if ((dragMode || drawMode === "none") && draggingCircleIndex !== null) {
+				  circles[draggingCircleIndex].x = currentMouseX;
+				  circles[draggingCircleIndex].y = currentMouseY;
 				}
+
 
 				// Highlight nearest dot if pinMode/dragMode
 				if ((pinMode || dragMode) && (e.movementX || e.movementY)) {
@@ -3753,33 +3798,45 @@ window.addEventListener("keydown", (e) => {
 					return;
 				}
 
-				// Drag mode
-				if (dragMode) {
-					let bestChainIndex = null;
-					let bestDotIndex = null;
-					let bestDist = Infinity;
-					const pickRadius = 20;
+				const wantDrag = (dragMode || drawMode === "none");
 
-					for (let c = 0; c < chains.length; c++) {
-						const ch = chains[c].chain;
-						for (let i = 0; i < ch.length; i++) {
-							const dot = ch[i];
-							const dx = mouseX - dot.x;
-							const dy = mouseY - dot.y;
-							const dist = Math.sqrt(dx * dx + dy * dy);
-							if (dist < pickRadius && dist < bestDist) {
-								bestDist = dist;
-								bestChainIndex = c;
-								bestDotIndex = i;
-							}
-						}
-					}
-					if (bestChainIndex !== null) {
-						draggingChainIndex = bestChainIndex;
-						draggingDotIndex = bestDotIndex;
-						return;
-					}
-				}
+	if (wantDrag) {
+	  // 1) Prefer dragging blob dots first
+	  let bestChainIndex = null;
+	  let bestDotIndex = null;
+	  let bestDist = Infinity;
+	  const pickRadius = 20;
+
+	  for (let c = 0; c < chains.length; c++) {
+	    const ch = chains[c].chain;
+	    for (let i = 0; i < ch.length; i++) {
+	      const dot = ch[i];
+	      const dx = x - dot.x;
+	      const dy = y - dot.y;
+	      const dist = Math.sqrt(dx * dx + dy * dy);
+	      if (dist < pickRadius && dist < bestDist) {
+	        bestDist = dist;
+	        bestChainIndex = c;
+	        bestDotIndex = i;
+	      }
+	    }
+	  }
+
+	  if (bestChainIndex !== null) {
+	    draggingChainIndex = bestChainIndex;
+	    draggingDotIndex = bestDotIndex;
+	    return;
+	  }
+
+	  // 2) Only if no blob dot was hit, allow circle dragging
+	  const circlePad = 3; // was effectively 5; smaller reduces accidental grabs
+	  const ci = pickCircleIndex(x, y, circlePad);
+	  if (ci !== null) {
+	    draggingCircleIndex = ci;
+	    return;
+	  }
+	}
+
 
 				// Otherwise, if in blob or line mode, start freehand
 				if ((drawMode === 'blob' || drawMode === 'line') && !dragMode) {
