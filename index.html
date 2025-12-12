@@ -25,11 +25,11 @@ body {
 
 /* 2. Outer console shell (window) */
 .window {
-  width: 800px;
+  width: 760px;
   margin: 0;                        /* was: 0 auto */
   background: #e2dbc8;
   border-radius: 22px;
-  padding: 8px;
+  padding: 10px;
   border: 3px solid #6b6558;
   box-shadow:
     8px 10px 0 #000,
@@ -128,11 +128,29 @@ body {
   background-color: #e0d8c8;
 }
 
+/* Advanced sliders are hidden unless Advanced is enabled */
+.window:not(.advanced-on) #sliders > div.advanced-only {
+  display: none;
+}
+
+
+/* Make the Advanced toggle feel like a real mode button */
+#advancedToggle {
+  position: relative;
+}
+
+#advancedToggle.icon-active {
+  background-color: #d3d3d3;
+  box-shadow: inset 3px 3px 0 #000;
+}
+
 /* 4. Workspace Layout */
 .content {
   display: flex;
   gap: 21px;
-  margin-top: 12px;
+  margin-top: 14px;
+	margin-left: 4px;
+	margin-right: 12px;
 }
 
 /* 4-A Left console panel / toolbar shell */
@@ -144,7 +162,7 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
   border-radius: 12px;
   border: 3px solid #4b463f;
   box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
@@ -1625,6 +1643,8 @@ input[type="range"]::-moz-range-thumb {
 
 			}
 		}
+
+
 	</style>
 </head>
 
@@ -1667,8 +1687,9 @@ input[type="range"]::-moz-range-thumb {
 				<span id="menuHelp">Help</span>
 			</div>
 			<div class="title-actions">
-				<span id="resetIcon" class="reset-icon" title="Reset Canvas">🗑️</span>
+				<span id="advancedToggle" class="reset-icon" title="Show advanced sliders">⚙️</span>
 				<span id="notifToggle" class="reset-icon" title="Disable tips">🔔</span>
+				<span id="resetIcon" class="reset-icon" title="Reset Canvas">🗑️</span>
 			</div>
 		</div>
 
@@ -1778,7 +1799,7 @@ input[type="range"]::-moz-range-thumb {
 	<label for="turgorPressureSlider">Inflation: <span id="turgorPressureValue">0%</span></label>
 	<input type="range" id="turgorPressureSlider" min="0" max="100" value="0" step="1">
 </div>
-				<div>
+				<div  class="advanced-only">
 					<div class="help-icon-container">
 						<span class="help-icon">i</span>
 						<div class="help-tooltip">
@@ -1788,7 +1809,7 @@ input[type="range"]::-moz-range-thumb {
 					<label for="springConstantSlider">Stiffness: <span id="springConstantValue">30%</span></label>
 					<input type="range" id="springConstantSlider" min="0" max="100" value="30" step="1">
 				</div>
-				<div>
+				<div  class="advanced-only">
 					<div class="help-icon-container">
 						<span class="help-icon">i</span>
 						<div class="help-tooltip">
@@ -1798,7 +1819,7 @@ input[type="range"]::-moz-range-thumb {
 					<label for="repulsionConstantSlider">Chaos: <span id="repulsionConstantValue">10%</span></label>
 					<input type="range" id="repulsionConstantSlider" min="0" max="100" value="10" step="1">
 				</div>
-				<div>
+				<div  class="advanced-only">
 					<div class="help-icon-container">
 						<span class="help-icon">i</span>
 						<div class="help-tooltip">
@@ -2143,6 +2164,31 @@ input[type="range"]::-moz-range-thumb {
 					el.addEventListener("transitionend", () => el.remove(), { once: true });
 				}, ms);
 			}
+
+			/* ---------- advanced sliders toggle ---------- */
+			let advancedEnabled = false;
+
+			function setAdvancedEnabled(on) {
+			  advancedEnabled = !!on;
+
+			  const win = document.querySelector(".window");
+			  if (win) win.classList.toggle("advanced-on", advancedEnabled);
+
+			  const btn = $("advancedToggle");
+			  if (btn) {
+			    btn.classList.toggle("icon-active", advancedEnabled);
+			    btn.title = advancedEnabled ? "Hide advanced sliders" : "Show advanced sliders";
+			  }
+			}
+
+			const advBtn = $("advancedToggle");
+			if (advBtn) {
+			  advBtn.onclick = () => setAdvancedEnabled(!advancedEnabled);
+			}
+
+			/* default: Advanced OFF (only first three sliders visible) */
+			setAdvancedEnabled(false);
+
 
 			/* -----------------------------------
 			   SPLASH OVERLAY
