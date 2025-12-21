@@ -2572,11 +2572,7 @@ input[type="range"]::-moz-range-thumb {
 						tpSlider.value = 0;
 						tpValue.textContent = "0%";
 					}
-					if (!solidFillMode) {
-						solidFillMode = true;
-						$("iconFill").title = "Solid Fill On";
-						toggleActiveIcon($("iconFill"), true);
-					}
+
 					slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
 					$("editToolsSection").classList.remove("edit-on");
 					["iconSlice", "iconDrag", "iconPin", "iconFreeze", "iconDelete"]
