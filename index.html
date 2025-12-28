@@ -4784,45 +4784,74 @@ window.addEventListener("keydown", (e) => {
 					}
 				}
 
-				// Self repulsion - OPTIMIZED: use squared distances to avoid Math.sqrt
-				const minDSq = (dotR * 2) * (dotR * 2); // squared minimum distance
+				// Self repulsion - OPTIMIZED: Use spatial hashing to reduce O(n²) to ~O(n)
+				// This is THE critical optimization for many blobs (1000+)
+				const minD = dotR * 2;
+				const minDSq = minD * minD;
+				const selfHashCellSize = minD * 1.5; // Slightly larger than minD to catch all neighbors
+				const invCellSize = 1 / selfHashCellSize;
+				const selfHash = new Map();
+				
+				// Build spatial hash for this blob's vertices
 				for (let i = 0; i < arr.length; i++) {
-					const a = arr[i];
-					for (let j = i + 1; j < arr.length; j++) {
-						const b = arr[j];
-						const dx = b.x - a.x;
-						const dy = b.y - a.y;
-						const distSq = dx * dx + dy * dy;
+					const p = arr[i];
+					const cx = Math.floor(p.x * invCellSize);
+					const cy = Math.floor(p.y * invCellSize);
+					const key = hashKey(cx, cy);
+					if (!selfHash.has(key)) selfHash.set(key, []);
+					selfHash.get(key).push(i);
+				}
+				
+				// Only check vertices in same or neighboring cells (massive speedup!)
+				const checkedPairs = new Set(); // Avoid duplicate checks
+				for (let [key, indices] of selfHash) {
+					const [cx, cy] = unhashKey(key);
+					
+					// Check same cell and 8 neighbors
+					for (let [ox, oy] of [[0,0], [1,0], [-1,0], [0,1], [1,1], [-1,1], [0,-1], [1,-1], [-1,-1]]) {
+						const nKey = hashKey(cx + ox, cy + oy);
+						const neighborIndices = selfHash.get(nKey);
+						if (!neighborIndices) continue;
 						
-						// Early exit: only calculate sqrt if particles are close enough
-						if (distSq > 0 && distSq < minDSq) {
-							const dist = Math.sqrt(distSq);
-							const minD = dotR * 2;
-							const overlap = minD - dist;
-							const invDist = 1 / dist; // cache 1/dist instead of recalculating
-							const nx = dx * invDist;
-							const ny = dy * invDist;
-							const f = repulsionConstant * overlap;
-							forces[i].x -= f * nx;
-							forces[i].y -= f * ny;
-							forces[j].x += f * nx;
-							forces[j].y += f * ny;
+						for (let i of indices) {
+							for (let j of neighborIndices) {
+								if (i >= j) continue; // Only check each pair once
+								const pairKey = i < j ? (i << 16) | j : (j << 16) | i;
+								if (checkedPairs.has(pairKey)) continue;
+								checkedPairs.add(pairKey);
+								
+								const a = arr[i];
+								const b = arr[j];
+								const dx = b.x - a.x;
+								const dy = b.y - a.y;
+								const distSq = dx * dx + dy * dy;
+								
+								// Only process if close enough
+								if (distSq > 0 && distSq < minDSq) {
+									const dist = Math.sqrt(distSq);
+									const overlap = minD - dist;
+									const invDist = 1 / dist;
+									const nx = dx * invDist;
+									const ny = dy * invDist;
+									const f = repulsionConstant * overlap;
+									forces[i].x -= f * nx;
+									forces[i].y -= f * ny;
+									forces[j].x += f * nx;
+									forces[j].y += f * ny;
+								}
+							}
 						}
 					}
 				}
 
-				// Boundary push-back - OPTIMIZED: cache canvas dimensions
-				const canvasWidth = canvas.width;
-				const canvasHeight = canvas.height;
-				const rightBound = canvasWidth - dotR;
-				const bottomBound = canvasHeight - dotR;
+				// Boundary push-back
 				for (let i = 0; i < arr.length; i++) {
 					const a = arr[i];
 					if (a.x < dotR) forces[i].x += (dotR - a.x) * 0.5;
-					else if (a.x > rightBound) forces[i].x -= (a.x - rightBound) * 0.5;
+					else if (a.x > canvas.width - dotR) forces[i].x -= (a.x - (canvas.width - dotR)) * 0.5;
 
 					if (a.y < dotR) forces[i].y += (dotR - a.y) * 0.5;
-					else if (a.y > bottomBound) forces[i].y -= (a.y - bottomBound) * 0.5;
+					else if (a.y > canvas.height - dotR) forces[i].y -= (a.y - (canvas.height - dotR)) * 0.5;
 				}
 
 				// --- Internal vs External Pressure Equilibrium (runaway-proof) ---
