@@ -1,0 +1,5969 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>blobSketch version 1.31</title>
+
+	<style>
+	/* ---------- Desktop defaults: Retro Beige Console ---------- */
+
+/* 1. Base / Reset */
+body {
+  margin: 0;
+  padding: 14px;
+  font-family: "Courier New", monospace;
+  background-color: #6e6b60;        /* console background */
+  color: #000;
+  display: flex;
+  justify-content: center;          /* center .window horizontally */
+  align-items: flex-start;          /* keep it near the top vertically */
+  min-height: 100vh;                /* so flex centering works */
+	  overflow: hidden;
+}
+
+
+/* 2. Outer console shell (window) */
+.window {
+  width: 760px;
+  margin: 0;                        /* was: 0 auto */
+  background: #e2dbc8;
+  border-radius: 22px;
+  padding: 8px;
+  border: 3px solid #6b6558;
+  box-shadow:
+    8px 10px 0 #000,
+    inset -3px -3px 6px rgba(0,0,0,0.5);
+  position: relative;
+}
+
+
+/* 3. Title-bar & Menu (kept, but styled to match console rim) */
+.title-bar {
+  background: #d3cbb7;
+  border-bottom: 3px solid #4b463f;
+  padding: 4px 8px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+  z-index: 2000;
+  border-radius: 10px 10px 4px 4px;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+}
+
+.menu-bar {
+  display: flex;
+  gap: 16px;
+}
+
+.menu-bar span {
+  font-weight: bold;
+  cursor: pointer;
+  position: relative;
+}
+
+.menu-bar span:hover {
+  text-decoration: underline;
+}
+
+/* dropdowns still work; just recolor to match beige */
+.submenu {
+  display: none;
+  position: absolute;
+  top: 22px;
+  left: 0;
+  background-color: #f3ecda;
+  border: 2px solid #4b463f;
+  padding: 4px;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 999;
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 #000;
+}
+
+.submenu span {
+  display: block;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.submenu span:hover {
+  background-color: #e0d8c8;
+}
+
+#exportSubmenu {
+  width: 160px;
+}
+#fileSubmenu {
+  width: 200px;
+}
+
+/* Title-bar right-side actions */
+.title-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+}
+
+.reset-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 24px;
+  padding: 0 8px;
+  font-weight: bold;
+  font-size: 18px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  background: #f7f2e4;
+  border: 2px solid #000;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.reset-icon:hover {
+  background-color: #e0d8c8;
+}
+
+/* 4. Workspace Layout */
+.content {
+  display: flex;
+  gap: 21px;
+  margin-top: 12px;
+	  margin-left: 10px;
+	  margin-right: 8px;
+}
+
+/* 4-A Left console panel / toolbar shell */
+.toolbar {
+  width: 180px;
+  border-right: none;
+  background: #ddd6c5;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-radius: 12px;
+  border: 3px solid #4b463f;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+}
+
+/* 4-B Panel sections (Draw, Edit, Shape, Canvas) */
+.toolbar-section {
+  border-radius: 6px;
+  background: #f3ecda;
+  border: 1px solid #4b463f;
+  padding: 8px;
+  margin: 0;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
+  display: flex;                    /* NEW */
+  flex-direction: column;           /* NEW */
+}
+
+
+
+
+.toolbar-section h4 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: bold;
+  text-align: left;
+  background: #3c3c3c;
+  color: #fff;
+  border-radius: 3px;
+  padding: 3px 6px;
+  border: none;
+}
+
+.toolbar-section .icon-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;          /* NEW: center horizontally */
+  align-items: center;              /* NEW: center vertically in the section */
+  flex: 1;                          /* take remaining height so centering is obvious */
+}
+
+/* Edit tools neon outline when active group is engaged - removed red highlight */
+
+/* 4-C Icon buttons – 3D beige console style */
+.icon {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #000;
+  background: #fffdfa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  user-select: none;
+  font-weight: normal;
+  position: relative;
+  border-radius: 6px;
+  box-shadow: 3px 3px 0 #000;
+  overflow: visible;
+}
+
+.icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* Active icon: keep ON badge but allow rim tweak if desired */
+#iconFill.icon-active {
+  background-color: #d3d3d3;
+  font-weight: bold;
+}
+
+/* “ON” label */
+.icon.icon-active::after {
+  content: "ON";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #ff0;
+  color: #000;
+  font-size: 10px;
+  font-weight: bold;
+  border: 1px solid #000;
+  padding: 2px 4px;
+  border-radius: 4px;
+  box-shadow: 2px 2px 0px #000;
+  z-index: 1555;
+}
+
+/* Pressed / active state 3D effect */
+.icon:active {
+  box-shadow: inset 3px 3px 0 #000;
+  background: #e0d8c8;
+}
+
+/* Keyboard focus */
+.icon:focus-visible {
+  outline: 3px solid #ffbf00;
+}
+
+/* small tooltip under icons */
+.icon[data-label]::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  translate: -50% 0;
+  font: 12px "Courier New", monospace;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+  z-index: 10000;
+}
+
+.icon:hover::before,
+.icon:focus-visible::before {
+  opacity: 1;
+}
+
+/* 4-D Shape settings mini-panel */
+.shape-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.shape-settings label {
+  font-size: 12px;
+  text-align: center;
+  display: block;
+}
+
+.shape-settings input[type="color"],
+.shape-settings input[type="number"] {
+  margin-top: 2px;
+  width: 40px;
+  min-width: 0;
+}
+
+.window.ipad input[type="color"] {
+  border: 1px solid;
+  padding: 0;
+}
+
+/* 5. Main Drawing Area – CRT-style screen */
+.main-area {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;              /* horizontal center */
+  justify-content: center;          /* vertical center */
+}
+
+
+/* Screen bezel */
+.main-area::before {
+  content: "";
+  display: block;
+}
+
+/* Screen wrapper look using the canvas itself + padding */
+#glCanvas {
+  width: 500px;
+  height: 500px;
+  border-radius: 6px;
+  border: 3px solid #000;
+  background:
+    repeating-linear-gradient(
+      to right,
+      #000 0,
+      #000 1px,
+      #adb79a 1px,
+      #adb79a 24px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      #000 0,
+      #000 1px,
+      #adb79a 1px,
+      #adb79a 24px
+    );
+  display: block;
+  margin: 0 auto 8px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+  box-shadow:
+    0 0 0 6px #4b463f
+}
+
+
+/* 6. Bottom Slider Panel – console lower bay */
+.bottom-panel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  border-top: 4px solid #6b6558;
+  padding: 4px;
+  background: #d6cfbe;
+  text-align: center;
+  border-radius: 12px;
+  margin-top: 18px;
+  box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+/* Drum Pad Styles */
+.drum-pad {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 3px solid #000;
+  background: #f7f2e4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  user-select: none;
+  position: relative;
+  box-shadow: 4px 4px 0 #000;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.drum-pad:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 #000;
+}
+
+.drum-pad:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.drum-pad.active {
+  background: #ffd700;
+  animation: drumPadPulse 0.3s ease-out;
+}
+
+@keyframes drumPadPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.drum-pad-label {
+  font-family: "Courier New", monospace;
+  color: #000;
+  text-align: center;
+}
+
+#sliders > div {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+/* labels */
+#sliders label {
+  width: 250px;
+  text-align: center;
+  margin-right: 8px;
+	color: #1a1a1a;
+font-weight: 700;
+letter-spacing: 0.7px;
+-webkit-text-stroke: 0.4px #000;
+}
+
+#sliders label span {
+  display: inline-block;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
+/* range track + thumb: 3D hardware slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 300px;
+  background: #efe7d4;
+  border: 3px solid #000;
+  height: 16px;
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 28px;
+  background: #b0a999;
+  border: 3px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: -8px;
+  box-shadow: 3px 3px 0 #000;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 26px;
+  background: #b0a999;
+  border: 3px solid #000;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #000;
+}
+
+/* 7. Dialogs & Modals (desktop look, keep behavior) */
+.dialog-backdrop {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  z-index: 5000;
+}
+
+.dialog-content {
+  background-color: #f3ecda;
+  border: 3px solid #4b463f;
+  padding: 16px;
+  min-width: 200px;
+  text-align: center;
+  box-shadow: 4px 4px 0px #000;
+  font-family: "Courier New", monospace;
+  border-radius: 8px;
+}
+
+.dialog-content button {
+  margin-top: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 2px solid #000;
+  background: #f7f2e4;
+  box-shadow: 2px 2px 0 #000;
+}
+
+/* Appearance Dialog Styles */
+.appearance-dialog {
+  min-width: 500px;
+  max-width: 600px;
+}
+
+.appearance-dialog-content {
+  display: flex;
+  gap: 20px;
+  margin: 16px 0;
+}
+
+.appearance-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.appearance-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.appearance-control-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.appearance-control-group input[type="range"] {
+  width: 100%;
+}
+
+.appearance-preview {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.appearance-preview h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+#appearancePreviewCanvas {
+  border: 2px solid #4b463f;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.appearance-dialog-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.appearance-dialog-buttons button {
+  margin-top: 0;
+  padding: 6px 16px;
+}
+
+/* 8. Splash Overlay */
+#splashOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+#splashOverlay img {
+  max-width: 50%;
+  max-height: 50%;
+  pointer-events: none;
+  margin-bottom: 50px;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 0px;
+}
+
+.splashText {
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  background-color: #d3cbb7;
+  padding: 8px 12px;
+  border: 2px solid #000;
+  box-shadow: 4px 4px 0px #000;
+  user-select: none;
+}
+
+/* 9. Help Icon & Tooltip */
+.inline-icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin: 0 4px;
+}
+
+.help-icon-container {
+  position: relative;
+  display: inline-block;
+}
+
+.help-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #d3cbb7;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 20px;
+  cursor: help;
+  user-select: none;
+}
+
+.help-tooltip {
+  display: none;
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  min-width: 120px;
+  background-color: #f3ecda;
+  color: #000;
+  border: 1px solid #000;
+  padding: 4px;
+  font-size: 12px;
+  box-shadow: 4px 4px 0 #000;
+  z-index: 999999;
+}
+
+.help-icon-container:hover .help-tooltip {
+  display: block;
+  z-index: 99999;
+}
+
+/* 10. Cursor Modes (unchanged behavior) */
+.canvas-blob-mode {
+  cursor: url("images/pencil.png"), auto;
+}
+.canvas-line-mode {
+  cursor: url("images/pencil.png"), auto;
+}
+.canvas-circle-mode {
+  cursor: url("images/CircleCursor.png"), auto;
+}
+.canvas-drag-mode {
+  cursor: url("images/glove.png"), auto;
+}
+.canvas-pin-mode {
+  cursor: url("images/PinCursor.png"), auto;
+}
+.canvas-slicing-mode {
+  cursor: url("images/trim.png"), auto;
+}
+.canvas-freeze-mode {
+  cursor: url("images/FreezeCursor.png"), auto;
+}
+.canvas-delete-mode {
+  cursor: url("images/DeleteCursor.png"), auto;
+}
+
+#iconSlice {
+    display: none !important;
+}
+
+/* 11. Mobile-only Warning (kept as-is) */
+#mobileWarning {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  color: #000;
+  font-family: sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+/* 12. Toast notifications (keep placement, recolor) */
+#toastStack {
+  position: absolute;
+  top: 48px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  pointer-events: none;
+  z-index: 2000;
+}
+
+.toast {
+  font: 14px "Courier New", monospace;
+  background: #000;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity .2s, transform .2s;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.toast.show {
+  opacity: .9;
+  transform: translateY(0);
+}
+
+/* 13. Guided tour highlight (unchanged) */
+#tourOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  z-index: 3000;
+  pointer-events: none;
+}
+
+#tourTip {
+  position: fixed;
+  z-index: 3001;
+  max-width: 320px;
+  font: 13px "Courier New", monospace;
+  background: #f3ecda;
+  color: #000;
+  border: 2px solid #000;
+  border-radius: 6px;
+  padding: 10px 12px;
+  box-shadow: 4px 4px 0 #000;
+}
+
+#tourCtrls {
+  margin-top: 8px;
+  text-align: right;
+}
+
+#tourCtrls button {
+  font: inherit;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+.tour-highlight {
+  outline: 3px solid #ffe600 !important;
+  box-shadow: 0 0 8px 3px #ffe600 !important;
+}
+
+/* 14. Presets gallery (frame matches console) */
+.presets-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+  padding: 4px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.preset-card {
+  aspect-ratio: 1/1;
+  background: #fafafa;
+  border: 2px solid #000;
+  box-shadow: 3px 3px 0 #000;
+  position: relative;
+  transition: transform .15s, box-shadow .15s;
+}
+
+.preset-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 5px 5px 0 #000;
+}
+
+.preset-card:active {
+  transform: translateY(0);
+}
+
+.preset-card img,
+.preset-card svg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.preset-card figcaption {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .58);
+  color: #fff;
+  font: 12px "Courier New", monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.preset-card:hover figcaption {
+  opacity: 1;
+}
+
+.preset-card.card-selected {
+  outline: 3px solid #ffe600;
+  box-shadow: 0 0 10px 3px #ffe600;
+  transform: none;
+}
+
+
+		/* ---------- iPad overrides (full ipad.css wrapped; no transformation) ---------- */
+		@supports (-webkit-touch-callout: none) {
+			@media (hover: none) and (pointer: coarse) {
+
+				/* =========================================================
+ BlobSketch CSS — Modern iPad Full-Screen Layout
+ ========================================================= */
+
+				/* ------------------ 0. Tokens / Theme ------------------ */
+				:root {
+					/* Modern palette */
+					--bg: #ffffff;
+					--panel: rgba(255, 255, 255, 0.95);
+					--panel-2: rgba(255, 255, 255, 0.9);
+					--panel-glass: rgba(255, 255, 255, 0.1);
+					--panel-glass-border: rgba(255, 255, 255, 0.2);
+					--text: #1a1a1a;
+					--muted: #6b7280;
+					--accent: #3b82f6;
+					--accent-hover: #2563eb;
+					--border: rgba(0, 0, 0, 0.08);
+					--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+					--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+					--shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+					--shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+					--backdrop-blur: blur(20px);
+					--backdrop-blur-strong: blur(24px);
+
+					/* Sizing */
+					--radius-sm: 8px;
+					--radius-md: 12px;
+					--radius-lg: 16px;
+					--radius-xl: 20px;
+					--gap-1: 8px;
+					--gap-2: 12px;
+					--gap-3: 16px;
+
+					/* Icon */
+					--icon-size: 44px;
+
+					/* Panel widths */
+					--panel-left-width: calc(var(--icon-size) + var(--gap-2) * 2); /* Single icon width */
+					--panel-bottom-height: 200px; /* Increased to fit all sliders */
+
+					/* Z-index */
+					--z-submenu: 100900;
+					--z-dialog: 2000;
+					--z-splash: 9999;
+					--z-panel: 100;
+					--z-toggle: 200;
+				}
+
+				/* ------------------ 1. Base / Reset ------------------ */
+				* {
+					box-sizing: border-box;
+				}
+
+				html,
+				body {
+					height: 100%;
+					overflow: hidden;
+				}
+
+				body {
+					margin: 0;
+					padding: 0;
+					background: var(--bg);
+					color: var(--text);
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+				}
+
+				img {
+					max-width: 100%;
+					display: block;
+				}
+
+				button {
+					font: inherit;
+					cursor: pointer;
+				}
+
+				/* Prevent gesture scrolling on canvas-driven apps where needed */
+				#glCanvas {
+					-webkit-user-select: none;
+					-moz-user-select: none;
+					user-select: none;
+					-webkit-user-drag: none;
+					touch-action: none;
+				}
+
+				/* ------------------ 2. App Shell ------------------ */
+				.window {
+					width: min(1100px, 96vw);
+					margin: 28px auto;
+					background: var(--panel);
+					border: 1px solid var(--border);
+					border-radius: 14px;
+					box-shadow: 0 12px 28px rgba(0, 0, 0, 0.10);
+					position: relative;
+					overflow: clip;
+				}
+
+				.title-bar {
+					height: 48px;
+					padding: 8px 12px;
+					display: flex;
+					align-items: center;
+					gap: 12px;
+					background: linear-gradient(180deg, #ffffff, #f5f6f8);
+					border-bottom: 1px solid var(--border);
+				}
+
+				.menu-bar {
+					display: flex;
+					gap: 16px;
+				}
+
+				.menu-bar span {
+					font-weight: 600;
+					cursor: pointer;
+					position: relative;
+				}
+
+				.menu-bar span:hover {
+					text-decoration: underline;
+				}
+
+
+
+				.title-actions {
+					margin-left: auto;
+					/* <-- pushes to the far right */
+					display: flex;
+					align-items: center;
+					gap: 8px;
+				}
+
+				/* Make the icons render tightly without extra width */
+				.reset-icon {
+					display: inline-flex;
+					align-items: center;
+					justify-content: center;
+					width: 32px;
+					height: 32px;
+					padding: 0;
+					margin-left: auto;
+					font-weight: bold;
+					font-size: 18px;
+					user-select: none;
+					}
+
+				/* Submenus */
+				.submenu {
+					display: none;
+					position: absolute;
+					top: 24px;
+					left: 0;
+					min-width: 160px;
+					background: var(--panel-2);
+					border: 1px solid var(--border);
+					border-radius: 10px;
+					padding: 8px;
+					z-index: var(--z-submenu);
+				}
+
+				.submenu span {
+					display: block;
+					padding: 4px 6px;
+					border-radius: var(--radius-sm);
+					cursor: pointer;
+				}
+
+				.submenu span:hover {
+					background: rgba(0, 0, 0, .04);
+				}
+
+				/* Content columns (Desktop default) */
+				.content {
+					display: grid;
+					grid-template-columns: 260px 1fr;
+					gap: var(--gap-3);
+					padding: var(--gap-3);
+				}
+
+				/* ------------------ 3. Toolbar & Sections ------------------ */
+				.toolbar {
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-3);
+					background: transparent;
+					border: 0;
+					padding: 0;
+				}
+
+				.toolbar-section {
+					background: var(--panel-2);
+					border: 1px solid var(--border);
+					border-radius: var(--radius-lg);
+					padding: 10px;
+				}
+
+				.toolbar-section h4 {
+					margin: 0 0 8px;
+					font-size: 12px;
+					font-weight: 600;
+					color: var(--muted);
+				}
+
+				.toolbar-section .icon-group {
+					display: flex;
+					flex-wrap: wrap;
+					gap: var(--gap-1);
+				}
+
+				/* Edit tools "glow" when active group is engaged - removed red highlight */
+				#editToolsSection.edit-on {
+					/* Red highlight removed */
+				}
+
+				/* ------------------ 4. Icons ------------------ */
+				.icon {
+					width: var(--icon-size);
+					height: var(--icon-size);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					border-radius: var(--radius-md);
+					border: 1px solid rgba(0, 0, 0, 0.12);
+					background: #f7f8fa;
+					/* light tile */
+					box-shadow:
+						0 1px 0 rgba(255, 255, 255, 0.7) inset,
+						0 8px 18px rgba(0, 0, 0, 0.08);
+					transition: transform .12s ease;
+					position: relative;
+					user-select: none;
+				}
+
+				.icon:hover {
+					transform: translateY(-1px);
+				}
+
+				.icon img {
+					width: 100%;
+					height: 100%;
+					object-fit: contain;
+					border-radius: inherit;
+					filter: none;
+					position: relative;
+					z-index: 0;
+					/* preserve dark glyphs */
+				}
+
+				/* Active icon rim */
+				.icon.icon-active {
+					background: #ffffff;
+					border-color: rgba(37, 99, 235, 0.35);
+					box-shadow:
+						0 0 0 1px rgba(37, 99, 235, 0.18) inset,
+						0 10px 22px rgba(37, 99, 235, 0.12);
+				}
+
+				/* Optional “ON” badge */
+				.icon.icon-active::after {
+					content: "ON";
+					position: absolute;
+					top: -10px;
+					right: -6px;
+					font-size: 8px;
+					font-weight: 700;
+					color: #000;
+					background: #ff0;
+					border: 1px solid #000;
+					border-radius: 4px;
+					padding: 2px 4px;
+					box-shadow: 2px 2px 0 #000;
+					z-index: 100;
+				}
+
+				/* Tooltip label under icon (on hover/focus) */
+				.icon[data-label]::before {
+					content: attr(data-label);
+					position: absolute;
+					bottom: -24px;
+					left: 50%;
+					transform: translateX(-50%);
+					font: 12px "Courier New", monospace;
+					color: #fff;
+					background: #111317;
+					border: 1px solid rgba(255, 255, 255, 0.18);
+					padding: 2px 6px;
+					border-radius: var(--radius-sm);
+					white-space: nowrap;
+					pointer-events: none;
+					opacity: 0;
+					transition: opacity .15s;
+					z-index: 10000;
+				}
+
+				.icon:hover::before,
+				.icon:focus-visible::before {
+					opacity: 1;
+				}
+
+				/* iPad: Tooltip to the right of icon - allow overflow onto canvas */
+				.window.ipad .icon[data-label]::before {
+					position: fixed;
+					bottom: auto;
+					display: none;
+					top: auto;
+					transform: translateY(-50%);
+					margin-left: 0px;
+					white-space: nowrap;
+					z-index: -1; /* Higher than panel z-index to appear on top of canvas */
+					/* Keep absolute positioning but ensure parent allows overflow */
+				}
+				
+				/* Ensure icon container allows tooltip overflow */
+				.window.ipad .icon-group {
+					overflow: visible;
+				}
+				
+				.window.ipad .toolbar-section {
+					overflow: visible;
+				}
+
+				.icon:focus-visible {
+					outline: 2px solid var(--accent);
+					outline-offset: 2px;
+				}
+
+				/* ------------------ 5. Main Drawing Area ------------------ */
+				.main-area {
+					background: var(--panel);
+					padding: 8px;
+					border-radius: var(--radius-lg);
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+				}
+
+				#glCanvas {
+					width: 500px;
+					height: 500px;
+					background: #fff;
+					border: 1px solid var(--border);
+					border-radius: var(--radius-lg);
+					display: block;
+					margin-bottom: 16px;
+				}
+
+				/* ------------------ 6. Bottom Sliders Panel ------------------ */
+				.bottom-panel {
+					background: var(--panel);
+					border-top: 1px solid var(--border);
+					padding: 10px 12px;
+					text-align: start;
+					display: flex;
+					flex-direction: column;
+					align-items: stretch;
+					justify-content: flex-start;
+					/* was inheriting center from the base rule */
+				}
+
+				#sliders {
+					display: grid;
+					align-content: start;
+					/* prevents “sag” inside a tall panel */
+					gap: var(--gap-2);
+				}
+
+				/* One row per control: label | (optional help) | input */
+				#sliders>div {
+					display: grid;
+					grid-template-columns: max-content max-content 1fr;
+					align-items: center;
+					/* top-align in grid cells */
+					column-gap: 10px;
+				}
+
+				/* Keep the info "i" a fixed square and stop stretching */
+				#sliders .help-icon-container {
+					justify-self: start;
+				}
+
+				#sliders .help-icon {
+					width: 16px;
+					height: 16px;
+					line-height: 16px;
+				}
+
+				#sliders label {
+					width: 220px;
+					text-align: right;
+					color: var(--muted);
+					white-space: nowrap;
+				}
+
+				/* Shape-settings: Color + Size side by side */
+				.shape-settings {
+					display: flex;
+					align-items: center;
+					gap: 8px;
+					flex-direction: row;
+					flex-wrap: nowrap;
+					/* keep them on one row */
+				}
+
+				.shape-settings label {
+					margin: 0;
+					font-size: 12px;
+					white-space: nowrap;
+					/* prevent wrapping */
+					text-align: left;
+					display: inline-block;
+				}
+
+				.shape-settings input[type="color"],
+				.shape-settings input[type="number"] {
+					margin-top: 0;
+					width: auto;
+					min-width: 60px;
+					/* avoids collapse on iPad */
+				}
+
+				/* iPad override: still side by side */
+				.window.ipad .shape-settings {
+					flex-wrap: nowrap;
+				}
+
+				/* Range input */
+				input[type="range"] {
+					-webkit-appearance: none;
+					width: 100%;
+					height: 8px;
+					background: #fff;
+					border: 1px solid var(--border);
+					border-radius: 999px;
+
+				}
+
+				input[type="range"]::-webkit-slider-thumb {
+					-webkit-appearance: none;
+					width: 16px;
+					height: 16px;
+					border-radius: 50%;
+					background: var(--accent);
+					border: none;
+					margin-top: -5px;
+				}
+
+				input[type="range"]::-moz-range-thumb {
+					width: 16px;
+					height: 16px;
+					border-radius: 50%;
+					background: var(--accent);
+					border: none;
+				}
+
+				/* ------------------ 7. Overlays / Dialogs / Toasts ------------------ */
+				.dialog-backdrop {
+					display: none;
+					position: fixed;
+					inset: 0;
+					background: rgba(0, 0, 0, .55);
+					justify-content: center;
+					align-items: center;
+					z-index: var(--z-dialog);
+				}
+
+				.dialog-content {
+					background: var(--panel-2);
+					color: var(--text);
+					border: 1px solid var(--border);
+					border-radius: var(--radius-lg);
+					padding: 16px;
+					min-width: 200px;
+					text-align: center;
+					box-shadow: 0 16px 40px rgba(0, 0, 0, .5);
+				}
+
+				/* Splash */
+				#splashOverlay {
+					position: absolute;
+					inset: 0;
+					background-color: rgba(255, 255, 255, 0.8);
+					display: none;
+					/* hidden by default; toggle via JS */
+					flex-direction: column;
+					align-items: center;
+					justify-content: center;
+					z-index: var(--z-splash);
+					cursor: pointer;
+				}
+
+				#splashOverlay img {
+					max-width: 50%;
+					max-height: 50%;
+					margin-bottom: 50px;
+					border: 2px solid #000;
+					border-radius: var(--radius-sm);
+				}
+
+				/* Help tooltip bubble */
+				.help-icon-container {
+					position: relative;
+					display: inline-block;
+					z-index:9999;
+				}
+
+				.help-icon {
+					width: 16px;
+					height: 16px;
+					line-height: 16px;
+					text-align: center;
+					border-radius: 50%;
+					background: #e6e7ea;
+					border: 1px solid #000;
+					color: #000;
+					font-size: 12px;
+					font-weight: bold;
+					user-select: none;
+					cursor: help;
+				}
+
+				.help-tooltip {
+					display: none;
+					position: absolute;
+					bottom: 20px;
+					left: 0;
+					min-width: 120px;
+					padding: 4px;
+					font-size: 12px;
+					color: var(--text);
+					background: var(--panel-2);
+					border: 1px solid var(--border);
+					box-shadow: 0 12px 28px rgba(0, 0, 0, .35);
+					z-index: var(--z-splash);
+				}
+
+				.help-icon-container:hover .help-tooltip {
+					display: block;
+					z-index: 99999;
+				}
+
+				/* Toasts */
+				#toastStack {
+					position: absolute;
+					top: 48px;
+					right: 10px;
+					display: flex;
+					flex-direction: column;
+					gap: 8px;
+					align-items: flex-end;
+					pointer-events: none;
+					z-index: 2000;
+				}
+
+				.toast {
+					font: 14px "Courier New", monospace;
+					background: #0f1115;
+					color: #fff;
+					border: 1px solid var(--border);
+					border-radius: 10px;
+					padding: 6px 10px;
+					opacity: 0;
+					transform: translateY(-8px);
+					transition: opacity .2s, transform .2s;
+				}
+
+				.toast.show {
+					opacity: .9;
+					transform: translateY(0);
+				}
+
+				/* Guided tour */
+				#tourOverlay {
+					position: fixed;
+					inset: 0;
+					background: rgba(0, 0, 0, .55);
+					z-index: 3000;
+					pointer-events: none;
+				}
+
+				#tourTip {
+					position: fixed;
+					z-index: 3001;
+					max-width: 320px;
+					background: #fff;
+					color: #000;
+					border: 2px solid #000;
+					border-radius: var(--radius-sm);
+					padding: 10px 12px;
+					box-shadow: 4px 4px 0 #000;
+					font: 13px "Courier New", monospace;
+				}
+
+				#tourCtrls {
+					margin-top: 8px;
+					text-align: right;
+				}
+
+				#tourCtrls button {
+					margin-left: 4px;
+				}
+
+				.tour-highlight {
+					outline: 3px solid #ffe600 !important;
+					box-shadow: 0 0 8px 3px #ffe600 !important;
+				}
+
+				/* Presets gallery */
+				.presets-gallery {
+					display: grid;
+					grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+					gap: 12px;
+					padding: 4px;
+					max-height: 60vh;
+					overflow-y: auto;
+				}
+
+				.preset-card {
+					aspect-ratio: 1/1;
+					background: #fafafa;
+					border: 2px solid #000;
+					box-shadow: 3px 3px 0 #000;
+					position: relative;
+					transition: transform .15s, box-shadow .15s;
+				}
+
+				.preset-card:hover {
+					transform: translateY(-3px);
+					box-shadow: 5px 5px 0 #000;
+				}
+
+				.preset-card:active {
+					transform: translateY(0);
+				}
+
+				.preset-card img,
+				.preset-card svg {
+					width: 100%;
+					height: 100%;
+					object-fit: cover;
+					display: block;
+				}
+
+				.preset-card figcaption {
+					position: absolute;
+					inset: 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					color: #fff;
+					background: rgba(0, 0, 0, .58);
+					padding: 4px;
+					text-align: center;
+					font: 12px "Courier New", monospace;
+					opacity: 0;
+					transition: opacity .15s;
+				}
+
+				.preset-card:hover figcaption {
+					opacity: 1;
+				}
+
+				.preset-card.card-selected {
+					outline: 3px solid #ffe600;
+					box-shadow: 0 0 10px 3px #ffe600;
+				}
+
+				/* Cursor modes (unchanged) */
+				.canvas-blob-mode {
+					cursor: url("images/pencil.png"), auto;
+				}
+
+				.canvas-line-mode {
+					cursor: url("images/pencil.png"), auto;
+				}
+
+				.canvas-circle-mode {
+					cursor: url("images/CircleCursor.png"), auto;
+				}
+
+				.canvas-drag-mode {
+					cursor: url("images/glove.png"), auto;
+				}
+
+				.canvas-pin-mode {
+					cursor: url("images/PinCursor.png"), auto;
+				}
+
+				.canvas-slicing-mode {
+					cursor: url("images/trim.png"), auto;
+				}
+
+				.canvas-freeze-mode {
+					cursor: url("images/FreezeCursor.png"), auto;
+				}
+
+				.canvas-delete-mode {
+					cursor: url("images/DeleteCursor.png"), auto;
+				}
+
+				/* Optional page-wide mobile notice (if you still use it) */
+				#mobileWarning {
+					position: fixed;
+					inset: 0;
+					display: none;
+					background: #fff;
+					color: #000;
+					padding: 20px;
+					align-items: center;
+					justify-content: center;
+					text-align: center;
+					z-index: 10000;
+				}
+
+				/* ------------------ 8. iPad Full-Screen Layout ------------------ */
+				.window.ipad {
+					width: 100%;
+					height: 100dvh;
+					margin: 0;
+					border-radius: 0;
+					border: 0;
+					box-shadow: none;
+					background: var(--bg);
+					position: fixed;
+					inset: 0;
+					overflow: hidden;
+					display: block;
+				}
+
+				/* Title bar on iPad - compact floating style */
+				.window.ipad .title-bar {
+					position: fixed;
+					top: 0;
+					left: 0;
+					right: 0;
+					height: 44px;
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur-strong);
+					-webkit-backdrop-filter: var(--backdrop-blur-strong);
+					border-bottom: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-md);
+					z-index: var(--z-toggle);
+					padding: 4px 8px;
+					display: flex;
+					align-items: center;
+					gap: 12px;
+				}
+
+				.window.ipad .menu-bar {
+					display: flex;
+					gap: 12px;
+					flex-wrap: wrap;
+				}
+
+				.window.ipad .menu-bar span {
+					font-size: 13px;
+					font-weight: 600;
+				}
+
+				.window.ipad .title-actions {
+					margin-left: auto;
+					display: flex;
+					gap: 6px;
+				}
+
+				.window.ipad .reset-icon {
+					width: 28px;
+					height: 28px;
+					font-size: 16px;
+				}
+
+				/* Ensure submenus appear above toggle buttons on iPad */
+				.window.ipad .submenu {
+					z-index: 1000; /* Higher than toggle button (200) */
+				}
+
+				/* Full-screen canvas container */
+				.window.ipad .content {
+					position: absolute;
+					top: 44px; /* Below title bar */
+					left: 0;
+					right: 0;
+					bottom: 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 0;
+					margin: 0;
+				}
+
+				.window.ipad .main-area {
+					position: absolute;
+					inset: 0;
+					width: 100%;
+					height: 100%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 0;
+					background: transparent;
+				}
+
+				/* Canvas - full screen */
+				.window.ipad #glCanvas {
+					width: 100% !important;
+					height: 100% !important;
+					margin: 0;
+					border: none;
+					border-radius: 0;
+					background: var(--panel);
+					display: block;
+				}
+
+				/* ------------------ Left Toolbar Panel (Slide-out) ------------------ */
+				.window.ipad .toolbar {
+					position: fixed;
+					left: 0;
+					top: 44px; /* Below title bar */
+					bottom: 0;
+					width: calc(var(--icon-size) + var(--gap-2) * 2); /* Single icon width + padding */
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur-strong);
+					-webkit-backdrop-filter: var(--backdrop-blur-strong);
+					border-right: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-xl);
+					z-index: var(--z-panel);
+					transform: translateX(0); /* Open by default */
+					transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+					overflow-y: auto;
+					overflow-x: visible; /* Allow tooltips to overflow */
+					padding: var(--gap-2);
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-2);
+					-webkit-overflow-scrolling: touch;
+				}
+
+				.window.ipad .toolbar:not(.panel-visible) {
+					transform: translateX(-100%);
+				}
+
+				.window.ipad .toolbar-section {
+					background: transparent;
+					border: none;
+					border-radius: 0;
+					padding: var(--gap-2) 0;
+					margin: 0;
+					box-shadow: none;
+					border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Visual separator */
+				}
+
+				.window.ipad .toolbar-section:last-child {
+					border-bottom: none;
+				}
+
+				/* Hide headers on iPad */
+				.window.ipad .toolbar-section h4 {
+					display: none;
+				}
+
+				.window.ipad .toolbar-section .icon-group {
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-1);
+					align-items: center;
+				}
+
+				.window.ipad .icon,
+				.window.ipad .icon img {
+					width: var(--icon-size);
+					height: var(--icon-size);
+				}
+
+				/* ------------------ Bottom Sliders Panel (Slide-up) ------------------ */
+				.window.ipad .bottom-panel {
+					position: fixed;
+					left: 0;
+					right: 0;
+					bottom: 0;
+					height: var(--panel-bottom-height);
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur-strong);
+					-webkit-backdrop-filter: var(--backdrop-blur-strong);
+					border-top: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-xl);
+					z-index: var(--z-panel);
+					transform: translateY(100%);
+					transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+					overflow-y: auto;
+					overflow-x: hidden;
+					padding: 16px 20px; /* Increased padding on left and right to prevent text overlap */
+					display: flex;
+					flex-direction: column;
+					-webkit-overflow-scrolling: touch;
+				}
+
+				/* iPad Drum Pad Styles */
+				.window.ipad .drum-pad {
+					width: 140px;
+					height: 140px;
+					border-radius: var(--radius-lg);
+					border: 2px solid var(--border);
+					background: var(--panel-2);
+					box-shadow: var(--shadow-md);
+					font-size: 20px;
+				}
+
+				.window.ipad .drum-pad:active {
+					background: var(--accent);
+					color: #fff;
+				}
+
+				.window.ipad .drum-pad.active {
+					background: #ffd700;
+					animation: drumPadPulse 0.3s ease-out;
+				}
+
+				.window.ipad .bottom-panel.panel-visible {
+					transform: translateY(0);
+				}
+
+				.window.ipad #sliders {
+					display: flex;
+					flex-direction: column;
+					gap: 0; /* No gap between sliders */
+					width: 100%;
+				}
+
+				.window.ipad #sliders > div {
+					display: grid;
+					grid-template-columns: auto auto 1fr;
+					align-items: center;
+					column-gap: var(--gap-2);
+					padding: 0; /* No padding */
+					min-height: 28px; /* Ultra compact row height */
+					margin: 0; /* No margin */
+				}
+
+
+				.window.ipad #sliders label {
+					font-size: 18px;
+					font-weight: 500;
+					color: var(--text);
+					white-space: nowrap;
+					margin: 0;
+					min-width: 120px;
+					line-height: 1.3;
+				}
+
+				.window.ipad #sliders label span {
+					font-size: 16px;
+					margin-left: 4px;
+				}
+
+				/* Modern range sliders */
+				.window.ipad input[type="range"] {
+					height: 4px;
+					background: rgba(0, 0, 0, 0.1);
+					border-radius: 999px;
+					border: none;
+					margin: 0;
+					align-self: center;
+				}
+
+				.window.ipad input[type="range"]::-webkit-slider-thumb {
+					width: 32px; /* Larger thumb for easier grabbing */
+					height: 32px; /* Larger thumb for easier grabbing */
+					border-radius: 50%;
+					background: var(--accent);
+					border: 3px solid white;
+					box-shadow: var(--shadow-md);
+					margin-top: -8px; /* Adjusted for larger thumb */
+					transition: all 0.2s ease;
+					cursor: grab;
+					
+				}
+
+				.window.ipad input[type="range"]::-webkit-slider-thumb:active {
+					transform: scale(1.1);
+					background: var(--accent-hover);
+					cursor: grabbing;
+				}
+
+				.window.ipad input[type="range"]::-moz-range-thumb {
+					width: 32px; /* Larger thumb for easier grabbing */
+					height: 32px; /* Larger thumb for easier grabbing */
+					border-radius: 50%;
+					background: var(--accent);
+					border: 3px solid white;
+					box-shadow: var(--shadow-md);
+					transition: all 0.2s ease;
+					cursor: grab;
+				}
+
+				.window.ipad input[type="range"]::-moz-range-thumb:active {
+					transform: scale(1.1);
+					background: var(--accent-hover);
+					cursor: grabbing;
+				}
+
+				/* ------------------ Toggle Buttons ------------------ */
+				.panel-toggle {
+					position: fixed;
+					z-index: var(--z-toggle);
+					width: 48px;
+					height: 48px;
+					border-radius: var(--radius-lg);
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur);
+					-webkit-backdrop-filter: var(--backdrop-blur);
+					border: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-lg);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					cursor: pointer;
+					transition: all 0.2s ease;
+					font-size: 20px;
+					color: var(--text);
+					user-select: none;
+					-webkit-tap-highlight-color: transparent;
+					z-index: 100;
+				}
+
+				.panel-toggle:active {
+					transform: scale(0.95);
+				}
+
+				.panel-toggle-left {
+					left: calc(var(--panel-left-width) + var(--gap-2)); /* Panel open by default */
+					top: calc(44px + var(--gap-2)); /* Below title bar */
+					transform: none;
+				}
+
+				.panel-toggle-left.panel-visible {
+					left: calc(var(--panel-left-width) + var(--gap-2));
+				}
+
+				/* When panel is hidden, move toggle button back */
+				.window.ipad .toolbar:not(.panel-visible) ~ .panel-toggle-left,
+				.window.ipad .toolbar:not(.panel-visible) + * ~ .panel-toggle-left {
+					left: var(--gap-2);
+				}
+
+				/* Alternative: when panel is hidden, button should be at left edge */
+				.window.ipad .panel-toggle-left:not(.panel-visible) {
+					left: var(--gap-2) !important;
+				}
+
+				.panel-toggle-bottom {
+					bottom: var(--gap-2);
+					right: var(--gap-2);
+				}
+
+				.panel-toggle-bottom.panel-visible {
+					bottom: calc(var(--panel-bottom-height) + var(--gap-2));
+				}
+
+
+				/* ------------------ Overlays & Dialogs ------------------ */
+				.window.ipad #splashOverlay {
+					position: fixed;
+					inset: 0;
+					z-index: var(--z-splash);
+				}
+
+				.window.ipad #toastStack {
+					position: fixed;
+					top: calc(44px + var(--gap-2)); /* Below title bar */
+					right: var(--gap-2);
+					z-index: var(--z-toggle);
+				}
+
+				.window.ipad .dialog-backdrop {
+					position: fixed;
+					inset: 0;
+					z-index: var(--z-dialog);
+				}
+
+				.window.ipad #splashOverlay .splashText {
+					display: inline-block;
+					padding: 12px 24px;
+					margin-top: 16px;
+					background: var(--accent);
+					color: #fff;
+					font-weight: 600;
+					border-radius: var(--radius-lg);
+					box-shadow: var(--shadow-lg);
+					text-align: center;
+					font-size: 16px;
+				}
+
+				/* Hide mobile warning on iPad */
+				.window.ipad ~ #mobileWarning {
+					display: none !important;
+				}
+
+				/* Help icons */
+				.window.ipad #sliders .help-icon-container {
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					width: 20px;
+					height: 20px;
+				}
+
+				.window.ipad #sliders .help-icon {
+					width: 16px;
+					height: 16px;
+					line-height: 16px;
+					font-size: 10px;
+					background: rgba(0, 0, 0, 0.1);
+					border: 1px solid rgba(0, 0, 0, 0.15);
+				}
+
+				/* Shape settings in toolbar - narrow vertical layout */
+				.window.ipad .shape-settings {
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-1);
+					align-items: center;
+				}
+
+				.window.ipad .shape-settings > div {
+					display: flex;
+					flex-direction: column;
+					gap: 4px;
+					align-items: center;
+					width: 100%;
+				}
+
+				.window.ipad .shape-settings label {
+					font-size: 10px;
+					font-weight: 500;
+					color: var(--muted);
+					text-align: center;
+				}
+
+				.window.ipad .shape-settings input[type="color"],
+				.window.ipad .shape-settings input[type="number"] {
+					width: var(--icon-size);
+					height: var(--icon-size);
+					border: 1px solid var(--border);
+					border-radius: var(--radius-md);
+					padding: 0;
+				}
+
+				/* Edit tools glow effect - removed red highlight */
+
+				/* Icon active state */
+				.window.ipad .icon.icon-active {
+					background: var(--accent);
+					color: white;
+					border-color: var(--accent);
+					box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), var(--shadow-md);
+				}
+
+				.window.ipad .icon.icon-active::after {
+					background: #ff0;
+					color: #000;
+					font-size: 9px;
+					padding: 2px 5px;
+				}
+
+			}
+		}
+	</style>
+</head>
+
+<body>
+	<div class="window">
+		<!-- Splash Overlay -->
+		<div id="splashOverlay">
+			<img src="images/splash.png" alt="Splash Image" />
+			<div class="splashText">Click and Drag to Start Blobbing</div>
+		</div>
+		<div id="toastStack"></div>
+		<div id="tourOverlay" style="display:none;"></div>
+		<div id="tourTip" style="display:none;">
+			<div id="tourText"></div>
+			<div id="tourCtrls">
+				<button id="tourPrev">◀ Prev</button>
+				<button id="tourNext">Next ▶</button>
+				<button id="tourExit">End ✖</button>
+			</div>
+		</div>
+		<!-- Title Bar -->
+		<div class="title-bar">
+			<div class="menu-bar">
+				<span id="menuFile">File
+					<div class="submenu" id="fileSubmenu">
+						<span id="saveBlobsOption">Save Blobs (JSON)</span>
+						<span id="loadBlobsOption">Load Blobs (JSON)</span>
+					</div>
+				</span>
+				<span id="menuExport">Export
+					<div class="submenu" id="exportSubmenu">
+						<span id="exportSVGOption">SVG</span>
+						<span id="exportJPGOption">JPG</span>
+					</div>
+				</span>
+				<span id="menuPresets">Presets</span>
+				<span id="menuAbout">About</span>
+				<span id="menuHelp">Help</span>
+			</div>
+			<div class="title-actions">
+				<span id="resetIcon" class="reset-icon" title="Reset Canvas">🗑️</span>
+				<span id="notifToggle" class="reset-icon" title="Disable tips">🔔</span>
+			</div>
+		</div>
+
+		<!-- Panel Toggle Buttons (iPad only) -->
+		<button class="panel-toggle panel-toggle-left" id="toggleToolbar" aria-label="Toggle Tools Panel">☰</button>
+		<button class="panel-toggle panel-toggle-bottom" id="toggleSliders" aria-label="Toggle Sliders Panel">⚙</button>
+
+		<!-- Main Content -->
+		<div class="content">
+			<!-- Toolbar: grouped into Draw Tools, Edit Tools, Canvas Tools, and now Shape Settings -->
+			<div class="toolbar">
+				<!-- DRAW TOOLS -->
+				<div class="toolbar-section">
+					<h4>Draw Tools</h4>
+					<div class="icon-group">
+						<div class="icon" id="iconBlob" data-label="Blob (Q)">
+							<img src="images/blob.png" alt="Blob Mode" />
+						</div>
+						<div class="icon" id="iconLine" data-label="Line (W)">
+							<img src="images/line.png" alt="Line Mode" />
+						</div>
+						<div class="icon" id="iconCircle" data-label="Circle (E)">
+							<img src="images/wrap.png" alt="Circle Mode" />
+						</div>
+					</div>
+				</div>
+
+				<!-- EDIT TOOLS -->
+				<div class="toolbar-section" id="editToolsSection">
+					<h4>Edit Tools</h4>
+					<div class="icon-group">
+						<div class="icon" id="iconDrag" data-label="Drag (A)">
+							<img src="images/gloveIcon.png" alt="Drag Mode" />
+						</div>
+						<div class="icon" id="iconFreeze" data-label="Freeze (S)">
+							<img src="images/freeze.png" alt="Freeze Mode" />
+						</div>
+						<div class="icon" id="iconPin" data-label="Pin (D)">
+							<img src="images/pin.png" alt="Pin Mode" />
+						</div>
+						<div id="iconSlice">
+						</div>
+						<div class="icon" id="iconDelete" data-label="Delete (X)">
+							<img src="images/delete.png" alt="Delete">
+						</div>
+					</div>
+				</div>
+
+				<!-- SHAPE SETTINGS (Color, Gap, ΔSize) -->
+				<div class="toolbar-section">
+					<h4>Shape Settings</h4>
+					<div class="shape-settings">
+						<div>
+							<label for="blobColor">Color</label>
+							<input type="color" id="blobColor" value="#0066ff">
+						</div>
+						<div>
+							<label for="radiusAvgInput">Size</label>
+							<input type="number" id="radiusAvgInput" min="0.0" max="20" step="0.2" value="5">
+						</div>
+					</div>
+				</div>
+
+				<!-- CANVAS TOOLS -->
+				<div class="toolbar-section">
+					<h4>Canvas</h4>
+					<div class="icon-group">
+						<div class="icon" id="iconAppearance" data-label="Appearance">🎨</div>
+						<div class="icon" id="iconDiffusion" data-label="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
+						<div class="icon" id="iconNoise" data-label="Auto Movement"><img src="images/Lava.png" alt="Auto Movement" /></div>
+						<div class="icon" id="iconUndo" data-label="Undo Last Item">⎌</div>
+						<div class="icon" id="iconGravity" data-label="Gravity (G)">G</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Main Drawing Area -->
+			<div class="main-area">
+				<canvas id="glCanvas" width="500" height="500"></canvas>
+			</div>
+		</div>
+
+		<!-- Bottom Panel: Sliders -->
+		<div class="bottom-panel">
+			<!-- Sliders Panel -->
+			<div id="sliders">
+				<div>
+					<div class="help-icon-container">
+						<span class="help-icon">i</span>
+						<div class="help-tooltip">
+							Higher = bigger blobs/lines.
+						</div>
+					</div>
+					<label for="dotScaleSlider" class="slider-label">Blob Size: <span id="dotScaleValue">39%</span></label>
+					<input type="range" id="dotScaleSlider" min="0" max="100" value="39" step="0.5">
+				</div>
+				<div>
+					<div class="help-icon-container">
+						<span class="help-icon">i</span>
+						<div class="help-tooltip">
+							Higher = more wobble.
+						</div>
+					</div>
+					<label for="dampingSlider">Excitability: <span id="dampingValue">85%</span></label>
+					<input type="range" id="dampingSlider" min="0" max="100" value="85" step="0.5">
+				</div>
+				<div>
+	<div class="help-icon-container">
+		<span class="help-icon">i</span>
+		<div class="help-tooltip">Simulated internal fluid pushing outward. Closed blobs inflate uniformly.</div>
+	</div>
+	<label for="turgorPressureSlider">Inflation: <span id="turgorPressureValue">0%</span></label>
+	<input type="range" id="turgorPressureSlider" min="0" max="100" value="0" step="1">
+</div>
+				<div>
+					<div class="help-icon-container">
+						<span class="help-icon">i</span>
+						<div class="help-tooltip">
+							Higher = tighter shapes.
+						</div>
+					</div>
+					<label for="springConstantSlider">Stiffness: <span id="springConstantValue">30%</span></label>
+					<input type="range" id="springConstantSlider" min="0" max="100" value="30" step="1">
+				</div>
+				<div>
+					<div class="help-icon-container">
+						<span class="help-icon">i</span>
+						<div class="help-tooltip">
+							Higher = more expansion.
+						</div>
+					</div>
+					<label for="repulsionConstantSlider">Chaos: <span id="repulsionConstantValue">10%</span></label>
+					<input type="range" id="repulsionConstantSlider" min="0" max="100" value="10" step="1">
+				</div>
+				<div>
+					<div class="help-icon-container">
+						<span class="help-icon">i</span>
+						<div class="help-tooltip">
+							Shapes animate faster when higher.
+						</div>
+					</div>
+					<label for="timeStepSlider">Speed: <span id="timeStepValue">47%</span></label>
+					<input type="range" id="timeStepSlider" min="0" max="100" value="47" step="1">
+				</div>
+
+
+
+			</div>
+		</div>
+
+		<!-- ░ PRESETS DIALOG ░ -->
+		<div class="dialog-backdrop" id="presetsBackdrop">
+			<div class="dialog-content presets-dialog">
+				<h3>Select a Preset</h3>
+
+				<div id="presetsGallery" class="presets-gallery">
+					<!-- Grid preset card -->
+					<div class="preset-card" id="presetGrid">
+						<svg viewBox="0 0 100 100" width="100%" height="100%">
+							<rect width="100" height="100" fill="#fff" />
+							<g stroke="#000" stroke-width="2" fill="none">
+								<!-- 5 × 5 grid preview -->
+								<circle cx="10" cy="10" r="8" />
+								<circle cx="30" cy="10" r="8" />
+								<circle cx="50" cy="10" r="8" />
+								<circle cx="70" cy="10" r="8" />
+								<circle cx="90" cy="10" r="8" />
+
+								<circle cx="10" cy="30" r="8" />
+								<circle cx="30" cy="30" r="8" />
+								<circle cx="50" cy="30" r="8" />
+								<circle cx="70" cy="30" r="8" />
+								<circle cx="90" cy="30" r="8" />
+
+								<circle cx="10" cy="50" r="8" />
+								<circle cx="30" cy="50" r="8" />
+								<circle cx="50" cy="50" r="8" />
+								<circle cx="70" cy="50" r="8" />
+								<circle cx="90" cy="50" r="8" />
+
+								<circle cx="10" cy="70" r="8" />
+								<circle cx="30" cy="70" r="8" />
+								<circle cx="50" cy="70" r="8" />
+								<circle cx="70" cy="70" r="8" />
+								<circle cx="90" cy="70" r="8" />
+
+								<circle cx="10" cy="90" r="8" />
+								<circle cx="30" cy="90" r="8" />
+								<circle cx="50" cy="90" r="8" />
+								<circle cx="70" cy="90" r="8" />
+								<circle cx="90" cy="90" r="8" />
+							</g>
+						</svg>
+						<figcaption>Grid of Circles</figcaption>
+					</div>
+					<div class="preset-card" id="presetBlobGrid">
+						<img src="images/grid_of_blobs.png" alt="Grid of Blobs">
+						<figcaption>Grid of Blobs</figcaption>
+					</div>
+					<div class="preset-card" id="presetAnthro">
+						<!-- tiny 100×100 PNG or SVG is fine; use any placeholder for now -->
+						<img src="images/anthro_blobs.png" alt="Anthro Blobs">
+						<figcaption>Blob Face</figcaption>
+					</div>
+				</div>
+
+				<button id="closePresets">Close</button>
+			</div>
+		</div>
+
+		<div class="dialog-backdrop" id="gridBackdrop">
+			<div class="dialog-content">
+				<h3>Grid of Circles</h3>
+
+				<label>Count
+					<input type="number" id="gridCount" value="5" min="1" max="12">
+				</label><br>
+
+				<label>
+					<input type="checkbox" id="autoRadius" checked>
+					Fit circles to canvas
+				</label><br>
+
+				<div id="radiusRow" style="display:none;">
+					<label>Radius
+						<input type="number" id="gridRadius" value="20" min="2" max="200">
+					</label><br>
+				</div>
+
+				<button id="applyGrid">Apply</button>
+				<button id="cancelGrid">Cancel</button>
+			</div>
+
+		</div>
+		<div class="dialog-backdrop" id="blobGridBackdrop">
+			<div class="dialog-content">
+				<h3>Grid of Blobs</h3>
+
+				<label>Count (rows = cols)
+					<input type="number" id="blobGridCount" value="5" min="1" max="10">
+				</label><br>
+
+				<label>
+					<input type="checkbox" id="blobAutoSize" checked>
+					Fit blobs to canvas
+				</label><br>
+
+				<div id="blobSizeRow" style="display:none;">
+					<label>Base Radius
+						<input type="number" id="blobBaseRadius" value="20" min="4" max="120">
+					</label><br>
+				</div>
+
+				<button id="applyBlobGrid">Apply</button>
+				<button id="cancelBlobGrid">Cancel</button>
+			</div>
+		</div>
+
+		<!-- Modals/Dialogs: About and Help -->
+		<div class="dialog-backdrop" id="aboutBackdrop">
+			<div class="dialog-content">
+				<p>blobSketch version 1.31</p>
+				<p>by Colin Reid</p>
+				<button id="closeAbout">OK</button>
+			</div>
+		</div>
+
+		<!-- ░ SAVE / IMPORT OPTION DIALOGS ░ -->
+		<div class="dialog-backdrop" id="saveOptionsBackdrop">
+			<div class="dialog-content">
+				<h3>Save Options</h3>
+				<label><input type="checkbox" id="saveIncludeChains" checked> Blobs / Lines</label><br>
+				<label><input type="checkbox" id="saveIncludeCircles" checked> Circles</label><br>
+				<label><input type="checkbox" id="saveIncludeSettings"> Physics & UI Settings</label><br>
+				<button id="confirmSaveBtn">Save</button>
+				<button id="cancelSaveBtn">Cancel</button>
+			</div>
+		</div>
+
+		<div class="dialog-backdrop" id="importOptionsBackdrop">
+			<div class="dialog-content">
+				<h3>Import Options</h3>
+				<label><input type="checkbox" id="importIncludeChains" checked> Blobs / Lines</label><br>
+				<label><input type="checkbox" id="importIncludeCircles" checked> Circles</label><br>
+				<label><input type="checkbox" id="importIncludeSettings" checked> Physics & UI Settings</label><br>
+				<button id="confirmImportBtn">Import</button>
+				<button id="cancelImportBtn">Cancel</button>
+			</div>
+		</div>
+
+		<!-- Appearance Dialog -->
+		<div class="dialog-backdrop" id="appearanceBackdrop">
+			<div class="dialog-content appearance-dialog">
+				<h3>Appearance</h3>
+				<div class="appearance-dialog-content">
+					<div class="appearance-controls">
+						<div class="appearance-section">
+							<h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; color: #333;">Blob</h4>
+							
+							<div class="appearance-control-group">
+								<label>
+									<input type="checkbox" id="appearanceOutline" checked>
+									Outline
+								</label>
+								<label>
+									<input type="checkbox" id="appearanceFilled" checked>
+									Filled
+								</label>
+							</div>
+
+							<div class="appearance-control-group" id="appearanceOutlineWidthGroup" style="margin-top: 20px; margin-bottom: 0;">
+								<label for="appearanceOutlineWidth">Outline Width: <span id="appearanceOutlineWidthValue">4</span></label>
+								<input type="range" id="appearanceOutlineWidth" min="1" max="10" value="4" step="1">
+							</div>
+						</div>
+
+						<div class="appearance-section" style="margin-top: 25px; padding-top: 25px; border-top: 2px solid #ddd;">
+							<h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; color: #333;">Canvas</h4>
+							
+							<div class="appearance-control-group">
+								<label for="appearanceBackgroundColor">Background Color:</label>
+								<input type="color" id="appearanceBackgroundColor" value="#bfccab" style="width: 100%; height: 40px; cursor: pointer;">
+							</div>
+
+							<div class="appearance-control-group">
+								<label>
+									<input type="checkbox" id="appearanceShowGrid" checked>
+									Show Grid
+								</label>
+							</div>
+						</div>
+					</div>
+					
+					<div class="appearance-preview">
+						<h4>Preview</h4>
+						<canvas id="appearancePreviewCanvas" width="200" height="200"></canvas>
+					</div>
+				</div>
+				<div class="appearance-dialog-buttons">
+					<button id="appearanceApplyBtn">Apply</button>
+					<button id="appearanceCancelBtn">Cancel</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- ░ END DIALOGS ░ -->
+	</div>
+	<div id="circleInfo" style="
+     position:fixed; display:none; z-index:10000;
+     pointer-events:none; font:12px 'Courier New',monospace;
+     padding:3px 6px; background:#ffffcc;
+     border:1px solid #000; box-shadow:3px 3px 0 #000;">
+	</div>
+	<script>
+		 (function () {
+    var ua = navigator.userAgent || "";
+    var isIPhone = /iPhone|iPod/i.test(ua);
+
+    if (!isIPhone) return;
+
+    document.documentElement.innerHTML = `
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Not Supported on iPhone</title>
+        <style>
+          :root {
+            --bg1: #ffffff;
+            --bg2: #e9eef9;
+            --fg: #000;
+            --border: #000;
+          }
+          html, body { height: 100%; margin: 0; }
+          body {
+            display: flex; align-items: center; justify-content: center;
+            background: radial-gradient(140% 100% at 50% 0%, var(--bg2), var(--bg1) 60%);
+            color: var(--fg);
+            font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Courier New", monospace;
+          }
+          .splash {
+            box-sizing: border-box;
+            max-width: 640px; width: calc(100% - 40px);
+            background: #f3f4f6;
+            border: 2px solid var(--border);
+            box-shadow: 8px 8px 0 #000;
+            border-radius: 10px;
+            padding: 22px;
+            text-align: center;
+          }
+          .badge {
+            display:inline-block;
+            padding: 6px 10px;
+            border:2px solid var(--border);
+            border-radius:8px;
+            background:#fff;
+            box-shadow: 3px 3px 0 #000;
+            font-weight: 700;
+            margin-bottom: 14px;
+          }
+          h1 {
+            margin: 8px 0 6px;
+            font-size: 26px;
+            letter-spacing: 0.3px;
+          }
+          p { margin: 8px 0; }
+          .hint {
+            margin-top: 14px;
+            font-size: 14px;
+            opacity: 0.9;
+          }
+          .btn {
+            margin-top: 16px;
+            display: inline-block;
+            padding: 10px 14px;
+            background: #2563eb;
+            color: #fff;
+            text-decoration: none;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 3px 3px 0 #000;
+            font-weight: 700;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="splash" role="alert" aria-live="polite">
+          <div class="badge">BlobSketch</div>
+          <h1>Not supported on iPhone</h1>
+          <p>This experience is designed for larger screens.</p>
+          <p>Please use an <strong>iPad</strong> or <strong>desktop</strong> browser.</p>
+        </div>
+      </body>
+    `;
+    throw new Error("Blocked on iPhone");
+  })();
+
+		if (/Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+			document.addEventListener("DOMContentLoaded", function() {
+				var warningDiv = document.createElement("div");
+				warningDiv.id = "mobileWarning";
+				warningDiv.innerHTML = '<h1>Desktop or iPad Only</h1><p>This application is best experienced on a desktop or iPad browser. Please switch to a desktop or ipad device.</p>';
+				document.body.appendChild(warningDiv);
+			});
+		}
+
+		document.addEventListener("DOMContentLoaded", () => {
+
+			/* -----------------------------------
+			   SHORTCUTS & UTILITIES
+			----------------------------------- */
+			const $ = id => document.getElementById(id);
+			const circleInfo = $("circleInfo");
+
+			// ==== Spatial Hash Setup ====
+			const cellSize = 50; // adjust ~ to  max interaction distance
+			let spatialHash = new Map();
+			const neighborOffsets = [
+				[0, 0],
+				[1, 0],
+				[-1, 0],
+				[0, 1],
+				[1, 1],
+				[-1, 1],
+				[0, -1],
+				[1, -1],
+				[-1, -1]
+			];
+
+			function hashKey(cx, cy) {
+				// Use numeric key: pack two 16-bit integers into one number
+				// Works for coordinates up to ±32767, which is plenty for canvas
+				return (cx << 16) | (cy & 0xFFFF);
+			}
+
+			function unhashKey(key) {
+				return [(key >> 16), (key & 0xFFFF)];
+			}
+
+			function buildSpatialHash() {
+				spatialHash.clear();
+				for (let c = 0; c < chains.length; c++) {
+					const ch = chains[c].chain;
+					const rA = chains[c].baseDotRadius * dotScaleFactor;
+					for (let i = 0; i < ch.length; i++) {
+						const p = ch[i];
+						const cx = Math.floor(p.x / cellSize);
+						const cy = Math.floor(p.y / cellSize);
+						const key = hashKey(cx, cy);
+						if (!spatialHash.has(key)) spatialHash.set(key, []);
+						spatialHash.get(key).push({ c, i, p, r: rA });
+					}
+				}
+			}
+
+			// Helper for converting from one numeric range to another
+			function mapRange(value, inMin, inMax, outMin, outMax) {
+				return outMin + (outMax - outMin) * ((value - inMin) / (inMax - inMin));
+			}
+
+			const hexToRGBA = hex => {
+				if (hex[0] === "#") hex = hex.slice(1);
+				const r = parseInt(hex.slice(0, 2), 16) / 255,
+					g = parseInt(hex.slice(2, 4), 16) / 255,
+					b = parseInt(hex.slice(4, 6), 16) / 255;
+				return [r, g, b, 1.0];
+			};
+
+			function setDotScale(percent) {
+				percent = Math.max(DOT_MIN_PERCENT,
+					Math.min(DOT_MAX_PERCENT, percent));
+
+				$("dotScaleSlider").value = percent;
+				$("dotScaleValue").textContent = Math.round(percent) + "%";
+
+				dotScaleFactor = mapRange(percent, 0, 100, 0.1, 5);
+			}
+
+			/* ---------- toast notifications ---------- */
+			let tipsEnabled = false;
+			$("notifToggle").onclick = () => {
+				tipsEnabled = !tipsEnabled;
+				$("notifToggle").textContent = tipsEnabled ? "🔔" : "🔕";
+				$("notifToggle").title = tipsEnabled ? "Disable tips" : "Enable tips";
+			};
+			/* 2 ▸ ensure the bell shows the muted state on first load */
+			$("notifToggle").textContent = "🔕";
+			$("notifToggle").title = "Enable tips";
+
+			function toast(msg, ms = 2200) {
+				if (!tipsEnabled) return;
+				const el = document.createElement("div");
+				el.className = "toast";
+				el.textContent = msg;
+				$("toastStack").appendChild(el);
+				requestAnimationFrame(() => el.classList.add("show")); // fade in
+				setTimeout(() => {
+					el.classList.remove("show"); // fade out
+					el.addEventListener("transitionend", () => el.remove(), { once: true });
+				}, ms);
+			}
+
+			/* -----------------------------------
+			   SPLASH OVERLAY
+			----------------------------------- */
+			$("splashOverlay").onclick = () => {
+				$("splashOverlay").style.display = "none";
+			};
+
+			/* -----------------------------------
+			   DIALOG SETUP (ABOUT, HELP)
+			----------------------------------- */
+			function setupDialog(openBtnId, backdropId, closeBtnId) {
+				const openBtn = $(openBtnId),
+					backdrop = $(backdropId),
+					closeBtn = $(closeBtnId);
+				openBtn.addEventListener("click", () => (backdrop.style.display = "flex"));
+				closeBtn.addEventListener("click", () => (backdrop.style.display = "none"));
+			}
+			setupDialog("menuAbout", "aboutBackdrop", "closeAbout");
+			$("menuHelp").addEventListener("click", startTour);
+			window.addEventListener("keydown", e => { if (e.key === "h" || e.key === "H") startTour(); });
+
+			/* -----------------------------------
+			   FILE & EXPORT MENU
+			----------------------------------- */
+			function setupSubmenu(menuId, submenuId) {
+				const menu = $(menuId),
+					submenu = $(submenuId);
+				let visible = false;
+				menu.addEventListener("click", (e) => {
+					e.stopPropagation();
+					visible = !visible;
+					submenu.style.display = visible ? "flex" : "none";
+				});
+				document.addEventListener("click", (e) => {
+					if (!menu.contains(e.target) && visible) {
+						visible = false;
+						submenu.style.display = "none";
+					}
+				});
+			}
+			setupSubmenu("menuFile", "fileSubmenu");
+			setupSubmenu("menuExport", "exportSubmenu");
+
+
+			/* ---------- PRESETS ---------- */
+			$("menuPresets").onclick = () => {
+				$("presetsBackdrop").style.display = "flex";
+			};
+
+			/* close gallery */
+			$("closePresets").onclick = () =>
+				$("presetsBackdrop").style.display = "none";
+
+			/* show the Grid-options dialog when the card is clicked */
+			$("presetGrid").onclick = () => {
+				$("presetsBackdrop").style.display = "none";
+				$("gridBackdrop").style.display = "flex";
+			};
+
+			/* cancel grid dialog */
+			$("cancelGrid").onclick = () =>
+				$("gridBackdrop").style.display = "none";
+
+			/* show / hide the custom-radius row */
+			$("autoRadius").onchange = () =>
+				$("radiusRow").style.display = $("autoRadius").checked ? "none" : "block";
+
+			/* apply grid */
+			$("applyGrid").onclick = () => {
+				const count = Math.min(12,
+					Math.max(1, parseInt($("gridCount").value, 10) || 1));
+				/* this radius would make circles kiss each other and the edges */
+				/* leave a 1px gap between adjacent circles */
+				const maxR = (Math.min(canvas.width, canvas.height) - (count - 1)) / (count * 2);
+
+				const radius = $("autoRadius").checked ?
+					maxR :
+					Math.min(parseFloat($("gridRadius").value) || 2, maxR);
+
+				const spacing = 2 * maxR + 1; // +1 ensures 1px gap between centers
+
+				for (let r = 0; r < count; r++) {
+					for (let c = 0; c < count; c++) {
+						circles.push({
+							x: maxR + c * spacing,
+							y: maxR + r * spacing,
+							radius // may be < maxR ⇒ nice margin
+						});
+						history.push({ type: "circle" });
+					}
+				}
+
+				/* set Blob Size slider to 0 % and Excitability to 85 % */
+				setDotScale(0); // updates UI + dotScaleFactor
+				damping = 0.85;
+				$("dampingSlider").value = 85;
+				$("dampingValue").textContent = "85%";
+				/* ── 1. High Repulsion ON ── */
+				if (interRepelMult !== 3) { // 1 = normal, 3 = high
+					interRepelMult = 3;
+					toggleActiveIcon($("iconDiffusion"), true);
+				}
+
+				/* ── 2. Blob draw-mode ── */
+				setDrawMode("blob"); // switches UI + cursor
+
+				/* ── 3. Edit tools OFF ── */
+				slicingMode = dragMode = pinMode =
+					freezeMode = deleteMode = false; // clear flags
+				$("editToolsSection").classList.remove("edit-on");
+				["iconSlice", "iconDrag", "iconPin", "iconFreeze", "iconDelete"]
+				.forEach(id => setIconActive($(id), false, "", ""));
+				updateCanvasCursor();
+
+				if (!showFilled) {
+					showFilled = true;
+					$("iconFill").title = "Solid Fill On";
+					toggleActiveIcon($("iconFill"), true);
+				}
+
+				toast(`Grid (${count}×${count}) added`, 1600);
+				$("gridBackdrop").style.display = "none";
+			};
+
+			/* === ANTHRO BLOBS PRESET =========================================== */
+			$("presetAnthro").onclick = () => {
+				$("presetsBackdrop").style.display = "none"; // close gallery
+				addAnthroBlobs(8); // draw 8 faces by default
+			};
+
+			/* helper: main face + eyes + pupils + mouth ------------------------- */
+			function addAnthroBlobs(count = 8) {
+
+				/* clamp Excitability (damping) to 0 % */
+				damping = 0;
+				$("dampingSlider").value = 0;
+				$("dampingValue").textContent = "0%";
+
+				/* step 0 ─ turn High-Repel ON (keeps blobs apart) */
+				if (interRepelMult !== 3) { // 1 = normal, 3 = boosted
+					interRepelMult = 3; // physics flag
+					toggleActiveIcon($("iconDiffusion"), true); // light the toolbar icon
+				}
+
+				const palette = ["#ff3333", "#ffd700", "#0066ff", "#000000"]; // red, yellow, blue, black
+				const placed = []; // remember centres
+
+				for (let k = 0; k < count; k++) {
+
+					/* find a free, non-overlapping position (≤100 tries) */
+					let cx, cy, R, ok, tries = 100;
+					do {
+						R = 30 + Math.random() * 40; // 30‒70 px radius
+						cx = R + Math.random() * (canvas.width - 2 * R);
+						cy = R + Math.random() * (canvas.height - 2 * R);
+
+						ok = true;
+						for (const p of placed) {
+							const minGap = R + p.R + 6; // 6 px padding
+							if (Math.hypot(cx - p.cx, cy - p.cy) < minGap) { ok = false; break; }
+						}
+					} while (!ok && --tries);
+					if (!ok) continue; // couldn’t place
+
+					placed.push({ cx, cy, R });
+
+					/* 1 ─ base face blob */
+					const faceCol = palette[Math.floor(Math.random() * palette.length)];
+					const faceArr = hexToRGBA(faceCol);
+					chains.push(makeCircleBlob(cx, cy, R, faceArr));
+					history.push({ type: "chain" });
+
+					/* 2 ─ eyes & pupils */
+					const eyeDX = R * 0.30,
+						eyeDY = -R * 0.20,
+						eyeR = R * 0.18;
+					const pupilR = eyeR * 0.40;
+					const white = hexToRGBA("#ffffff");
+					const pupilArr = hexToRGBA("#000000"); // pupils always black
+
+					// left eye
+					chains.push(makeCircleBlob(cx - eyeDX, cy + eyeDY, eyeR, white, 10));
+					chains.push(makeCircleBlob(cx - eyeDX, cy + eyeDY, pupilR, pupilArr, 8));
+					// right eye
+					chains.push(makeCircleBlob(cx + eyeDX, cy + eyeDY, eyeR, white, 10));
+					chains.push(makeCircleBlob(cx + eyeDX, cy + eyeDY, pupilR, pupilArr, 8));
+					history.push({ type: "chain" }, { type: "chain" }, { type: "chain" }, { type: "chain" });
+
+					/* 3 ─ mouth (more-dots straight line) ----------------------------- */
+					const mouthY = cy + R * 0.25,
+						mouthW = R * 0.75, // width already bumped
+						mouthArr = hexToRGBA(faceCol === "#000000" ? "#ffffff" : "#000000");
+
+					/* roughly 8 points across the span (left → right) */
+					const mouthPts = [];
+					const segments = 7; // 7 gaps ⇒ 8 dots
+					for (let i = 0; i <= segments; i++) {
+						const t = i / segments; // 0 … 1
+						mouthPts.push({
+							x: cx - mouthW + 2 * mouthW * t, // linear x-interpolation
+							y: mouthY, // keep flat (straight line)
+							vx: 0,
+							vy: 0,
+							pinned: false
+						});
+					}
+
+					chains.push({
+						chain: mouthPts,
+						color: mouthArr,
+						baseDotRadius: R * 0.06,
+						isClosed: false,
+						frozen: false
+					});
+					history.push({ type: "chain" });
+				}
+
+				/* make sure fill mode + Blob draw-mode are active */
+				if (!showFilled) {
+					showFilled = true;
+					$("iconFill").title = "Solid Fill On";
+					toggleActiveIcon($("iconFill"), true);
+				}
+				setDrawMode("blob");
+
+				toast(`Anthro blobs (${count}) added`, 1600);
+				toast("Raise the Excitability slider to see the blobs come alive!", 3000);
+			}
+
+			/* === GRID-OF-BLOBS PRESET ======================================== */
+			$("presetBlobGrid").onclick = () => {
+				$("presetsBackdrop").style.display = "none"; // ✨ hide gallery
+				$("blobGridBackdrop").style.display = "flex"; // show blob-dialog
+			};
+
+			/* toggle custom size row */
+			$("blobAutoSize").onchange = () =>
+				$("blobSizeRow").style.display = $("blobAutoSize").checked ? "none" : "block";
+
+			/* helper to create a simple circular blob (you could swap in fancier math) */
+			function makeCircleBlob(cx, cy, r, colorArr, steps = 48) {
+				const pts = [];
+				for (let i = 0; i < steps; i++) {
+					const θ = i / steps * 2 * Math.PI;
+					pts.push({
+						x: cx + r * Math.cos(θ),
+						y: cy + r * Math.sin(θ),
+						vx: 0,
+						vy: 0,
+						pinned: false
+					});
+				}
+				return {
+					chain: pts,
+					color: colorArr,
+					baseDotRadius: r * 0.12,
+					isClosed: true,
+					frozen: false
+				};
+			}
+
+			/* Apply button */
+			$("applyBlobGrid").onclick = () => {
+				/* 1 ─ grid sizing */
+				const cnt = Math.min(10,
+					Math.max(1, parseInt($("blobGridCount").value, 10) || 1));
+				const maxR = Math.min(canvas.width, canvas.height) / (cnt * 2);
+
+				const baseR = $("blobAutoSize").checked ?
+					maxR :
+					Math.min(parseFloat($("blobBaseRadius").value) || 4, maxR);
+
+				const spacing = 2 * maxR; // centres stay fixed
+
+				const chosenColor = hexToRGBA($("blobColor").value);
+				/* 2 ─ add blobs */
+				for (let r = 0; r < cnt; r++) {
+					for (let c = 0; c < cnt; c++) {
+						const cx = maxR + c * spacing;
+						const cy = maxR + r * spacing;
+						const blob = makeCircleBlob(cx, cy, baseR, chosenColor);
+						chains.push(blob);
+						history.push({ type: "chain" });
+					}
+				}
+
+				/* 3 ─ snap UI states exactly like circle-grid did */
+				{
+					if (interRepelMult !== 3) {
+						interRepelMult = 3;
+						toggleActiveIcon($("iconDiffusion"), true);
+					}
+					setDrawMode("blob");
+					$("dampingSlider").value = 40;
+					$("dampingValue").textContent = "40%";
+					setDotScale(12);
+					damping = 0.40;
+					turgorPressure = 0;
+					const tpSlider = $("turgorPressureSlider");
+					const tpValue  = $("turgorPressureValue");
+					if (tpSlider && tpValue) {
+						tpSlider.value = 0;
+						tpValue.textContent = "0%";
+					}
+
+					slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+					$("editToolsSection").classList.remove("edit-on");
+					["iconSlice", "iconDrag", "iconPin", "iconFreeze", "iconDelete"]
+					.forEach(id => setIconActive($(id), false, "", ""));
+					updateCanvasCursor();
+				}
+
+				toast(`Blob grid (${cnt}×${cnt}) added`, 1600);
+				$("blobGridBackdrop").style.display = "none";
+			};
+			$("cancelBlobGrid").onclick = () =>
+				$("blobGridBackdrop").style.display = "none";
+
+			/* -----------------------------------
+			   WEBGL CONTEXT
+			----------------------------------- */
+			const canvas = $("glCanvas");
+
+			// --- Pointer normalization helpers ---
+			function getCanvasXY(evt) {
+				// Use CSS box but scale into the canvas's internal pixel space
+				const rect = canvas.getBoundingClientRect();
+				const scaleX = canvas.width / rect.width;
+				const scaleY = canvas.height / rect.height;
+				const x = (evt.clientX - rect.left) * scaleX;
+				const y = (evt.clientY - rect.top) * scaleY;
+				return { x, y };
+			}
+
+			// Primary pointer test: accept pen/touch, left mouse only
+			function isPrimaryPointer(evt) {
+				return (evt.isPrimary !== false) && (evt.pointerType !== "mouse" || evt.button === 0);
+			}
+
+			// Optional: use pressure for dynamic radius when drawing with Pencil
+			function getPressure(evt) {
+				// 0..1 on Apple Pencil; mouse is 0 or 0.5+ depending on browser
+				return (typeof evt.pressure === "number" && evt.pressure > 0) ? evt.pressure : 1;
+			}
+
+
+			const gl = canvas.getContext("webgl", { stencil: true });
+			if (!gl) alert("WebGL not supported by your browser.");
+			gl.enable(gl.BLEND);
+			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+				gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+
+			// ───── Unified Pointer Events (mouse + touch + Pencil) ─────
+			let activePointerId = null;
+
+			canvas.addEventListener("pointerdown", (e) => {
+				if (!isPrimaryPointer(e)) return;
+				e.preventDefault();
+				activePointerId = e.pointerId;
+				canvas.setPointerCapture(activePointerId);
+
+				const { x, y } = getCanvasXY(e);
+				const pressure = getPressure(e);
+
+				currentMouseX = x;
+				currentMouseY = y;
+
+				if (drawMode === 'circle') {
+					if (dragMode) {
+						for (let i = 0; i < circles.length; i++) {
+							const c = circles[i];
+							if (Math.hypot(x - c.x, y - c.y) < c.radius + 5) { draggingCircleIndex = i; return; }
+						}
+						return;
+					} else {
+
+						// ── Long-press to resize an existing circle ───────────────────
+						// ── Long-press to resize an existing circle ───────────────────
+						{
+							let hitIndex = null;
+							for (let i = circles.length - 1; i >= 0; i--) {
+								const c = circles[i];
+								const d = Math.hypot(x - c.x, y - c.y);
+								if (d <= c.radius) { hitIndex = i; break; }
+							}
+
+							if (hitIndex !== null) {
+								waitingForLongPress = true; // <— NEW
+								longPressTargetIndex = hitIndex;
+								longPressStartX = x;
+								longPressStartY = y;
+
+								if (longPressTimer) {
+									clearTimeout(longPressTimer);
+									longPressTimer = null;
+								}
+								longPressTimer = setTimeout(() => {
+									// Activate resize mode after 5s (only if we’re still waiting)
+									if (!waitingForLongPress) return;
+									resizingCircleIndex = longPressTargetIndex;
+									if (resizingCircleIndex !== null) {
+										circles[resizingCircleIndex].__resizing = true;
+									}
+									isCircleDrawing = false;
+									currentCircle = null;
+									waitingForLongPress = false; // we’re no longer waiting
+								}, resizeHoldMs);
+
+								return; // Defer decision to move: either resize (after 5s) or start new circle on drift
+							}
+						}
+						// ───────────────────────────────────────────────────────────────
+						// ───
+
+
+						isCircleDrawing = true;
+						currentCircle = { x, y, radius: 0 };
+						return;
+					}
+				}
+
+				if (freezeMode) {
+					// find all closed blobs under the pointer
+					const hits = [];
+					for (let i = 0; i < chains.length; i++) {
+						const ch = chains[i];
+						if (!ch.isClosed) continue;
+						if (pointInPolygon(x, y, ch.chain)) hits.push(i);
+					}
+
+					// pick the smallest one and toggle frozen/alpha
+					if (hits.length) {
+						let bestIndex = hits[0];
+						let bestArea = polygonArea(chains[bestIndex].chain);
+						for (let k = 1; k < hits.length; k++) {
+							const idx = hits[k];
+							const area = polygonArea(chains[idx].chain);
+							if (area < bestArea) {
+								bestIndex = idx;
+								bestArea = area;
+							}
+						}
+						const obj = chains[bestIndex];
+						obj.frozen = !obj.frozen;
+						obj.alpha = obj.frozen ? 0.3 : 1.0; //
+					}
+					return; // stop further handling
+				}
+				if (deleteMode) {
+					// a) delete circles first
+					for (let i = 0; i < circles.length; i++) {
+						const c = circles[i];
+						const dx = x - c.x,
+							dy = y - c.y;
+						if (Math.hypot(dx, dy) < c.radius) {
+							circles.splice(i, 1);
+							history.push({ type: "circle" });
+							return; // done
+						}
+					}
+
+					// b) delete open lines if near a segment
+					const SEG_TOL = 6;
+					for (let k = 0; k < chains.length; k++) {
+						const obj = chains[k];
+						if (obj.isClosed) continue;
+						const pts = obj.chain;
+						for (let i = 0; i < pts.length - 1; i++) {
+							const a = pts[i],
+								b = pts[i + 1];
+							const denom = (b.x - a.x) ** 2 + (b.y - a.y) ** 2 || 1; // avoid /0
+							const t = ((x - a.x) * (b.x - a.x) + (y - a.y) * (b.y - a.y)) / denom;
+							const clamped = Math.max(0, Math.min(1, t));
+							const px = a.x + clamped * (b.x - a.x);
+							const py = a.y + clamped * (b.y - a.y);
+							if (Math.hypot(x - px, y - py) < SEG_TOL) {
+								chains.splice(k, 1);
+								history.push({ type: "chain" });
+								return; // done
+							}
+						}
+					}
+
+					// c) delete the smallest closed blob under the point
+					const hits = [];
+					for (let i = 0; i < chains.length; i++) {
+						const ch = chains[i];
+						if (!ch.isClosed) continue;
+						if (pointInPolygon(x, y, ch.chain)) hits.push(i);
+					}
+					if (hits.length) {
+						let best = hits[0],
+							bestArea = polygonArea(chains[best].chain);
+						for (let j = 1; j < hits.length; j++) {
+							const idx = hits[j];
+							const area = polygonArea(chains[idx].chain);
+							if (area < bestArea) {
+								best = idx;
+								bestArea = area;
+							}
+						}
+						chains.splice(best, 1);
+						history.push({ type: "chain" });
+					}
+					return; // stop further handling in delete mode
+				}
+
+				if (pinMode) {
+					let bestChainIndex = null;
+					let bestDotIndex = null;
+					let bestDist = Infinity;
+					const pickRadius = 20; // same radius you use in mousedown
+
+					for (let c = 0; c < chains.length; c++) {
+						const ch = chains[c].chain;
+						for (let i = 0; i < ch.length; i++) {
+							const dx = x - ch[i].x;
+							const dy = y - ch[i].y;
+							const d = Math.hypot(dx, dy);
+							if (d < pickRadius && d < bestDist) {
+								bestDist = d;
+								bestChainIndex = c;
+								bestDotIndex = i;
+							}
+						}
+					}
+					if (bestChainIndex !== null) {
+						const dot = chains[bestChainIndex].chain[bestDotIndex];
+						dot.pinned = !dot.pinned; // toggle
+					}
+					return; // stop further handling
+				}
+
+				const wantDrag = (dragMode || drawMode === "none");
+
+				if (wantDrag) {
+				  // 1) Prefer dragging blob dots first
+				  let bestChainIndex = null;
+				  let bestDotIndex = null;
+				  let bestDist = Infinity;
+				  const pickRadius = 20;
+
+				  for (let c = 0; c < chains.length; c++) {
+				    const ch = chains[c].chain;
+				    for (let i = 0; i < ch.length; i++) {
+				      const dot = ch[i];
+				      const dx = x - dot.x;
+				      const dy = y - dot.y;
+				      const dist = Math.sqrt(dx * dx + dy * dy);
+				      if (dist < pickRadius && dist < bestDist) {
+				        bestDist = dist;
+				        bestChainIndex = c;
+				        bestDotIndex = i;
+				      }
+				    }
+				  }
+
+				  if (bestChainIndex !== null) {
+				    draggingChainIndex = bestChainIndex;
+				    draggingDotIndex = bestDotIndex;
+				    return;
+				  }
+
+				  // 2) Only if no blob dot was hit, allow circle dragging
+				  const circlePad = 3; // was effectively 5; smaller reduces accidental grabs
+				  const ci = pickCircleIndex(x, y, circlePad);
+				  if (ci !== null) {
+				    draggingCircleIndex = ci;
+				    return;
+				  }
+				}
+
+
+
+
+				if ((drawMode === 'blob' || drawMode === 'line') && !dragMode) {
+					isDrawing = true;
+					currentPathPoints = [{ x, y, vx: 0, vy: 0, pinned: false }];
+				}
+				// ↑↑↑ END: adapted mousedown body
+			}, { passive: false });
+
+			canvas.addEventListener("pointermove", (e) => {
+				if (activePointerId !== null && e.pointerId !== activePointerId) return;
+
+				// ✅ Only use the most recent coalesced event (or fall back to e)
+				const ce = (e.getCoalescedEvents && e.getCoalescedEvents().pop()) || e;
+
+				const { x, y } = getCanvasXY(ce);
+				currentMouseX = x;
+				currentMouseY = y;
+
+				// If we were waiting for long-press but the finger moved too much, start drawing a new circle instead
+				if (waitingForLongPress && longPressTimer && longPressTargetIndex !== null) {
+					const drift = Math.hypot(x - longPressStartX, y - longPressStartY);
+					if (drift > LONG_PRESS_MOVE_CANCEL) {
+						// Cancel long-press path
+						clearTimeout(longPressTimer);
+						longPressTimer = null;
+						waitingForLongPress = false;
+						longPressTargetIndex = null;
+
+						// Start a new circle draw RIGHT HERE (even if inside another circle)
+						isCircleDrawing = true;
+						// Seed from the original touch-down point for a natural feel
+						currentCircle = {
+							x: longPressStartX,
+							y: longPressStartY,
+							radius: drift, // small initial radius based on the first move
+						};
+					}
+				}
+				// Cancel pending long-press if finger drifts too far
+				if (longPressTimer && longPressTargetIndex !== null) {
+					const drift = Math.hypot(x - longPressStartX, y - longPressStartY);
+					if (drift > LONG_PRESS_MOVE_CANCEL) {
+						clearTimeout(longPressTimer);
+						longPressTimer = null;
+						longPressTargetIndex = null;
+					}
+				}
+
+				// Live-resize an active circle
+				if (resizingCircleIndex !== null) {
+					const c = circles[resizingCircleIndex];
+					c.radius = Math.hypot(x - c.x, y - c.y);
+					// optional HUD
+					if (typeof circleInfo !== 'undefined' && circleInfo) {
+						circleInfo.textContent = "r: " + Math.round(c.radius);
+						circleInfo.style.left = (e.clientX + 14) + "px";
+						circleInfo.style.top = (e.clientY + 18) + "px";
+						circleInfo.style.display = "block";
+					}
+					return; // swallow move while resizing
+				}
+				// draw path (blob/line)
+				if (isDrawing && (drawMode === 'blob' || drawMode === 'line')) {
+					const last = currentPathPoints[currentPathPoints.length - 1];
+					if (Math.hypot(x - last.x, y - last.y) > 1.5) {
+						currentPathPoints.push({ x, y, vx: 0, vy: 0, pinned: false });
+					}
+				}
+
+				// resize in-progress circle
+				if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
+					currentCircle.radius = Math.hypot(x - currentCircle.x, y - currentCircle.y);
+				}
+
+				if ((dragMode || drawMode === "none") && draggingCircleIndex !== null) {
+				  circles[draggingCircleIndex].x = x;
+				  circles[draggingCircleIndex].y = y;
+				}
+
+				// pin/drag hover highlight
+				if ((pinMode || dragMode) && (e.movementX || e.movementY)) {
+					pinHoverChainIndex = null;
+					pinHoverDotIndex = null;
+					let bestDist = Infinity;
+					const hoverRad = 20;
+					for (let c = 0; c < chains.length; c++) {
+						const ch = chains[c].chain;
+						for (let i = 0; i < ch.length; i++) {
+							const d = Math.hypot(x - ch[i].x, y - ch[i].y);
+							if (d < hoverRad && d < bestDist) {
+								bestDist = d;
+								pinHoverChainIndex = c;
+								pinHoverDotIndex = i;
+							}
+						}
+					}
+				}
+			}, { passive: false });
+
+			function finalizePointer(e) {
+				if (activePointerId !== null && e.pointerId !== activePointerId) return;
+
+				if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
+					if (currentCircle.radius > 5) {
+						circles.push(currentCircle);
+						history.push({ type: "circle" });
+					}
+					isCircleDrawing = false;
+					currentCircle = null;
+					draggingCircleIndex = null;
+					circleInfo.style.display = "none";
+				}
+
+				if (isDrawing && currentPathPoints.length > 2 &&
+					(drawMode === 'blob' || drawMode === 'line')) {
+					let r = globalRadiusAvg + (Math.random() * 2 - 1) * globalRadiusVar;
+					if (r < 1) r = 1;
+					const chosenColor = hexToRGBA(colorInput.value);
+					const isClosed = (drawMode === 'blob');
+					if (isClosed) {
+						const f = currentPathPoints[0];
+						currentPathPoints.push({ ...f });
+					}
+					chains.push({
+						chain: currentPathPoints.slice(),
+						color: chosenColor,
+						baseDotRadius: r,
+						isClosed,
+						frozen: false
+					});
+					history.push({ type: "chain" });
+				}
+
+				isDrawing = false;
+				draggingChainIndex = null;
+				draggingDotIndex = null;
+				draggingCircleIndex = null;
+
+
+				if (longPressTimer) {
+					clearTimeout(longPressTimer);
+					longPressTimer = null;
+				}
+				waitingForLongPress = false; // <— NEW
+				longPressTargetIndex = null;
+
+				// If we *were* resizing, turn off highlight and exit resize mode
+				if (resizingCircleIndex !== null) {
+					circles[resizingCircleIndex].__resizing = false; // remove blue rim
+					resizingCircleIndex = null;
+
+					// Hide any radius HUD if you added it
+					if (typeof circleInfo !== 'undefined' && circleInfo) {
+						circleInfo.style.display = "none";
+					}
+				}
+				try { canvas.releasePointerCapture(activePointerId); } catch {}
+				activePointerId = null;
+			}
+
+			canvas.addEventListener("pointerup", finalizePointer, { passive: true });
+			canvas.addEventListener("pointercancel", finalizePointer, { passive: true });
+			canvas.addEventListener("lostpointercapture", () => {
+				isDrawing = false;
+				draggingChainIndex = null;
+				draggingDotIndex = null;
+				draggingCircleIndex = null;
+				activePointerId = null;
+			});
+
+			/* ───────── Device/layout toggler ───────── */
+			const rootWindow = document.querySelector(".window");
+			const contentEl = document.querySelector(".content");
+			const toolbarEl = document.querySelector(".toolbar");
+			const bottomEl = document.querySelector(".bottom-panel");
+
+			/* robust iPad detection (covers iPadOS reporting as Mac) */
+			function isIPad() {
+				const ua = navigator.userAgent || "";
+				const platform = navigator.platform || "";
+				const touch = navigator.maxTouchPoints || 0;
+				return /iPad/.test(ua) || (platform === "MacIntel" && touch > 1);
+			}
+
+			/* iPad panels are now fixed position, no DOM manipulation needed */
+			let toolbarHomeParent = toolbarEl.parentElement;
+			let toolbarHomeNext = toolbarEl.nextSibling;
+
+			function adoptIPadDOM() {
+				// Panels are fixed position on iPad, no DOM changes needed
+				// But ensure they're in the window for proper z-index stacking
+				if (toolbarEl.parentElement !== rootWindow) {
+					rootWindow.appendChild(toolbarEl);
+				}
+				if (bottomEl.parentElement !== rootWindow) {
+					rootWindow.appendChild(bottomEl);
+				}
+			}
+
+			function restoreDesktopDOM() {
+				// Restore original desktop layout
+				if (toolbarHomeNext && toolbarHomeNext.parentNode === toolbarHomeParent) {
+					toolbarHomeParent.insertBefore(toolbarEl, toolbarHomeNext);
+				} else if (toolbarHomeParent) {
+					toolbarHomeParent.appendChild(toolbarEl);
+				}
+			}
+
+			/* Full-screen canvas for iPad - fixed size regardless of panel state */
+			function fitCanvasForIPad() {
+				const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
+				const titleBarHeight = 44;
+				// Always account for panel width - canvas size stays constant
+				const availableWidth = window.innerWidth - panelWidth;
+				const availableHeight = window.innerHeight - titleBarHeight;
+
+				// Fill entire available space (panel space is always reserved)
+				canvas.style.width = availableWidth + "px";
+				canvas.style.height = availableHeight + "px";
+				canvas.width = availableWidth;
+				canvas.height = availableHeight;
+				if (gl) gl.viewport(0, 0, availableWidth, availableHeight);
+			}
+
+			/* master switch */
+			function applyResponsiveLayout() {
+				if (isIPad()) {
+					rootWindow.classList.add("ipad");
+					adoptIPadDOM();
+					document.documentElement.style.overflow = "hidden";
+					document.body.style.overflow = "hidden";
+					fitCanvasForIPad();
+				} else {
+					rootWindow.classList.remove("ipad");
+					restoreDesktopDOM();
+					document.documentElement.style.overflow = "";
+					document.body.style.overflow = "";
+				}
+			}
+
+			applyResponsiveLayout();
+			$("splashOverlay").style.display = "flex"; // ← show splash on load
+			window.addEventListener("resize", applyResponsiveLayout);
+			window.addEventListener("orientationchange", applyResponsiveLayout);
+
+			/* ───────── iPad Panel Toggle Functionality ───────── */
+			const toggleToolbarBtn = $("toggleToolbar");
+			const toggleSlidersBtn = $("toggleSliders");
+			const toolbarPanel = toolbarEl;
+			const bottomPanel = bottomEl;
+
+			function setupPanelToggles() {
+				if (!rootWindow.classList.contains("ipad")) {
+					// Hide toggle buttons on desktop
+					if (toggleToolbarBtn) toggleToolbarBtn.style.display = "none";
+					if (toggleSlidersBtn) toggleSlidersBtn.style.display = "none";
+					return;
+				}
+
+				// Show toggle buttons on iPad
+				if (toggleToolbarBtn) toggleToolbarBtn.style.display = "flex";
+				if (toggleSlidersBtn) toggleSlidersBtn.style.display = "flex";
+
+				// Open toolbar panel by default on iPad
+				if (toolbarPanel) {
+					toolbarPanel.classList.add("panel-visible");
+				}
+				if (toggleToolbarBtn) {
+					toggleToolbarBtn.classList.add("panel-visible");
+					// Set initial button position
+					const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
+					toggleToolbarBtn.style.left = `calc(${panelWidth}px + var(--gap-2))`;
+				}
+
+				// Open bottom panel by default on iPad
+				if (bottomPanel) {
+					bottomPanel.classList.add("panel-visible");
+				}
+				if (toggleSlidersBtn) {
+					toggleSlidersBtn.classList.add("panel-visible");
+				}
+
+				// Toolbar toggle
+				if (toggleToolbarBtn && toolbarPanel) {
+					toggleToolbarBtn.onclick = (e) => {
+						e.stopPropagation();
+						toolbarPanel.classList.toggle("panel-visible");
+						toggleToolbarBtn.classList.toggle("panel-visible");
+						
+						// Update button position based on panel state
+						const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
+						if (toolbarPanel.classList.contains("panel-visible")) {
+							toggleToolbarBtn.style.left = `calc(${panelWidth}px + var(--gap-2))`;
+						} else {
+							toggleToolbarBtn.style.left = "var(--gap-2)";
+						}
+						
+						// Canvas size stays constant - no need to resize
+					};
+				}
+
+				// Sliders toggle
+				if (toggleSlidersBtn && bottomPanel) {
+					toggleSlidersBtn.onclick = (e) => {
+						e.stopPropagation();
+						bottomPanel.classList.toggle("panel-visible");
+						toggleSlidersBtn.classList.toggle("panel-visible");
+					};
+				}
+
+				// Panels stay open when drawing - only toggle via buttons
+			}
+
+			// Setup toggles after layout is applied
+			setTimeout(setupPanelToggles, 100);
+			window.addEventListener("resize", () => {
+				setTimeout(setupPanelToggles, 100);
+			});
+
+			/* -----------------------------------
+			   GLOBALS & DATA
+			----------------------------------- */
+
+			/* 1. Canvas draw-mode */
+			let drawMode = 'blob'; // 'blob' | 'line' | 'circle'
+
+			/* 2. Geometry collections */
+			const chains = []; // { chain:[…], color, baseDotRadius, isClosed, frozen }
+			const circles = []; // { x, y, radius }
+			let history = []; // undo stack
+
+			/* 3. Live drawing state */
+			let isDrawing = false;
+			let isCircleDrawing = false;
+			let currentCircle = null;
+			let draggingCircleIndex = null;
+			// ── Circle long-press/resize state ─────────────────────────────
+			let resizeHoldMs = 1000; // 5 seconds to enter resize mode
+			let longPressTimer = null; // pending timer id
+			let longPressStartX = 0,
+				longPressStartY = 0;
+			let longPressTargetIndex = null; // which circle we’re aiming to resize
+			let resizingCircleIndex = null; // active circle being resized
+			const LONG_PRESS_MOVE_CANCEL = 6; // px tolerance before we cancel press
+			// While we’re waiting to see if this becomes a long-press
+			let waitingForLongPress = false;
+			/* 4. Active edit-tool flags (mutually exclusive) */
+			let slicingMode = false,
+				dragMode = false,
+				pinMode = false,
+				freezeMode = false,
+				deleteMode = false;
+
+			/* 5. Drag / hover helpers */
+			let draggingChainIndex = null,
+				draggingDotIndex = null;
+			let pinHoverChainIndex = null,
+				pinHoverDotIndex = null;
+
+			/* 6. Render options */
+			let showOutline = true; // Show outline/stroke
+			let showFilled = true; // Show filled area
+			let outlineWidth = 4; // Width of outline/border
+			let canvasBackgroundColor = [0.75, 0.80, 0.67, 1.0]; // Canvas background color [r, g, b, a]
+			let showGrid = true; // Show grid on canvas
+
+			/* 7. Physics parameters (defaults) */
+			let springConstant = 0.3, // ~30 %
+				repulsionConstant = 0.09, // ~10 %
+				damping = 0.85, // ~85 %
+				timeStep = 1.05, // slider 47 % → 0.1‒2
+				dotScaleFactor = 2.0, // slider 39 % → 0.1‒5
+				currentLineThickness = 4; // Default to thicker lines
+
+			let prevDamping = damping; // remembers last non-zero value
+
+			/* 8. Noise movement state */
+			let noiseActive = false;
+			let noiseTime = 0;
+			let noiseRampTime = 0; // Time for ramping oscillation
+
+			/* 9. Global shape settings */
+			let globalRadiusAvg = 5,
+				globalRadiusVar = 0;
+
+				let turgorPressure = 0.0; // 0..1 — 0 = no inflation, 1 = max
+
+			// --- Gravity Mode ---
+			let gravityEnabled = false;
+			// Pixels per second^2; feels good across your current timestep range
+			let gravityAccel = 15;
+
+			/* 9. UI element references */
+			const colorInput = $("blobColor");
+			const DOT_SCROLL_STEP = 0.01; // lower = finer control
+			const DOT_MIN_PERCENT = 0;
+			const DOT_MAX_PERCENT = 100;
+			/* -----------------------------------b
+			   ICON "ON" LABEL HELPER
+			----------------------------------- */
+			function toggleActiveIcon(iconEl, isActive) {
+				iconEl.classList.toggle("icon-active", isActive);
+			}
+
+			// A helper to apply the “active” styling to edit-tool icons
+			function setIconActive(iconEl, isActive, activeTitle, inactiveTitle) {
+				iconEl.title = isActive ? activeTitle : inactiveTitle;
+				iconEl.style.backgroundColor = isActive ? "#D3D3D3" : "";
+				iconEl.style.fontWeight = isActive ? "bold" : "normal";
+				iconEl.classList.toggle("icon-active", isActive);
+			}
+
+			function pickCircleIndex(x, y, pad = 5) {
+			  // iterate backwards so “topmost / newest” circle wins
+			  for (let i = circles.length - 1; i >= 0; i--) {
+			    const c = circles[i];
+			    if (Math.hypot(x - c.x, y - c.y) <= c.radius + pad) return i;
+			  }
+			  return null;
+			}
+
+
+			// Ensure only one edit tool is active at a time
+			function setEditTool(toolName, opts = {}) {
+			  const forceOn = !!opts.forceOn;
+
+			  const isAlreadyActive = !forceOn && (
+			    (toolName === "slice"  && slicingMode) ||
+			    (toolName === "drag"   && dragMode)    ||
+			    (toolName === "pin"    && pinMode)     ||
+			    (toolName === "freeze" && freezeMode)  ||
+			    (toolName === "delete" && deleteMode)
+			  );
+
+			  // Turn everything off first
+			  slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+
+			  // Turn the requested tool on (unless user toggled it off)
+			  if (forceOn || !isAlreadyActive) {
+			    if (toolName === "slice")  slicingMode = true;
+			    if (toolName === "drag")   dragMode = true;
+			    if (toolName === "pin")    pinMode = true;
+			    if (toolName === "freeze") freezeMode = true;
+			    if (toolName === "delete") deleteMode = true;
+			  }
+
+			  // ✅ If no draw mode is active, we ALWAYS fall back to drag
+			  const anyEditOn = slicingMode || dragMode || pinMode || freezeMode || deleteMode;
+
+				if (anyEditOn) {
+  // ✅ If any edit tool is active, drawing must be OFF
+  clearDrawModeUIOnly();
+}
+			  if (!anyEditOn && drawMode === "none") {
+			    dragMode = true;
+			  }
+
+			  // UI updates (same as your existing code)
+			  const editFrame = $("editToolsSection");
+			  editFrame.classList.toggle("edit-on", slicingMode || dragMode || pinMode || freezeMode || deleteMode);
+
+			  setIconActive($("iconSlice"),  slicingMode, "Slicing Mode (On)", "Slicing Mode (Off)");
+			  setIconActive($("iconDrag"),   dragMode,    "Disable Drag Mode", "Enable Drag Mode");
+			  setIconActive($("iconPin"),    pinMode,     "Disable Pin Mode",  "Enable Pin Mode");
+			  setIconActive($("iconFreeze"), freezeMode,  "Disable Freeze Mode","Enable Freeze Mode");
+			  setIconActive($("iconDelete"), deleteMode,  "Disable Delete Mode","Enable Delete Mode");
+
+			  updateCanvasCursor();
+
+			  const msg =
+			    forceOn ? "Drag mode" :
+			    (isAlreadyActive ? "Edit tools off" : `Edit mode: ${toolName.toUpperCase()}`);
+
+			  toast(msg, 1800);
+			}
+
+
+			/* -----------------------------------
+			   DRAW MODE: BLOB / LINE / CIRCLE
+			----------------------------------- */
+			function clearAllEditToolsUIOnly() {
+			  const editFrame = $("editToolsSection");
+			  editFrame.classList.remove("edit-on");
+			  setIconActive($("iconSlice"),  false, "Slicing Mode (On)", "Slicing Mode (Off)");
+			  setIconActive($("iconDrag"),   false, "Disable Drag Mode", "Enable Drag Mode");
+			  setIconActive($("iconPin"),    false, "Disable Pin Mode",  "Enable Pin Mode");
+			  setIconActive($("iconFreeze"), false, "Disable Freeze Mode","Enable Freeze Mode");
+			  setIconActive($("iconDelete"), false, "Disable Delete Mode","Enable Delete Mode");
+			}
+
+			function clearDrawModeUIOnly() {
+			  drawMode = "none";
+			  toggleActiveIcon($("iconBlob"), false);
+			  toggleActiveIcon($("iconLine"), false);
+			  toggleActiveIcon($("iconCircle"), false);
+			}
+
+
+			function setDrawMode(mode) {
+			  // Toggle: clicking the same draw mode turns drawing OFF
+			  drawMode = (drawMode === mode) ? "none" : mode;
+
+			  toggleActiveIcon($("iconBlob"),   drawMode === "blob");
+			  toggleActiveIcon($("iconLine"),   drawMode === "line");
+			  toggleActiveIcon($("iconCircle"), drawMode === "circle");
+
+			  if (drawMode === "none") {
+			    // ✅ When draw is off, drag becomes the default interaction
+			    setEditTool("drag", { forceOn: true });
+			    toast("Draw: OFF (Drag)", 1600);
+			  } else {
+			    // Entering a draw mode: turn off edit tools to avoid blocking drawing
+			    slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+			    clearAllEditToolsUIOnly();
+			    toast(`Draw mode: ${drawMode.toUpperCase()}`, 1600);
+			  }
+
+			  updateCanvasCursor();
+			}
+
+			// Initialize default draw mode
+			setDrawMode("none");
+			setDrawMode("blob");
+			/* -----------------------------------
+			   EDIT TOOL ICONS (now calling setEditTool)
+			----------------------------------- */
+			$("iconSlice").onclick = function() {
+				setEditTool("slice");
+			};
+			$("iconDrag").onclick = function() {
+				setEditTool("drag");
+			};
+			$("iconPin").onclick = function() {
+				setEditTool("pin");
+			};
+			$("iconFreeze").onclick = function() {
+				setEditTool("freeze");
+			};
+			$("iconDelete").onclick = function() {
+				setEditTool("delete");
+			};
+
+			/* -----------------------------------
+			   APPEARANCE DIALOG
+			----------------------------------- */
+			$("iconAppearance").onclick = () => {
+				// Initialize dialog with current values
+				$("appearanceOutline").checked = showOutline;
+				$("appearanceFilled").checked = showFilled;
+				$("appearanceOutlineWidth").value = outlineWidth;
+				$("appearanceOutlineWidthValue").textContent = outlineWidth;
+				
+				// Show/hide outline width based on outline checkbox
+				$("appearanceOutlineWidthGroup").style.display = showOutline ? "block" : "none";
+				
+				// Canvas settings
+				const bgColor = canvasBackgroundColor;
+				const hexColor = "#" + [Math.round(bgColor[0] * 255), Math.round(bgColor[1] * 255), Math.round(bgColor[2] * 255)]
+					.map(x => x.toString(16).padStart(2, '0')).join('');
+				$("appearanceBackgroundColor").value = hexColor;
+				$("appearanceShowGrid").checked = showGrid;
+				
+				updateAppearancePreview();
+				$("appearanceBackdrop").style.display = "flex";
+			};
+
+			$("appearanceCancelBtn").onclick = () => {
+				$("appearanceBackdrop").style.display = "none";
+			};
+
+			$("appearanceApplyBtn").onclick = () => {
+				// Apply settings
+				showOutline = $("appearanceOutline").checked;
+				showFilled = $("appearanceFilled").checked;
+				outlineWidth = parseInt($("appearanceOutlineWidth").value);
+				
+				// Update line thickness based on outline width
+				currentLineThickness = outlineWidth;
+				
+				// Canvas settings
+				const hexColor = $("appearanceBackgroundColor").value;
+				const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+				const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+				const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+				canvasBackgroundColor = [r, g, b, 1.0];
+				showGrid = $("appearanceShowGrid").checked;
+				
+				// Update canvas background color
+				gl.clearColor(canvasBackgroundColor[0], canvasBackgroundColor[1], canvasBackgroundColor[2], canvasBackgroundColor[3]);
+				
+				$("appearanceBackdrop").style.display = "none";
+				toast("Appearance updated", 1600);
+			};
+
+			// Update preview when controls change
+			$("appearanceFilled").addEventListener("change", updateAppearancePreview);
+			$("appearanceOutline").addEventListener("change", () => {
+				// Show/hide outline width based on outline checkbox
+				$("appearanceOutlineWidthGroup").style.display = $("appearanceOutline").checked ? "block" : "none";
+				updateAppearancePreview();
+			});
+			$("appearanceOutlineWidth").addEventListener("input", () => {
+				$("appearanceOutlineWidthValue").textContent = $("appearanceOutlineWidth").value;
+				updateAppearancePreview();
+			});
+			$("appearanceBackgroundColor").addEventListener("input", updateAppearancePreview);
+			$("appearanceShowGrid").addEventListener("change", updateAppearancePreview);
+
+			// Preview rendering function
+			function updateAppearancePreview() {
+				const canvas = $("appearancePreviewCanvas");
+				const ctx = canvas.getContext("2d");
+				const width = canvas.width;
+				const height = canvas.height;
+				
+				// Draw canvas background preview
+				const hexColor = $("appearanceBackgroundColor").value;
+				ctx.fillStyle = hexColor;
+				ctx.fillRect(0, 0, width, height);
+				
+				// Draw grid if enabled
+				if ($("appearanceShowGrid").checked) {
+					ctx.strokeStyle = "rgba(115, 128, 115, 0.3)";
+					ctx.lineWidth = 1;
+					for (let i = 0; i <= width; i += 20) {
+						ctx.beginPath();
+						ctx.moveTo(i, 0);
+						ctx.lineTo(i, height);
+						ctx.stroke();
+					}
+					for (let i = 0; i <= height; i += 20) {
+						ctx.beginPath();
+						ctx.moveTo(0, i);
+						ctx.lineTo(width, i);
+						ctx.stroke();
+					}
+				}
+				
+				// Draw preview blob
+				const centerX = width / 2;
+				const centerY = height / 2;
+				const radius = 60;
+				const showOutlineCheck = $("appearanceOutline").checked;
+				const showFilledCheck = $("appearanceFilled").checked;
+				const outlineWidthVal = parseInt($("appearanceOutlineWidth").value);
+				
+				ctx.save();
+				
+				// Create blob path (simple rounded shape)
+				ctx.beginPath();
+				const numPoints = 8;
+				for (let i = 0; i < numPoints; i++) {
+					const angle = (i / numPoints) * Math.PI * 2;
+					const r = radius + Math.sin(angle * 3) * 15;
+					const x = centerX + Math.cos(angle) * r;
+					const y = centerY + Math.sin(angle) * r;
+					if (i === 0) {
+						ctx.moveTo(x, y);
+					} else {
+						ctx.lineTo(x, y);
+					}
+				}
+				ctx.closePath();
+				
+				// Draw filled area if enabled
+				if (showFilledCheck) {
+					ctx.fillStyle = "#0066ff";
+					ctx.fill();
+				}
+				
+				// Draw outline if enabled
+				if (showOutlineCheck) {
+					ctx.strokeStyle = showFilledCheck ? "#000" : "#0066ff";
+					ctx.lineWidth = outlineWidthVal;
+					ctx.setLineDash([]);
+					ctx.stroke();
+				}
+				
+				ctx.restore();
+			}
+
+			/* -----------------------------------
+			   UNDO & RESET
+			----------------------------------- */
+
+			$("iconUndo").onclick = () => {
+				if (history.length > 0) {
+					const last = history.pop();
+					if (last.type === "chain") chains.pop();
+					if (last.type === "circle") circles.pop();
+				}
+				toast("Undo", 1200);
+			};
+
+			$("resetIcon").onclick = () => {
+				if (confirm("Are you sure you want to clear the entire canvas?")) {
+					chains.length = 0;
+					circles.length = 0;
+					history.length = 0;
+				}
+				toast("Canvas cleared", 1600);
+			};
+
+			let interRepelMult = 1; // 1 = normal, 3 = boosted
+
+			$("iconDiffusion").onclick = () => {
+				interRepelMult = interRepelMult === 1 ? 3 : 1;
+				toggleActiveIcon($("iconDiffusion"), interRepelMult === 3);
+				toast(interRepelMult === 3 ? "High Repel: ON" : "High Repel: OFF", 1600);
+			};
+
+			$("iconGravity").addEventListener("click", () => {
+  gravityEnabled = !gravityEnabled;
+  $("iconGravity").classList.toggle("icon-active", gravityEnabled);
+  toast(gravityEnabled ? "Gravity ON" : "Gravity OFF");
+});
+
+// Optional keyboard shortcut: G
+window.addEventListener("keydown", (e) => {
+  if (e.key === "g" || e.key === "G") $("iconGravity").click();
+});
+
+			/* -----------------------------------
+			   DRAW MODE ICONS
+			----------------------------------- */
+			$("iconBlob").onclick = () => setDrawMode('blob');
+			$("iconLine").onclick   = () => setDrawMode("line");
+			$("iconCircle").onclick = () => setDrawMode("circle");
+
+			/* -----------------------------------
+			   UPDATE CANVAS CURSOR
+			----------------------------------- */
+			function updateCanvasCursor() {
+				canvas.classList.remove(
+					"canvas-blob-mode",
+					"canvas-line-mode",
+					"canvas-circle-mode",
+					"canvas-drag-mode",
+					"canvas-pin-mode",
+					"canvas-slicing-mode",
+					"canvas-freeze-mode",
+					"canvas-delete-mode"
+				);
+				// Draw mode
+				if (drawMode === 'blob') canvas.classList.add("canvas-blob-mode");
+				if (drawMode === 'line') canvas.classList.add("canvas-line-mode");
+				if (drawMode === 'circle') canvas.classList.add("canvas-circle-mode");
+
+				// Edit tools
+				if (slicingMode) canvas.classList.add("canvas-slicing-mode");
+				if (dragMode) canvas.classList.add("canvas-drag-mode");
+				if (pinMode) canvas.classList.add("canvas-pin-mode");
+				if (freezeMode) canvas.classList.add("canvas-freeze-mode");
+				if (deleteMode) canvas.classList.add("canvas-delete-mode");
+			}
+
+			/* -----------------------------------
+			   FILE MENU LOGIC (SAVE/LOAD)
+			----------------------------------- */
+			function getCurrentSettings() {
+			    return {
+			        timeStep,
+			        springConstant,
+			        repulsionConstant,
+			        damping,
+			        dotScaleFactor,
+			        currentLineThickness,
+			        globalRadiusAvg,
+			        globalRadiusVar,
+			        colorValue: colorInput.value,
+			        turgorPressure      // NEW: 0..1
+			    };
+			}
+
+
+			function applySettings(obj) {
+				if (typeof obj.timeStep === "number") {
+					timeStep = obj.timeStep;
+					$("timeStepSlider").value = ((timeStep - 0.1) / (2 - 0.1)) * 100;
+					$("timeStepValue").textContent = $("timeStepSlider").value + "%";
+				}
+				if (typeof obj.springConstant === "number") {
+					springConstant = obj.springConstant;
+					$("springConstantSlider").value = springConstant * 100;
+					$("springConstantValue").textContent = $("springConstantSlider").value + "%";
+				}
+				if (typeof obj.repulsionConstant === "number") {
+					repulsionConstant = obj.repulsionConstant;
+					$("repulsionConstantSlider").value = repulsionConstant * 200;
+					$("repulsionConstantValue").textContent = $("repulsionConstantSlider").value + "%";
+				}
+				if (typeof obj.damping === "number") {
+					damping = obj.damping;
+					$("dampingSlider").value = damping * 100;
+					$("dampingValue").textContent = $("dampingSlider").value + "%";
+				}
+				if (typeof obj.dotScaleFactor === "number") {
+					dotScaleFactor = obj.dotScaleFactor;
+					$("dotScaleSlider").value = ((dotScaleFactor - 0.1) / (5 - 0.1)) * 100;
+					$("dotScaleValue").textContent = $("dotScaleSlider").value + "%";
+				}
+				if (typeof obj.currentLineThickness === "number") {
+					currentLineThickness = obj.currentLineThickness;
+					$("iconThickness").title = (currentLineThickness === 1) ?
+						"Line Thickness: Thin" :
+						"Line Thickness: Thick";
+					$("iconThickness").style.fontWeight = (currentLineThickness === 5) ? "bold" : "normal";
+					$("iconThickness").style.backgroundColor = (currentLineThickness === 5) ? "#D3D3D3" : "";
+					toggleActiveIcon($("iconThickness"), currentLineThickness > 1);
+				}
+				if (typeof obj.globalRadiusAvg === "number") {
+					globalRadiusAvg = obj.globalRadiusAvg;
+					$("radiusAvgInput").value = obj.globalRadiusAvg;
+				}
+				if (typeof obj.globalRadiusVar === "number") {
+					globalRadiusVar = obj.globalRadiusVar;
+					$("radiusVarInput").value = obj.globalRadiusVar;
+				}
+				if (typeof obj.colorValue === "string") {
+					colorInput.value = obj.colorValue;
+				}
+				if (typeof obj.turgorPressure === "number") {
+			    // clamp just in case incoming JSON is slightly out of range
+			    turgorPressure = Math.max(0, Math.min(1, obj.turgorPressure));
+
+			    const s = $("turgorPressureSlider");
+			    const v = $("turgorPressureValue");
+
+			    if (s && v) {
+			        s.value = Math.round(turgorPressure * 100);
+			        v.textContent = s.value + "%";
+			    }
+			}
+
+			}
+
+			function downloadJSON(filename, dataObj) {
+				const dataStr = JSON.stringify(dataObj, null, 2);
+				const blob = new Blob([dataStr], { type: "application/json" });
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement("a");
+				link.href = url;
+				link.download = filename;
+				link.click();
+				URL.revokeObjectURL(url);
+			}
+
+			/* ---------- SAVE ---------- */
+			$("saveBlobsOption").onclick = e => {
+				e.stopPropagation();
+				$("fileSubmenu").style.display = "none";
+				$("saveOptionsBackdrop").style.display = "flex";
+			};
+			$("cancelSaveBtn").onclick = () =>
+				$("saveOptionsBackdrop").style.display = "none";
+
+			$("confirmSaveBtn").onclick = () => {
+				const payload = {};
+				if ($("saveIncludeChains").checked) payload.chains = chains;
+				if ($("saveIncludeCircles").checked) payload.circles = circles;
+				if ($("saveIncludeSettings").checked) payload.settings = getCurrentSettings();
+				downloadJSON("blobs.json", payload);
+				$("saveOptionsBackdrop").style.display = "none";
+			};
+
+			/* ---------- IMPORT (file ➜ dialog) ---------- */
+			let pendingImport = null; // temp storage
+
+			$("loadBlobsOption").onclick = e => {
+				e.stopPropagation();
+				$("fileSubmenu").style.display = "none";
+
+
+
+
+
+				const fi = document.createElement("input");
+				fi.type = "file";
+				fi.accept = ".json,application/json"; // broader accept
+
+				fi.style.display = "none";
+				document.body.appendChild(fi);
+
+				fi.onchange = ev => {
+					const file = ev.target.files && ev.target.files[0];
+					if (!file) { fi.remove(); return; }
+
+					const reader = new FileReader();
+					reader.onload = evt => {
+						try {
+							pendingImport = JSON.parse(evt.target.result);
+							$("importIncludeChains").disabled = !pendingImport.chains;
+							$("importIncludeCircles").disabled = !pendingImport.circles;
+							$("importIncludeSettings").disabled = !pendingImport.settings;
+							$("importIncludeChains").checked = !!pendingImport.chains;
+							$("importIncludeCircles").checked = !!pendingImport.circles;
+							$("importIncludeSettings").checked = !!pendingImport.settings;
+							$("importOptionsBackdrop").style.display = "flex";
+							$("importOptionsBackdrop").style.pointerEvents = "auto";
+						} catch {
+							alert("Error parsing JSON file!");
+						} finally {
+							fi.remove(); // clean up
+						}
+					};
+					reader.readAsText(file);
+				};
+
+				fi.value = ""; // lets you import the same file twice
+				fi.click();
+			};
+
+			/* user clicks Import / Cancel */
+			$("confirmImportBtn").onclick = () => {
+				if (!pendingImport) return;
+
+				// Close NOW so iPad can paint the hide
+				const b = $("importOptionsBackdrop");
+				if (b) {
+					b.style.display = "none";
+					b.style.pointerEvents = "none"; // prevents any “ghost” hitbox
+					void document.body.offsetHeight; // iOS paint nudge
+				}
+
+				// Defer heavy import/physics so the hide actually commits
+				setTimeout(() => {
+					try {
+						if ($("importIncludeChains")?.checked && pendingImport.chains)
+							pendingImport.chains.forEach(c => chains.push(c));
+
+						if ($("importIncludeCircles")?.checked && pendingImport.circles)
+							pendingImport.circles.forEach(c => circles.push(c));
+
+						if ($("importIncludeSettings")?.checked && pendingImport.settings) {
+							try { applySettings(pendingImport.settings); } catch (e) { console.warn(e); }
+						}
+
+						if ($("importIncludePhysics")?.checked) {
+							applyImportedPhysics?.(pendingImport) ?? startPhysicsFromImport?.(pendingImport);
+						}
+					} finally {
+						pendingImport = null;
+					}
+				}, 0);
+			};
+			$("cancelImportBtn").onclick = () => {
+				pendingImport = null;
+				$("importOptionsBackdrop").style.display = "none";
+			};
+
+
+
+			/* -----------------------------------
+			   MOUSE EVENTS & DRAWING
+			----------------------------------- */
+			let currentPathPoints = [];
+			let currentMouseX = 0,
+				currentMouseY = 0;
+
+			const dotSlider = $("dotScaleSlider");
+
+			/* Wheel on canvas */
+			canvas.addEventListener("wheel", handleDotWheel, { passive: false });
+			/* Wheel directly on the slider (nice for trackpads) */
+			dotSlider.addEventListener("wheel", handleDotWheel, { passive: false });
+
+			function handleDotWheel(e) {
+				e.preventDefault(); // stop page scroll
+				const delta = e.deltaY; // +120, −120, etc.
+				const current = parseFloat(dotSlider.value);
+				const next = current - delta * DOT_SCROLL_STEP;
+				setDotScale(next);
+			}
+
+			canvas.addEventListener("mousemove", e => {
+				const rect = canvas.getBoundingClientRect();
+				currentMouseX = e.clientX - rect.left;
+				currentMouseY = e.clientY - rect.top;
+
+				// If drawing a blob or line
+				if (isDrawing && (drawMode === 'blob' || drawMode === 'line')) {
+					const last = currentPathPoints[currentPathPoints.length - 1];
+					const dx = currentMouseX - last.x,
+						dy = currentMouseY - last.y;
+					if (Math.sqrt(dx * dx + dy * dy) > 1.5) {
+						currentPathPoints.push({
+							x: currentMouseX,
+							y: currentMouseY,
+							vx: 0,
+							vy: 0,
+							pinned: false
+						});
+					}
+				}
+
+				// If resizing a new circle
+				if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
+					const r = Math.sqrt(
+						(currentMouseX - currentCircle.x) ** 2 +
+						(currentMouseY - currentCircle.y) ** 2
+					);
+					currentCircle.radius = r;
+
+					circleInfo.textContent = "r: " + Math.round(r);
+					circleInfo.style.left = (e.clientX + 14) + "px";
+					circleInfo.style.top = (e.clientY + 18) + "px";
+					circleInfo.style.display = "block";
+				} else {
+					circleInfo.style.display = "none";
+				}
+
+				// If dragging an existing circle
+				if ((dragMode || drawMode === "none") && draggingCircleIndex !== null) {
+				  circles[draggingCircleIndex].x = currentMouseX;
+				  circles[draggingCircleIndex].y = currentMouseY;
+				}
+
+
+				// Highlight nearest dot if pinMode/dragMode
+				if ((pinMode || dragMode) && (e.movementX || e.movementY)) {
+					pinHoverChainIndex = null;
+					pinHoverDotIndex = null;
+
+					let bestDist = Infinity;
+					const hoverRad = 20; // hover radius in px
+
+					for (let c = 0; c < chains.length; c++) {
+						const ch = chains[c].chain;
+						for (let i = 0; i < ch.length; i++) {
+							const dot = ch[i];
+							const dx = currentMouseX - dot.x;
+							const dy = currentMouseY - dot.y;
+							const dist = Math.sqrt(dx * dx + dy * dy);
+							if (dist < hoverRad && dist < bestDist) {
+								bestDist = dist;
+								pinHoverChainIndex = c;
+								pinHoverDotIndex = i;
+							}
+						}
+					}
+				}
+
+			});
+
+			function polygonArea(points) {
+				let sum = 0;
+				for (let i = 0; i < points.length; i++) {
+					const j = (i + 1) % points.length;
+					sum += points[i].x * points[j].y -
+						points[j].x * points[i].y;
+				}
+				return Math.abs(sum) / 2;
+			}
+
+			function measurePerimeterArea(pts, isClosed=true) {
+  const N = pts.length;
+  if (N < 2) return { L: 0, A: 0 };
+  let L = 0, twiceA = 0;
+  const M = isClosed ? N : N - 1;
+  for (let i = 0; i < M; i++) {
+    const j = (i + 1) % N;
+    const ex = pts[j].x - pts[i].x;
+    const ey = pts[j].y - pts[i].y;
+    L += Math.hypot(ex, ey);
+    twiceA += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+  }
+  return { L, A: 0.5 * twiceA };
+}
+
+			/**
+			 * Ray-casting test for point-in-polygon
+			 */
+			function pointInPolygon(px, py, polygon) {
+				let inside = false;
+				for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+					const xi = polygon[i].x,
+						yi = polygon[i].y;
+					const xj = polygon[j].x,
+						yj = polygon[j].y;
+					const intersect = ((yi > py) !== (yj > py)) &&
+						(px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+					if (intersect) inside = !inside;
+				}
+				return inside;
+			}
+
+			canvas.addEventListener("mousedown", e => {
+				if (e.button !== 0) return;
+				const rect = canvas.getBoundingClientRect();
+				const mouseX = e.clientX - rect.left;
+				const mouseY = e.clientY - rect.top;
+
+				if (dragMode && drawMode !== "circle") {
+					for (let i = 0; i < circles.length; i++) {
+						const c = circles[i],
+							dx = mouseX - c.x,
+							dy = mouseY - c.y;
+						if (Math.hypot(dx, dy) < c.radius + 5) { // inside any circle?
+							toast("Hint: turn Circle draw mode ON to move circles.",
+								3000);
+							break;
+						}
+					}
+				}
+
+				// Circle creation or circle dragging
+				if (drawMode === 'circle') {
+					if (dragMode) {
+						// If we're in dragMode AND circle draw mode, we only do circle dragging:
+						// (Try to pick up an existing circle but do NOT create a new one)
+						for (let i = 0; i < circles.length; i++) {
+							const c = circles[i];
+							const dx = mouseX - c.x;
+							const dy = mouseY - c.y;
+							if (Math.sqrt(dx * dx + dy * dy) < c.radius + 5) {
+								draggingCircleIndex = i;
+								return;
+							}
+						}
+
+						// If we didn’t find a circle to drag, just return without creating one:
+						return;
+
+					} else {
+						// Otherwise (dragMode is OFF), start a new circle
+						isCircleDrawing = true;
+						currentCircle = { x: mouseX, y: mouseY, radius: 0 };
+						return;
+					}
+				}
+
+				// Slicing mode
+				if (slicingMode) {
+					let bestChainIndex = null;
+					let bestDotIndex = null;
+					let bestDist = Infinity;
+					const sliceRadius = 15;
+
+					for (let c = 0; c < chains.length; c++) {
+						const ch = chains[c].chain;
+						for (let i = 0; i < ch.length; i++) {
+							const dot = ch[i];
+							const dx = mouseX - dot.x;
+							const dy = mouseY - dot.y;
+							const dist = Math.sqrt(dx * dx + dy * dy);
+							if (dist < sliceRadius && dist < bestDist) {
+								bestDist = dist;
+								bestChainIndex = c;
+								bestDotIndex = i;
+							}
+						}
+					}
+					if (bestChainIndex !== null) {
+						const ch = chains[bestChainIndex].chain;
+						if (bestDotIndex > 0 && bestDotIndex < ch.length - 1) {
+							const firstHalf = ch.slice(0, bestDotIndex);
+							const secondHalf = ch.slice(bestDotIndex);
+							chains[bestChainIndex].chain = firstHalf;
+							chains.push({
+								...chains[bestChainIndex],
+								chain: secondHalf
+							});
+							history.push({ type: "chain" });
+						}
+					}
+					return;
+				}
+
+				// Freeze mode
+				if (freezeMode) {
+					// 1) find all blobs under the mouse
+					const hits = [];
+					for (let i = 0; i < chains.length; i++) {
+						const ch = chains[i];
+						if (!ch.isClosed) continue;
+						if (pointInPolygon(mouseX, mouseY, ch.chain)) {
+							hits.push(i);
+						}
+					}
+
+					if (hits.length) {
+						// 2) pick the smallest one
+						let bestIndex = hits[0];
+						let bestArea = polygonArea(chains[bestIndex].chain);
+
+						for (let k = 1; k < hits.length; k++) {
+							const idx = hits[k];
+							const area = polygonArea(chains[idx].chain);
+							if (area < bestArea) {
+								bestArea = area;
+								bestIndex = idx;
+							}
+						}
+
+						// 3) toggle only that blob
+						chains[bestIndex].frozen = !chains[bestIndex].frozen;
+						chains[bestIndex].alpha = chains[bestIndex].frozen ? 0.3 : 1.0;
+					}
+					return;
+				}
+				// ----- DELETE MODE: remove the smallest blob under cursor -----
+				if (deleteMode) {
+
+					/* a) test circles first */
+					for (let i = 0; i < circles.length; i++) {
+						const c = circles[i],
+							dx = mouseX - c.x,
+							dy = mouseY - c.y;
+						if (Math.hypot(dx, dy) < c.radius) {
+							circles.splice(i, 1);
+							history.push({ type: "circle" });
+							return;
+						}
+					}
+
+					/* b) test open lines: nearest segment within 6 px */
+					const SEG_TOL = 6;
+					for (let k = 0; k < chains.length; k++) {
+						const obj = chains[k];
+						if (obj.isClosed) continue; // skip blobs (do later)
+						const pts = obj.chain;
+						for (let i = 0; i < pts.length - 1; i++) {
+							const a = pts[i],
+								b = pts[i + 1];
+							const t = ((mouseX - a.x) * (b.x - a.x) + (mouseY - a.y) * (b.y - a.y)) /
+								((b.x - a.x) ** 2 + (b.y - a.y) ** 2);
+							const clamped = Math.max(0, Math.min(1, t));
+							const px = a.x + clamped * (b.x - a.x);
+							const py = a.y + clamped * (b.y - a.y);
+							if (Math.hypot(mouseX - px, mouseY - py) < SEG_TOL) {
+								chains.splice(k, 1);
+								history.push({ type: "chain" });
+								return;
+							}
+						}
+					}
+
+					/* c) fall back to old “blob” logic (smallest closed shape) */
+					const hits = [];
+					for (let i = 0; i < chains.length; i++) {
+						if (!chains[i].isClosed) continue;
+						if (pointInPolygon(mouseX, mouseY, chains[i].chain)) hits.push(i);
+					}
+					if (hits.length) {
+						let best = hits[0],
+							bestArea = polygonArea(chains[best].chain);
+						for (let j = 1; j < hits.length; j++) {
+							const area = polygonArea(chains[hits[j]].chain);
+							if (area < bestArea) {
+								best = hits[j];
+								bestArea = area;
+							}
+						}
+						chains.splice(best, 1);
+						history.push({ type: "chain" });
+					}
+					return;
+				}
+				// Pin mode
+				if (pinMode) {
+					let bestChainIndex = null;
+					let bestDotIndex = null;
+					let bestDist = Infinity;
+					const pickRadius = 20;
+
+					for (let c = 0; c < chains.length; c++) {
+						const ch = chains[c].chain;
+						for (let i = 0; i < ch.length; i++) {
+							const dot = ch[i];
+							const dx = mouseX - dot.x;
+							const dy = mouseY - dot.y;
+							const dist = Math.sqrt(dx * dx + dy * dy);
+							if (dist < pickRadius && dist < bestDist) {
+								bestDist = dist;
+								bestChainIndex = c;
+								bestDotIndex = i;
+							}
+						}
+					}
+					if (bestChainIndex !== null) {
+						const dot = chains[bestChainIndex].chain[bestDotIndex];
+						dot.pinned = !dot.pinned;
+						return;
+					}
+					return;
+				}
+
+				const wantDrag = (dragMode || drawMode === "none");
+
+	if (wantDrag) {
+	  // 1) Prefer dragging blob dots first
+	  let bestChainIndex = null;
+	  let bestDotIndex = null;
+	  let bestDist = Infinity;
+	  const pickRadius = 20;
+
+	  for (let c = 0; c < chains.length; c++) {
+	    const ch = chains[c].chain;
+	    for (let i = 0; i < ch.length; i++) {
+	      const dot = ch[i];
+	      const dx = mouseX - dot.x;
+	      const dy = mouseY - dot.y;
+	      const dist = Math.sqrt(dx * dx + dy * dy);
+	      if (dist < pickRadius && dist < bestDist) {
+	        bestDist = dist;
+	        bestChainIndex = c;
+	        bestDotIndex = i;
+	      }
+	    }
+	  }
+
+	  if (bestChainIndex !== null) {
+	    draggingChainIndex = bestChainIndex;
+	    draggingDotIndex = bestDotIndex;
+	    return;
+	  }
+
+	  // 2) Only if no blob dot was hit, allow circle dragging
+	  const circlePad = 3; // was effectively 5; smaller reduces accidental grabs
+	  const ci = pickCircleIndex(mouseX, mouseY, circlePad);
+	  if (ci !== null) {
+	    draggingCircleIndex = ci;
+	    return;
+	  }
+	}
+
+
+				// Otherwise, if in blob or line mode, start freehand
+				if ((drawMode === 'blob' || drawMode === 'line') && !dragMode) {
+					isDrawing = true;
+					currentPathPoints = [{
+						x: mouseX,
+						y: mouseY,
+						vx: 0,
+						vy: 0,
+						pinned: false
+					}];
+				}
+			});
+
+			window.addEventListener("mouseup", e => {
+				if (e.button !== 0) return;
+
+				// Finalize circle
+				if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
+					if (currentCircle.radius > 5) {
+						circles.push(currentCircle);
+						history.push({ type: "circle" });
+					}
+					isCircleDrawing = false;
+					currentCircle = null;
+					draggingCircleIndex = null;
+
+					circleInfo.style.display = "none"; // ← hide the live radius overlay
+					return;
+				}
+
+				// Finalize blob/line
+				if (isDrawing && currentPathPoints.length > 2 && (drawMode === 'blob' || drawMode === 'line')) {
+					let r = globalRadiusAvg + (Math.random() * 2 - 1) * globalRadiusVar;
+					if (r < 1) r = 1;
+					const chosenColor = hexToRGBA(colorInput.value);
+
+					const isClosed = (drawMode === 'blob');
+					if (isClosed) {
+						// close shape
+						const f = currentPathPoints[0];
+						currentPathPoints.push({ ...f });
+					}
+
+					// NEW: initialize reference geometry for turgor controller
+				   const { L, A } = measurePerimeterArea(currentPathPoints, isClosed);
+				   const _L0 = Math.max(L, 1e-6);
+				   const _A0 = Math.max(Math.abs(A), 1e-6);
+
+
+					chains.push({
+						chain: currentPathPoints.slice(),
+						color: chosenColor,
+						baseDotRadius: r,
+						isClosed,
+						_L0,
+						_A0,
+						frozen: false
+					});
+					history.push({ type: "chain" });
+				}
+
+				// End all "mouseDown" states
+				isDrawing = false;
+				draggingChainIndex = null;
+				draggingDotIndex = null;
+				draggingCircleIndex = null;
+			});
+
+			window.addEventListener("mouseleave", () => {
+				isDrawing = false;
+				draggingChainIndex = null;
+				draggingDotIndex = null;
+				draggingCircleIndex = null;
+			});
+
+			/* -----------------------------------
+			   SHADERS & PROGRAM
+			----------------------------------- */
+			function compileShader(type, src) {
+				const s = gl.createShader(type);
+				gl.shaderSource(s, src);
+				gl.compileShader(s);
+				if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+					console.error("Shader compile error:", gl.getShaderInfoLog(s));
+					gl.deleteShader(s);
+					return null;
+				}
+				return s;
+			}
+
+			function createProgram(vsSrc, fsSrc) {
+				const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+				const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+				const p = gl.createProgram();
+				gl.attachShader(p, vs);
+				gl.attachShader(p, fs);
+				gl.linkProgram(p);
+				if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
+					console.error("Program link error:", gl.getProgramInfoLog(p));
+					return null;
+				}
+				return p;
+			}
+			const vsSource = `
+    attribute vec2 a_position;
+    uniform vec2 u_resolution;
+    void main(){
+      vec2 clipSpace = (a_position / u_resolution)*2.0 - 1.0;
+      clipSpace.y = -clipSpace.y;
+      gl_Position = vec4(clipSpace,0,1);
+    }
+  `;
+			const fsSource = `
+    precision mediump float;
+    uniform vec4 u_color;
+    void main(){
+      gl_FragColor = u_color;
+    }
+  `;
+			const lineProgram = createProgram(vsSource, fsSource);
+			const linePosLoc = gl.getAttribLocation(lineProgram, "a_position");
+			const lineResLoc = gl.getUniformLocation(lineProgram, "u_resolution");
+			const lineColorLoc = gl.getUniformLocation(lineProgram, "u_color");
+			const positionBuffer = gl.createBuffer();
+			let thickScratch = new Float32Array(0);
+			/* -----------------------------------
+			   CATMULL–ROM SPLINE HELPERS
+			----------------------------------- */
+			function getClosedSmoothCurve(points, seg = 10) {
+				const n = points.length;
+				if (n < 2) return new Float32Array([]);
+				let out = [];
+				for (let i = 0; i < n; i++) {
+					const p0 = points[(i - 1 + n) % n],
+						p1 = points[i],
+						p2 = points[(i + 1) % n],
+						p3 = points[(i + 2) % n];
+					for (let s = 0; s < seg; s++) {
+						const t = s / seg,
+							t2 = t * t,
+							t3 = t2 * t;
+						const x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+						const y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+						out.push(x, y);
+					}
+				}
+				out.push(points[0].x, points[0].y);
+				return new Float32Array(out);
+			}
+
+			function getOpenSmoothCurve(points, seg = 10) {
+				const n = points.length;
+				if (n < 2) return new Float32Array([]);
+				let out = [];
+				for (let i = 0; i < n - 1; i++) {
+					const p0 = (i === 0 ? points[0] : points[i - 1]),
+						p1 = points[i],
+						p2 = points[i + 1],
+						p3 = (i === n - 2 ? points[n - 1] : points[i + 2]);
+					for (let s = 0; s < seg; s++) {
+						const t = s / seg,
+							t2 = t * t,
+							t3 = t2 * t;
+						const x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+						const y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+						out.push(x, y);
+					}
+				}
+				out.push(points[n - 1].x, points[n - 1].y);
+				return new Float32Array(out);
+			}
+
+			function buildStencilTris(flat, outX, outY) {
+				// flat = [x0,y0,x1,y1, ... ,xn,yn]  (closed, last!=first)
+				const segs = flat.length / 2;
+				const arr = new Float32Array(segs * 3 * 2); // 3 verts × 2 coords
+				let p = 0;
+				for (let i = 0; i < segs; i++) {
+					const i2 = (i + 1) % segs;
+					arr[p++] = flat[i * 2];
+					arr[p++] = flat[i * 2 + 1];
+					arr[p++] = flat[i2 * 2];
+					arr[p++] = flat[i2 * 2 + 1];
+					arr[p++] = outX;
+					arr[p++] = outY; // far point
+				}
+				return arr;
+			}
+
+			function getThickLineVertices(splinePts, thickness) {
+				const n = splinePts.length >> 1; // points count
+				const needed = n * 4; // 2 verts per point
+				if (thickScratch.length < needed) thickScratch = new Float32Array(needed);
+
+				const half = thickness * 0.5;
+				for (let i = 0; i < n; i++) {
+					const currX = splinePts[i * 2],
+						currY = splinePts[i * 2 + 1];
+					const prevX = splinePts[((i - 1 + n) % n) * 2],
+						prevY = splinePts[((i - 1 + n) % n) * 2 + 1];
+					const nextX = splinePts[((i + 1) % n) * 2],
+						nextY = splinePts[((i + 1) % n) * 2 + 1];
+
+					// tangential = next - prev
+					const tx = nextX - prevX,
+						ty = nextY - prevY;
+					const invLen = 1 / Math.hypot(tx, ty || 1); // avoid /0
+					const nx = -ty * invLen,
+						ny = tx * invLen; // normal
+
+					const base = i * 4;
+					thickScratch[base] = currX + nx * half;
+					thickScratch[base + 1] = currY + ny * half;
+					thickScratch[base + 2] = currX - nx * half;
+					thickScratch[base + 3] = currY - ny * half;
+				}
+				return thickScratch.subarray(0, needed);
+			}
+
+			/* -----------------------------------
+			   "DASHED" RENDER FOR FROZEN
+			----------------------------------- */
+			const dashBuf = new Float32Array(4); // x1,y1,x2,y2
+
+			function drawDashedSpline(spline, color) {
+			    gl.useProgram(lineProgram);
+			    gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+			    gl.uniform4fv(lineColorLoc, color);
+			    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			    gl.enableVertexAttribArray(linePosLoc);
+			    gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+
+			    const pts = spline;
+			    for (let i = 0; i < pts.length - 3; i += 4) {
+			        dashBuf[0] = pts[i];
+			        dashBuf[1] = pts[i + 1];
+			        dashBuf[2] = pts[i + 2];
+			        dashBuf[3] = pts[i + 3];
+
+			        gl.bufferData(gl.ARRAY_BUFFER, dashBuf, gl.DYNAMIC_DRAW);
+			        gl.drawArrays(gl.LINE_STRIP, 0, 2);
+			    }
+			}
+
+
+			/* -----------------------------------
+			   PHYSICS
+			----------------------------------- */
+			function applySpring(chain, forces, i, j, restDist) {
+				const a = chain[i],
+					b = chain[j];
+				let dx = b.x - a.x,
+					dy = b.y - a.y,
+					dist = Math.sqrt(dx * dx + dy * dy);
+				if (dist < 1e-4) dist = 1e-4;
+				const f = springConstant * (dist - restDist),
+					nx = dx / dist,
+					ny = dy / dist;
+				forces[i].x += f * nx;
+				forces[i].y += f * ny;
+				forces[j].x -= f * nx;
+				forces[j].y -= f * ny;
+			}
+
+			function simulateChain(chainObj, cIndex) {
+				if (chainObj.frozen) return; // skip frozen
+
+				const arr = chainObj.chain;
+				let forces = chainObj._forces;
+				// (re‑create if first time or if the point count changed)
+				if (!forces || forces.length !== arr.length) {
+					forces = chainObj._forces = Array.from({ length: arr.length },
+						() => ({ x: 0, y: 0 }));
+				}
+				// zero the existing vectors instead of allocating new objects
+				for (let i = 0; i < forces.length; i++) {
+					forces[i].x = 0;
+					forces[i].y = 0;
+				}
+				const dotR = chainObj.baseDotRadius * dotScaleFactor;
+				const restDist = Math.max(dotR, 4) * 0.7;
+
+				// Springs
+				if (chainObj.isClosed) {
+					for (let i = 0; i < arr.length; i++) {
+						const j = (i + 1) % arr.length;
+						applySpring(arr, forces, i, j, restDist);
+					}
+				} else {
+					for (let i = 0; i < arr.length - 1; i++) {
+						applySpring(arr, forces, i, i + 1, restDist);
+					}
+				}
+
+				// Self repulsion
+				for (let i = 0; i < arr.length; i++) {
+					for (let j = i + 1; j < arr.length; j++) {
+						const a = arr[i],
+							b = arr[j];
+						const minD = dotR * 2,
+							dx = b.x - a.x,
+							dy = b.y - a.y,
+							dist = Math.sqrt(dx * dx + dy * dy);
+						if (dist > 0 && dist < minD) {
+							const overlap = (minD - dist),
+								nx = dx / dist,
+								ny = dy / dist;
+							const f = repulsionConstant * overlap;
+							forces[i].x -= f * nx;
+							forces[i].y -= f * ny;
+							forces[j].x += f * nx;
+							forces[j].y += f * ny;
+						}
+					}
+				}
+
+				// Boundary push-back
+				for (let i = 0; i < arr.length; i++) {
+					const a = arr[i];
+					if (a.x < dotR) forces[i].x += (dotR - a.x) * 0.5;
+					else if (a.x > canvas.width - dotR) forces[i].x -= (a.x - (canvas.width - dotR)) * 0.5;
+
+					if (a.y < dotR) forces[i].y += (dotR - a.y) * 0.5;
+					else if (a.y > canvas.height - dotR) forces[i].y -= (a.y - (canvas.height - dotR)) * 0.5;
+				}
+
+				// --- Internal vs External Pressure Equilibrium (runaway-proof) ---
+		if (chainObj.isClosed && turgorPressure > 0) {
+		  const pts = chainObj.chain; const N = pts.length; if (N >= 3) {
+
+				// Perimeter & orientation
+				let L = 0, twiceA = 0;
+				for (let i = 0; i < N; i++) {
+				  const j  = (i + 1) % N;
+				  const ex = pts[j].x - pts[i].x;
+				  const ey = pts[j].y - pts[i].y;
+				  L       += Math.hypot(ex, ey);
+				  twiceA  += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+				}
+				const A   = 0.5 * twiceA;
+				const sgn = (A >= 0) ? 1 : -1;
+
+				// --- perimeter baseline: still used for membrane tension ---
+				if (chainObj._L0 == null || chainObj._L0 < 1e-6) {
+				  chainObj._L0 = Math.max(L, 1e-6);
+				}
+				const L0 = chainObj._L0;
+
+				// keep the size-follow logic for membrane tension
+				if (chainObj._dotScale0 == null) chainObj._dotScale0 = dotScaleFactor;
+				const sizeScale = dotScaleFactor / chainObj._dotScale0;
+				const L0_eff    = L0 * sizeScale;
+
+				// --- AREA-BASED baseline from the *drawn* shape ---
+				// Use the precomputed A0 from finalize; fall back to current area if missing.
+				const Aabs = Math.abs(A);
+				const A0   = (chainObj._A0 && chainObj._A0 > 1e-6) ? chainObj._A0 : Aabs;
+
+				// Baseline area = the drawn blob; turgor is "how much bigger than drawn"
+				const A_base = A0;
+
+				// How much extra area at full turgor (0–1 slider)
+				const areaGain = 1.5;  // tweak to taste
+
+				// Target area at this turgor
+				const A_goal = A_base * (1 + areaGain * turgorPressure);
+
+
+				// Base stiffness for the area controller
+				const kA = springConstant * 0.12;
+
+				// ------------------------------
+				// 1) "Balloon" mode (original-ish)
+				// ------------------------------
+				const areaErr   = A_goal - Aabs;
+				const P_balloon = 1.25 * kA * (areaErr / Math.max(A_base, 1e-6));
+
+				// ------------------------------
+				// 2) "Soft" mode (saturated)
+				// ------------------------------
+				const relErrRaw = areaErr / Math.max(A_base, 1e-6);
+
+				// How quickly saturation kicks in:
+				//   bigger satWidth => more balloon-like, less clamp
+				//   smaller satWidth => gentler, more clamp
+				const satWidth = 3.0;  // try 1.5–3.0
+
+				// Overall strength of soft mode pressure
+				const pressureScale = 1.3; // try 1.0–1.6
+
+				const relErr   = Math.tanh(relErrRaw * satWidth);
+				const P_soft   = pressureScale * kA * relErr;
+
+				// ------------------------------
+				// 3) Blend based on turgor slider
+				// ------------------------------
+				// Below blendStart: 100% soft
+				// Above blendEnd:   100% balloon
+				const blendStart = 0.0;  // where balloon influence starts
+				const blendEnd   = 0.5;  // where it's fully balloon
+
+				let blend;
+				if (turgorPressure <= blendStart) {
+				  blend = 0.0;
+				} else if (turgorPressure >= blendEnd) {
+				  blend = 1.0;
+				} else {
+				  blend = (turgorPressure - blendStart) / (blendEnd - blendStart);
+				}
+
+				// Final pressure: linear mix of soft + balloon
+				let P_in = (1.0 - blend) * P_soft + blend * P_balloon;
+
+		    // ---- EXTERNAL membrane tension (resists stretch) ----
+		    // Hookean surface tension: grows with perimeter strain.
+		    // kT sets stiffness of the membrane; tune 0.20–0.50.
+		    const strain = Math.max(0, (L - L0_eff) / L0_eff);    // 0 when at/below rest length
+		    const kT = springConstant * 0.30;             // membrane tension coefficient
+		    const P_tension = kT * strain;                // also force/length
+
+		    // Effective pressure
+		    let P_eff = P_in - P_tension;
+
+		    // Small hysteresis: if we overshoot a bit, allow mild inward pressure
+		    // to pull back; otherwise clamp to avoid oscillation at rest.
+		    const hysteresis = 0.03; // 3% perimeter over baseline
+		    if (L <= L0_eff * (1 + hysteresis)) {
+		      if (P_eff < 0) P_eff = 0;
+		    } else {
+		      // allow inward up to 50% of springConstant scale
+		      const inwardCap = springConstant * 0.05;
+		      if (P_eff < -inwardCap) P_eff = -inwardCap;
+		    }
+
+		    // Optional: light damping to avoid breathing
+		    const hasVel = !!(chainObj._vel || (pts[0] && ("vx" in pts[0] || "xv" in pts[0])));
+		    const kd = 0.5 * springConstant * 0.02;
+
+		    // Apply along outward normals (split to endpoints)
+		    for (let i = 0; i < N; i++) {
+		      const j = (i + 1) % N;
+
+		      const ex = pts[j].x - pts[i].x;
+		      const ey = pts[j].y - pts[i].y;
+		      let elen = Math.hypot(ex, ey);
+		      if (elen < 1e-12) continue;
+
+		      // outward unit normal (winding-aware)
+		      let nx =  ey / elen;
+		      let ny = -ex / elen;
+		      nx *= sgn; ny *= sgn;
+
+		      // base pressure on this edge
+		      let fMag = P_eff * elen;
+
+		      // damping against normal motion at the edge midpoint
+		      if (hasVel && kd > 0) {
+		        const vi = (chainObj._vel && chainObj._vel[i]) ? chainObj._vel[i] : pts[i];
+		        const vj = (chainObj._vel && chainObj._vel[j]) ? chainObj._vel[j] : pts[j];
+		        const vix = ("vx" in vi) ? vi.vx : ("xv" in vi ? vi.xv : 0);
+		        const viy = ("vy" in vi) ? vi.vy : ("yv" in vi ? vi.yv : 0);
+		        const vjx = ("vx" in vj) ? vj.vx : ("xv" in vj ? vj.xv : 0);
+		        const vjy = ("vy" in vj) ? vj.vy : ("yv" in vj ? vj.yv : 0);
+		        const vmx = 0.5 * (vix + vjx), vmy = 0.5 * (viy + vjy);
+		        const vNormal = vmx * nx + vmy * ny; // outward positive
+		        fMag -= kd * vNormal * elen;
+		      }
+
+		      // per-edge safety clamp
+		      const maxPerEdge = springConstant * 0.15 * elen;
+		      if (fMag >  maxPerEdge) fMag =  maxPerEdge;
+		      if (fMag < -maxPerEdge) fMag = -maxPerEdge;
+
+		      const fx = (fMag * nx) * 0.5;
+		      const fy = (fMag * ny) * 0.5;
+
+		      if (!pts[i].pinned) { chainObj._forces[i].x += fx; chainObj._forces[i].y += fy; }
+		      if (!pts[j].pinned) { chainObj._forces[j].x += fx; chainObj._forces[j].y += fy; }
+		    }
+		  }
+		}
+		// --- end equilibrium ---
+
+
+				// If this chain is currently being dragged
+				if (dragMode && cIndex === draggingChainIndex && draggingDotIndex !== null) {
+					const dot = arr[draggingDotIndex],
+						dx = currentMouseX - dot.x,
+						dy = currentMouseY - dot.y,
+						dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist > 1e-4) {
+						const nx = dx / dist,
+							ny = dy / dist,
+							f = 0.2 * dist;
+						forces[draggingDotIndex].x += f * nx;
+						forces[draggingDotIndex].y += f * ny;
+					}
+				}
+
+				// Integrate
+				for (let i = 0; i < arr.length; i++) {
+					const d = arr[i];
+					const isDraggingThisDot = (dragMode && cIndex === draggingChainIndex && i === draggingDotIndex);
+					if (d.pinned && !isDraggingThisDot) {
+						d.vx = 0;
+						d.vy = 0;
+						continue;
+					}
+					if (gravityEnabled) {
+						d.vy += gravityAccel * (timeStep / 60);
+					}
+					d.vx = (d.vx + forces[i].x * timeStep) * damping;
+					d.vy = (d.vy + forces[i].y * timeStep) * damping;
+
+					d.x += d.vx * timeStep;
+					d.y += d.vy * timeStep;
+				}
+			}
+
+			function simulateInterChainRepulsion() {
+				buildSpatialHash();
+
+				for (let [key, points] of spatialHash) {
+					const [cx, cy] = unhashKey(key);
+
+					for (let pt of points) {
+						const A = chains[pt.c];
+						if (A.frozen) continue;
+						const dotA = pt.p;
+						const rA = pt.r;
+
+						// Check neighbor cells
+						for (let [ox, oy] of neighborOffsets) {
+							const nKey = hashKey(cx + ox, cy + oy);
+							const neighborPoints = spatialHash.get(nKey);
+							if (!neighborPoints) continue;
+
+							for (let nPt of neighborPoints) {
+							    const sameChain = (nPt.c === pt.c);
+
+							    // If it's the same chain, only repel non-neighbor vertices.
+							    if (sameChain) {
+							        const idxA = pt.i;
+							        const idxB = nPt.i;
+							        const chainLen = chains[pt.c].chain.length;
+
+							        // shortest index distance on a closed loop
+							        let di = Math.abs(idxA - idxB);
+							        di = Math.min(di, chainLen - di);
+
+							        // skip immediate neighbors – springs handle them
+							        if (di <= 1) continue;
+							    }
+
+							    const B = chains[nPt.c];
+							    if (B.frozen) continue;
+							    const dotB = nPt.p;
+							    const rB = nPt.r;
+							    const minD = rA + rB;
+
+							    const dx = dotB.x - dotA.x;
+							    const dy = dotB.y - dotA.y;
+							    const dist = Math.hypot(dx, dy);
+
+							    if (dist > 0 && dist < minD) {
+							        const overlap = (minD - dist);
+							        const nx = dx / dist;
+							        const ny = dy / dist;
+
+							        // Same-chain vs inter-blob multiplier
+							        const repelMult = sameChain ? 1.0 : interRepelMult;
+
+							        const f = repulsionConstant * repelMult * overlap;
+							        if (!dotA.pinned) {
+							            dotA.vx -= f * nx * timeStep;
+							            dotA.vy -= f * ny * timeStep;
+							        }
+							        if (!dotB.pinned) {
+							            dotB.vx += f * nx * timeStep;
+							            dotB.vy += f * ny * timeStep;
+							        }
+							    }
+							}
+
+
+						}
+					}
+				}
+			}
+
+			function simulateCircleRepulsion() {
+				for (let c = 0; c < circles.length; c++) {
+					const circle = circles[c];
+					for (let ch = 0; ch < chains.length; ch++) {
+						if (chains[ch].frozen) continue;
+						const arr = chains[ch].chain;
+						for (let i = 0; i < arr.length; i++) {
+							const d = arr[i];
+							const dx = d.x - circle.x,
+								dy = d.y - circle.y,
+								dist = Math.sqrt(dx * dx + dy * dy);
+							const hardWall = (interRepelMult === 3); // button ON → hard wall
+							if (hardWall) { // ─── HARD mode ───
+								const dotR = chains[ch].baseDotRadius * dotScaleFactor;
+								const minD = circle.radius + dotR;
+								if (dist < minD) {
+									const nx = dx / dist,
+										ny = dy / dist;
+									d.x = circle.x + nx * minD;
+									d.y = circle.y + ny * minD;
+									d.vx = d.vy = 0;
+								}
+							} else { // ─── SOFT mode ───
+								if (dist > 1e-4 && dist < circle.radius) {
+									const f = repulsionConstant * (circle.radius - dist);
+									if (!d.pinned) {
+										d.vx += f * (dx / dist);
+										d.vy += f * (dy / dist);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			/* -----------------------------------
+			   RENDERING
+			----------------------------------- */
+			function drawGrid(size = 20) {
+				const w = canvas.width,
+					h = canvas.height;
+				// Ensure square grid cells by using the same size for both dimensions
+				// This ensures no "hangover" - grid cells are perfectly square
+				let gridVerts = [];
+				for (let x = 0; x <= w; x += size) {
+					gridVerts.push(x, 0, x, h);
+				}
+				for (let y = 0; y <= h; y += size) {
+					gridVerts.push(0, y, w, y);
+				}
+				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(gridVerts), gl.STATIC_DRAW);
+				gl.useProgram(lineProgram);
+				gl.enableVertexAttribArray(linePosLoc);
+				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+				gl.uniform2f(lineResLoc, w, h);
+				gl.uniform4fv(lineColorLoc, [0.45, 0.50, 0.45, 1.0]);
+				gl.drawArrays(gl.LINES, 0, gridVerts.length / 2);
+			}
+
+			function drawPinnedIndicator(x, y) {
+				const seg = 12,
+					rad = 4;
+				let verts = [];
+				for (let i = 0; i < seg; i++) {
+					const t = i * (2 * Math.PI / seg);
+					const cx = x + rad * Math.cos(t),
+						cy = y + rad * Math.sin(t);
+					verts.push(cx, cy);
+				}
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+				gl.uniform4fv(lineColorLoc, [1.0, 0.0, 0.0, 1.0]); // red ring
+				gl.drawArrays(gl.LINE_LOOP, 0, seg);
+			}
+
+			function drawHoverIndicator(dot, isPinned) {
+				const seg = 12,
+					radius = 8;
+				let verts = [];
+				for (let i = 0; i < seg; i++) {
+					const t = i * (2 * Math.PI / seg);
+					verts.push(dot.x + radius * Math.cos(t),
+						dot.y + radius * Math.sin(t));
+				}
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+				const color = isPinned ? [1.0, 0.2, 0.2, 1.0] : [0.00, 1.00, 0.50, 1];
+				gl.uniform4fv(lineColorLoc, color);
+				gl.drawArrays(gl.LINE_LOOP, 0, seg);
+			}
+
+			function drawChain(chainObj, chainIndex) {
+				const ch = chainObj.chain;
+				if (ch.length < 2) return;
+
+				const spline = chainObj.isClosed ?
+					getClosedSmoothCurve(ch, 10) :
+					getOpenSmoothCurve(ch, 10);
+				if (spline.length < 4) return;
+
+				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+				gl.useProgram(lineProgram);
+				gl.enableVertexAttribArray(linePosLoc);
+				gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+				gl.uniform4fv(lineColorLoc, chainObj.color);
+
+				/* NEW — solid-fill branch */
+				if (showFilled && chainObj.isClosed) {
+					gl.clear(gl.STENCIL_BUFFER_BIT);
+					// 1) toggle stencil wherever an edge wedge passes
+					gl.enable(gl.STENCIL_TEST);
+					gl.colorMask(false, false, false, false);
+					gl.stencilFunc(gl.ALWAYS, 0, 1);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
+
+					const OUT_X = -9999,
+						OUT_Y = -9999; // any point off-canvas
+					const tris = buildStencilTris(spline, OUT_X, OUT_Y);
+
+					gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+					gl.bufferData(gl.ARRAY_BUFFER, tris, gl.DYNAMIC_DRAW);
+					gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+					gl.uniform4fv(lineColorLoc, chainObj.color); // colour doesn't matter
+					gl.drawArrays(gl.TRIANGLES, 0, tris.length / 2);
+
+					const rgba = chainObj.color.slice(); // copy
+					rgba[3] = chainObj.alpha ?? 1.0; // use alpha from chainObj
+					gl.uniform4fv(lineColorLoc, rgba);
+
+					// 2) draw one big quad wherever stencil==1  (the filled blob)
+					gl.colorMask(true, true, true, true);
+					gl.stencilFunc(gl.EQUAL, 1, 1);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+
+					const quad = new Float32Array([
+						0, 0, canvas.width, 0, canvas.width, canvas.height,
+						0, 0, canvas.width, canvas.height, 0, canvas.height
+					]);
+					gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+					gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+					gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+					gl.disable(gl.STENCIL_TEST);
+
+					/* --- Draw outline stroke on filled blobs if both outline and filled are enabled --- */
+					if (showOutline && showFilled) {
+						const outlineColor2 = [0, 0, 0, 1.0];
+						gl.uniform4fv(lineColorLoc, outlineColor2);
+						const outlineVerts = getThickLineVertices(spline, outlineWidth);
+						gl.bufferData(gl.ARRAY_BUFFER, outlineVerts, gl.DYNAMIC_DRAW);
+						gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+						gl.drawArrays(gl.TRIANGLE_STRIP, 0, outlineVerts.length / 2);
+					}
+
+					/* --- overlays drawn on top of the filled blob ----------------- */
+					// pinned dots
+					for (let i = 0; i < ch.length; i++) {
+						if (ch[i].pinned) {
+							gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+							drawPinnedIndicator(ch[i].x, ch[i].y);
+						}
+					}
+					// hover ring in drag / pin mode
+					if ((pinMode || dragMode) &&
+						chainIndex === pinHoverChainIndex &&
+						pinHoverDotIndex !== null) {
+						const hoverDot = ch[pinHoverDotIndex];
+						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+						drawHoverIndicator(hoverDot, hoverDot.pinned);
+					}
+					/* ---------------------------------------------------------------- */
+					return; // done with this blob
+					// done with this blob
+				}
+
+				/* --- existing outline code below --- */
+				// Draw outline if enabled
+				if (showOutline) {
+					// Use color from chainObj
+					const outlineColor = chainObj.color.slice();
+					outlineColor[3] = chainObj.alpha ?? 1.0;
+					gl.uniform4fv(lineColorLoc, outlineColor);
+					
+					if (chainObj.frozen) {
+						// Use dashed style for frozen blobs
+						drawDashedSpline(spline, outlineColor);
+					} else {
+						// normal stroke using outlineWidth
+						if (outlineWidth === 1) {
+							gl.bufferData(gl.ARRAY_BUFFER, spline, gl.DYNAMIC_DRAW);
+							gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+							gl.drawArrays(gl.LINE_STRIP, 0, spline.length / 2);
+						} else {
+							const thickVerts = getThickLineVertices(spline, outlineWidth);
+							gl.bufferData(gl.ARRAY_BUFFER, thickVerts, gl.DYNAMIC_DRAW);
+							gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+							gl.drawArrays(gl.TRIANGLE_STRIP, 0, thickVerts.length / 2);
+						}
+					}
+				}
+
+				// pinned dots
+				for (let i = 0; i < ch.length; i++) {
+					if (ch[i].pinned) {
+						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+						drawPinnedIndicator(ch[i].x, ch[i].y);
+					}
+				}
+
+				// hover ring if this chain/dot is hovered in pinMode/dragMode
+				if ((pinMode || dragMode) && chainIndex === pinHoverChainIndex && pinHoverDotIndex !== null) {
+					const hoverDot = ch[pinHoverDotIndex];
+					gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+					drawHoverIndicator(hoverDot, hoverDot.pinned);
+				}
+			}
+
+			function drawCircle(circle) {
+				const seg = 32;
+				let verts = [];
+				for (let i = 0; i < seg; i++) {
+					const t = i * (2 * Math.PI / seg);
+					verts.push(
+						circle.x + circle.radius * Math.cos(t),
+						circle.y + circle.radius * Math.sin(t)
+					);
+				}
+				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
+				gl.useProgram(lineProgram);
+				gl.enableVertexAttribArray(linePosLoc);
+				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+				gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+				const rim = circle.__resizing ? [0.1, 0.6, 1.0, 1] : [0, 0, 0, 1];
+				gl.uniform4fv(lineColorLoc, rim);
+				gl.drawArrays(gl.LINE_LOOP, 0, seg);
+			}
+
+			let inProgressBuf = new Float32Array(1024); // or start small
+
+			function drawInProgressPath() {
+			    const n = currentPathPoints.length;
+			    if (!isDrawing || n < 2) return;
+
+			    const needed = n * 2;
+			    if (inProgressBuf.length < needed) {
+			        // grow to next power-of-two-ish
+			        inProgressBuf = new Float32Array(needed * 2);
+			    }
+
+			    for (let i = 0, j = 0; i < n; i++) {
+			        const p = currentPathPoints[i];
+			        inProgressBuf[j++] = p.x;
+			        inProgressBuf[j++] = p.y;
+			    }
+
+			    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+			    gl.bufferData(gl.ARRAY_BUFFER, inProgressBuf.subarray(0, needed), gl.DYNAMIC_DRAW);
+				gl.useProgram(lineProgram);
+				gl.enableVertexAttribArray(linePosLoc);
+				gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+				gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+				gl.uniform4fv(lineColorLoc, hexToRGBA(colorInput.value));
+				gl.drawArrays(gl.LINE_STRIP, 0, currentPathPoints.length);
+			}
+
+			function drawCurrentCircle() {
+				if (!isCircleDrawing || !currentCircle) return;
+				drawCircle(currentCircle);
+			}
+            const isIpad = document.querySelector(".window").classList.contains("ipad");
+			/* -----------------------------------
+			   ANIMATION LOOP
+			----------------------------------- */
+			// Set initial canvas background color
+			if (isIpad) {
+			    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+			    canvasBackgroundColor = [1.0, 1.0, 1.0, 1.0];
+			} else {
+			    gl.clearColor(canvasBackgroundColor[0], canvasBackgroundColor[1], canvasBackgroundColor[2], canvasBackgroundColor[3]);
+			}
+
+
+			function animate() {
+
+				// Physics
+				chains.forEach((c, i) => simulateChain(c, i));
+				simulateInterChainRepulsion();
+				simulateCircleRepulsion();
+				
+				// Apply noise forces if active
+				applyNoiseForces();
+
+				// Clear & draw
+
+				gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+				if (showGrid) {
+					drawGrid(20);
+				}
+
+				chains.forEach((chainObj, chainIndex) => {
+					drawChain(chainObj, chainIndex);
+				});
+				drawInProgressPath();
+				circles.forEach(drawCircle);
+				if (drawMode === 'circle') drawCurrentCircle();
+
+				requestAnimationFrame(animate);
+			}
+			animate();
+
+
+			/* ---------- guided tour engine ---------- */
+			const tourSteps = [
+				/* 0 ─ Title-bar */
+				{
+					el: "#splashOverlay + .title-bar",
+					text: "Title bar: File (save/load), Export (SVG/JPG), About, Help."
+				},
+
+				/* 1 ─ Draw Tools */
+				{
+					el: ".toolbar-section:first-of-type",
+					text: "Choose what you create on the canvas: Blobs, Lines, or Repulsion Circles. Select which one you'd like then click-drag on the canvas to draw."
+				},
+
+				/* 2 ─ Edit Tools */
+				{
+					el: "#editToolsSection",
+					text: "Edit items on the canvas with these tools: Drag, Freeze, Pin, or Delete existing items. Only one edit mode can be active at a time."
+				},
+
+				/* 3 ─ Shape Settings */
+				{
+					el: ".toolbar-section:nth-of-type(3)",
+					text: "Set colour and average blob size before each draw."
+				},
+
+				/* 4 ─ Canvas Tools */
+				{
+					el: ".toolbar-section:nth-of-type(4)",
+					text: "The canvas tools toggle stroke thickness, solid fill, high repulsion mode, or undo the last action."
+				},
+
+				/* 5 ─ Main Canvas */
+				{
+					el: "#glCanvas",
+					text: "Canvas: the main playground: draw, drag, and experiment here."
+				},
+
+				/* 6 ─ Physics Sliders */
+				{
+					el: ".bottom-panel",
+					text: "Physics Sliders: fine-tune the blob behaviour. Hover the ⓘ buttons to see what each slider does."
+				}
+			];
+
+			let tourIndex = -1;
+
+			function startTour() {
+				if (tourIndex !== -1) return; // already running
+				tourIndex = 0;
+				$("tourOverlay").style.display = $("tourTip").style.display = "block";
+				document.addEventListener("keydown", tourKey);
+				showStep();
+			}
+
+			function endTour() {
+				clearHighlight();
+				$("tourOverlay").style.display = $("tourTip").style.display = "none";
+				document.removeEventListener("keydown", tourKey);
+				tourIndex = -1;
+			}
+
+			function showStep() {
+				clearHighlight();
+				const step = tourSteps[tourIndex];
+				const el = document.querySelector(step.el);
+				if (!el) { nextStep(); return; }
+				el.classList.add("tour-highlight");
+				$("tourText").textContent = step.text;
+				positionTip(el);
+				$("tourPrev").disabled = tourIndex === 0;
+				$("tourNext").textContent = tourIndex === tourSteps.length - 1 ? "Done ✔" : "Next ▶";
+			}
+
+			function positionTip(target) {
+				const rect = target.getBoundingClientRect();
+				const tip = $("tourTip");
+				const left = rect.right + 12 < window.innerWidth - 330 ?
+					rect.right + 12 : rect.left - 332;
+				tip.style.left = (left < 8 ? 8 : left) + "px";
+				tip.style.top = rect.top + "px";
+			}
+
+			function clearHighlight() {
+				document.querySelectorAll(".tour-highlight").forEach(e => e.classList.remove("tour-highlight"));
+			}
+
+			function nextStep() {
+				if (tourIndex < tourSteps.length - 1) {
+					tourIndex++;
+					showStep();
+				} else endTour();
+			}
+
+			function prevStep() {
+				if (tourIndex > 0) {
+					tourIndex--;
+					showStep();
+				}
+			}
+
+			function tourKey(e) {
+				if (e.key === "Escape") endTour();
+				else if (e.key === "ArrowRight") nextStep();
+				else if (e.key === "ArrowLeft") prevStep();
+			}
+			$("tourNext").onclick = nextStep;
+			$("tourPrev").onclick = prevStep;
+			$("tourExit").onclick = endTour;
+
+			/* -----------------------------------
+			   EXPORT HELPERS
+			----------------------------------- */
+			function exportSVG() {
+				const w = canvas.width,
+					h = canvas.height;
+				const parts = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" style="background:white;">`];
+				
+				chains.forEach(obj => {
+					if (obj.chain.length < 2) return;
+					const spline = obj.isClosed ? getClosedSmoothCurve(obj.chain, 10) :
+						getOpenSmoothCurve(obj.chain, 10);
+					if (spline.length < 4) return;
+					const [rr, gg, bb] = obj.color.map(c => Math.floor(c * 255));
+					let d = `M ${spline[0]} ${spline[1]}`;
+					for (let i = 2; i < spline.length; i += 2) {
+						d += ` L ${spline[i]} ${spline[i+1]}`;
+					}
+					if (obj.isClosed) d += " Z";
+
+					// Use current appearance settings
+					const shouldFill = (showFilled && obj.isClosed);
+					const shouldStroke = showOutline;
+					const strokeWidth = outlineWidth;
+					
+					if (shouldFill && shouldStroke) {
+						// Both fill and outline - draw filled with black border
+						parts.push(`<path d="${d}" fill="rgb(${rr},${gg},${bb})" stroke="rgb(0,0,0)" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" />`);
+					} else if (shouldFill) {
+						// Only fill
+						parts.push(`<path d="${d}" fill="rgb(${rr},${gg},${bb})" stroke="none" />`);
+					} else if (shouldStroke) {
+						// Only outline
+						parts.push(`<path d="${d}" stroke="rgb(${rr},${gg},${bb})" fill="none" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" />`);
+					}
+				});
+				parts.push("</svg>");
+				const blob = new Blob([parts.join("")], { type: "image/svg+xml" });
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement("a");
+				link.href = url;
+				link.download = "blobs.svg";
+				link.click();
+				URL.revokeObjectURL(url);
+			}
+
+			function exportJPG() {
+				const size = 1500;
+				const offscreen = document.createElement("canvas");
+				offscreen.width = size;
+				offscreen.height = size;
+				const ctx = offscreen.getContext("2d");
+				
+				// Draw white background (no canvas background color or grid in exports)
+				ctx.fillStyle = "#fff";
+				ctx.fillRect(0, 0, size, size);
+				
+				const scale = size / canvas.width;
+
+				chains.forEach(obj => {
+					const ch = obj.chain;
+					if (ch.length < 2) return;
+					const spline = obj.isClosed ? getClosedSmoothCurve(ch, 10) :
+						getOpenSmoothCurve(ch, 10);
+					if (spline.length < 4) return;
+					const [rr, gg, bb] = obj.color.map(c => Math.floor(c * 255));
+					ctx.lineCap = "round";
+					ctx.lineJoin = "round";
+					ctx.beginPath();
+					ctx.moveTo(spline[0] * scale, spline[1] * scale);
+					for (let i = 2; i < spline.length; i += 2) {
+						ctx.lineTo(spline[i] * scale, spline[i + 1] * scale);
+					}
+					if (obj.isClosed) ctx.closePath();
+					
+					// Use current appearance settings
+					const shouldFill = (showFilled && obj.isClosed);
+					const shouldStroke = showOutline;
+					const strokeWidth = outlineWidth * scale;
+					
+					if (shouldFill && shouldStroke) {
+						// Both fill and outline - draw filled with black border
+						ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+						ctx.fill();
+						ctx.strokeStyle = "rgb(0,0,0)";
+						ctx.lineWidth = strokeWidth;
+						ctx.stroke();
+					} else if (shouldFill) {
+						// Only fill
+						ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+						ctx.fill();
+					} else if (shouldStroke) {
+						// Only outline
+						ctx.strokeStyle = `rgb(${rr},${gg},${bb})`;
+						ctx.lineWidth = strokeWidth;
+						ctx.stroke();
+					}
+				});
+
+				const url = offscreen.toDataURL("image/jpeg", 1.0);
+				const link = document.createElement("a");
+				link.href = url;
+				link.download = "blobs.jpg";
+				link.click();
+			}
+
+			$("exportSVGOption").onclick = e => {
+				e.stopPropagation();
+				exportSVG();
+				$("exportSubmenu").style.display = "none";
+			};
+			$("exportJPGOption").onclick = e => {
+				e.stopPropagation();
+				exportJPG();
+				$("exportSubmenu").style.display = "none";
+			};
+
+			/* -----------------------------------
+			   SLIDER SETUP
+			----------------------------------- */
+
+			// 1) Blob Scale slider (0..100 => 0.1..5)
+			{
+				const s = $("dotScaleSlider");
+				const v = $("dotScaleValue");
+				s.value = ((dotScaleFactor - 0.1) / (5 - 0.1)) * 100;
+				v.textContent = s.value + "%";
+				s.addEventListener("input", () => {
+					setDotScale(parseFloat(s.value));
+				});
+			}
+
+			// 2) Damping slider (0..100 => 0..1)
+			{
+				const s = $("dampingSlider");
+				const v = $("dampingValue");
+				s.value = damping * 100;
+				v.textContent = s.value + "%";
+				s.addEventListener("input", () => {
+					damping = parseFloat(s.value) / 100;
+					v.textContent = Math.round(s.value) + "%";
+				});
+			}
+
+			// 3) Spring Constant slider (0..100 => 0..1)
+			{
+				const s = $("springConstantSlider");
+				const v = $("springConstantValue");
+				s.value = springConstant * 100;
+				v.textContent = s.value + "%";
+				s.addEventListener("input", () => {
+					springConstant = parseFloat(s.value) / 100;
+					v.textContent = Math.round(s.value) + "%";
+				});
+			}
+
+			// 4) Repulsion slider (0..100 => 0..1)
+			{
+				const s = $("repulsionConstantSlider");
+				const v = $("repulsionConstantValue");
+				s.value = repulsionConstant * 200;
+				v.textContent = s.value + "%";
+				s.addEventListener("input", () => {
+					repulsionConstant = parseFloat(s.value) / 200;
+					v.textContent = s.value + "%";
+				});
+			}
+
+			// 5) Simulation Speed slider (0..100 => 0.1..2)
+			{
+				const s = $("timeStepSlider");
+				const v = $("timeStepValue");
+				s.value = ((timeStep - 0.1) / (2 - 0.1)) * 100;
+				v.textContent = s.value + "%";
+				s.addEventListener("input", () => {
+					const percent = parseFloat(s.value);
+					timeStep = mapRange(percent, 0, 100, 0.1, 2);
+					v.textContent = s.value + "%";
+				});
+			}
+
+			// 6) Turgor Pressure slider (0..100 => 0..1)
+{
+  const s = $("turgorPressureSlider");
+  const v = $("turgorPressureValue");
+  s.value = Math.round(turgorPressure * 100);
+  v.textContent = s.value + "%";
+  s.addEventListener("input", () => {
+    turgorPressure = parseFloat(s.value) / 100;
+    v.textContent = s.value + "%";
+  });
+}
+
+			/* -----------------------------------
+			   DRUM PAD PANEL
+			----------------------------------- */
+			let originalDamping = damping;
+			let dampingRestoreTimer = null;
+			let dampingRestoreStartTime = null;
+			let dampingRestoreDuration = 100; // ms for decay (increased from 500 for longer visible movement)
+
+			// Attack/Decay damping restoration
+			function restoreDampingWithDecay() {
+				if (dampingRestoreTimer) {
+					cancelAnimationFrame(dampingRestoreTimer);
+				}
+				
+				const startDamping = damping;
+				const targetDamping = originalDamping;
+				const startTime = performance.now();
+				
+				function animate() {
+					const elapsed = performance.now() - startTime;
+					const progress = Math.min(elapsed / dampingRestoreDuration, 1);
+					
+					// Exponential decay for smooth transition
+					const easeOut = 1 - Math.pow(1 - progress, 3);
+					damping = startDamping + (targetDamping - startDamping) * easeOut;
+					
+					// Update UI
+					const s = $("dampingSlider");
+					const v = $("dampingValue");
+					if (s && v) {
+						s.value = damping * 100;
+						v.textContent = Math.round(s.value) + "%";
+					}
+					
+					if (progress < 1) {
+						dampingRestoreTimer = requestAnimationFrame(animate);
+					} else {
+						damping = targetDamping;
+						dampingRestoreTimer = null;
+					}
+				}
+				
+				dampingRestoreTimer = requestAnimationFrame(animate);
+			}
+
+			// Temporarily boost excitability (set damping to 0.001 = 99.9% excitability)
+			function boostExcitability() {
+				originalDamping = damping; // Store current value
+				damping = 0.001; // 99.9% excitability (much more responsive)
+				
+				const s = $("dampingSlider");
+				const v = $("dampingValue");
+				if (s && v) {
+					s.value = damping * 100;
+					v.textContent = Math.round(s.value) + "%";
+				}
+				
+				// Restore after a short delay with decay
+				setTimeout(() => {
+					restoreDampingWithDecay();
+				}, 300); // Attack phase: 300ms at high excitability (longer for more movement)
+			}
+
+			// Simple 2D noise function (Perlin-like)
+			function noise2D(x, y) {
+				const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+				return n - Math.floor(n);
+			}
+			
+			// Smooth noise interpolation
+			function smoothNoise(x, y) {
+				const intX = Math.floor(x);
+				const intY = Math.floor(y);
+				const fracX = x - intX;
+				const fracY = y - intY;
+				
+				const v1 = noise2D(intX, intY);
+				const v2 = noise2D(intX + 1, intY);
+				const v3 = noise2D(intX, intY + 1);
+				const v4 = noise2D(intX + 1, intY + 1);
+				
+				const i1 = v1 * (1 - fracX) + v2 * fracX;
+				const i2 = v3 * (1 - fracX) + v4 * fracX;
+				return i1 * (1 - fracY) + i2 * fracY;
+			}
+			
+			// Apply noise-based forces to all blobs (called from animation loop)
+			// Very subtle enhancement that works WITH blob physics, not against it
+			function applyNoiseForces() {
+				if (!noiseActive) return;
+				
+				noiseTime += 0.003; // Slower time evolution for more subtle changes
+				noiseRampTime += 0.0015; // Ramping oscillation time (slower for smooth breathing)
+				const noiseScale = 0.01; // Spatial scale - samples noise at each vertex position
+				const baseNoiseStrength = 0.2; // Strong enough to drive blob movement
+				
+				// Create smooth breathing pattern: 0.5x -> peak -> down -> back up
+				// Using sine wave for smooth oscillation (0 to 1 range)
+				const rampPhase = (Math.sin(noiseRampTime) + 1) / 2; // 0 to 1
+				// Apply easing to make it feel more organic (ease in/out)
+				const easedRamp = rampPhase < 0.5 
+					? 2 * rampPhase * rampPhase // Ease in
+					: 1 - Math.pow(-2 * rampPhase + 2, 2) / 2; // Ease out
+				
+				// Current noise strength ramps from 0.5x to peak (baseNoiseStrength)
+				// Maps easedRamp (0-1) to (0.5-1.0) so it never goes below half strength
+				const strengthMultiplier = 0.5 + easedRamp * 0.5; // Range: 0.5 to 1.0
+				const currentNoiseStrength = baseNoiseStrength * strengthMultiplier;
+				
+				chains.forEach(chainObj => {
+					if (chainObj.frozen) return;
+					
+					// Apply very subtle noise enhancement per-vertex
+					chainObj.chain.forEach(vertex => {
+						if (vertex.pinned) return;
+						
+						// Calculate distance from canvas center
+						const centerX = canvas.width / 2;
+						const centerY = canvas.height / 2;
+						const distFromCenterX = Math.abs(vertex.x - centerX) / (canvas.width / 2);
+						const distFromCenterY = Math.abs(vertex.y - centerY) / (canvas.height / 2);
+						const edgeProximity = Math.max(distFromCenterX, distFromCenterY); // 0 = center, 1 = edge
+						
+						// Get current vertex velocity and speed
+						const vertexSpeed = Math.hypot(vertex.vx, vertex.vy);
+						
+						// Sample noise at each vertex's position - creates spatial variation
+						const nx = smoothNoise(vertex.x * noiseScale, noiseTime);
+						const ny = smoothNoise(vertex.y * noiseScale, noiseTime + 1000);
+						
+						// Convert noise (0-1) to direction modifier (-1 to 1)
+						// Full range to drive movement strongly
+						const noiseModX = (nx - 0.5) * 2;
+						const noiseModY = (ny - 0.5) * 2;
+						
+						// Scale noise influence - give minimum boost even when stationary
+						// This allows noise to drive even stationary blobs
+						const velocityScale = Math.max(0.3, Math.min(vertexSpeed / 2, 1.0)); // Minimum 0.3, scales up with speed
+						
+						// Apply noise as a driving force - can create new movement
+						// Strong enough to drive blobs while still working with physics
+						const noiseInfluence = currentNoiseStrength * velocityScale * 1.0; // Strong influence to drive movement
+						const noiseNudgeX = noiseModX * noiseInfluence;
+						const noiseNudgeY = noiseModY * noiseInfluence;
+						
+						// Add gentle center-seeking force when near edges (pushes back toward center)
+						const centerSeekStrength = 0.12; // Slightly reduced
+						const centerSeekFactor = Math.max(0, edgeProximity - 0.3); // Only active when >30% from center
+						const centerSeekX = (centerX - vertex.x) / (canvas.width / 2);
+						const centerSeekY = (centerY - vertex.y) / (canvas.height / 2);
+						const centerForceX = centerSeekX * centerSeekStrength * centerSeekFactor;
+						const centerForceY = centerSeekY * centerSeekStrength * centerSeekFactor;
+						
+						// Apply very subtle noise nudge to existing velocity (enhancement, not new force)
+						vertex.vx += noiseNudgeX + centerForceX;
+						vertex.vy += noiseNudgeY + centerForceY;
+					});
+				});
+			}
+			
+			// Noise Movement: Random noise movement (ambient noise field) - TOGGLE
+			$("iconNoise").addEventListener("click", () => {
+				if (chains.length === 0) {
+					toast("No blobs to move", 1500);
+					return;
+				}
+				
+				if (noiseActive) {
+					// Turn OFF noise
+					noiseActive = false;
+					
+					// Restore excitability
+					restoreDampingWithDecay();
+					
+					// Update button visual state
+					toggleActiveIcon($("iconNoise"), false);
+					
+					toast("Noise OFF", 800);
+				} else {
+					// Turn ON noise
+					noiseActive = true;
+					noiseTime = Math.random() * 1000; // Random starting point
+					noiseRampTime = 0; // Start ramping from 0
+					
+					// STEP 1: Boost excitability to 99% (0.01 damping)
+					originalDamping = damping;
+					damping = 0.95; // 95% excitability
+					
+					const s = $("dampingSlider");
+					const v = $("dampingValue");
+					if (s && v) {
+						s.value = damping * 100;
+						v.textContent = Math.round(s.value) + "%";
+					}
+					
+					// Update button visual state
+					toggleActiveIcon($("iconNoise"), true);
+					
+					toast("Noise ON", 800);
+				}
+			});
+
+
+
+			window.addEventListener("keydown", e => {
+				// ignore ⇧/⌥/⌘ combos and when user is typing in an input / textarea
+				if (e.ctrlKey || e.metaKey || e.altKey) return;
+				const tgt = e.target;
+				if (tgt && (tgt.tagName === "INPUT" || tgt.tagName === "TEXTAREA")) return;
+
+				switch (e.key.toLowerCase()) {
+					/* draw modes */
+					case "q":
+						setDrawMode("blob");
+						break; // Blob
+					case "w":
+						setDrawMode("line");
+						break; // Line
+					case "e":
+						setDrawMode("circle");
+						break; // Circle
+
+						/* edit tools (toggle off if already on) */
+					case "a":
+						setEditTool("drag");
+						break; // Drag
+					case "s":
+						setEditTool("freeze");
+						break; // Freeze
+					case "d":
+						setEditTool("pin");
+						break; // Pin
+					case "z":
+						setEditTool("slice");
+						break; // Slice
+					case "x":
+						setEditTool("delete");
+						break; // Delete
+				}
+			});
+
+			window.addEventListener("keydown", e => {
+				if (e.code === "Space" && !e.repeat) { // Space toggles
+					if (damping !== 0) { // turn OFF
+						prevDamping = damping; // remember
+						damping = 0;
+					} else { // turn ON
+						damping = prevDamping || 0.85; // fallback default
+					}
+
+					// keep the UI slider in sync
+					const s = $("dampingSlider"),
+						v = $("dampingValue");
+					s.value = damping * 100;
+					v.textContent = Math.round(s.value) + "%";
+
+					e.preventDefault(); // stop the page from scrolling
+				}
+			});
+			// 6) Gap & ΔSize
+			$("radiusAvgInput").oninput = e => {
+				globalRadiusAvg = parseFloat(e.target.value);
+			};
+			$("radiusVarInput").oninput = e => {
+				globalRadiusVar = parseFloat(e.target.value);
+			};
+		});
+	</script>
+</body>
+
+</html>
