@@ -3378,12 +3378,19 @@ input[type="range"]::-moz-range-thumb {
 				const availableWidth = window.innerWidth - panelWidth;
 				const availableHeight = window.innerHeight - titleBarHeight;
 
-				// Fill entire available space (panel space is always reserved)
-				canvas.style.width = availableWidth + "px";
-				canvas.style.height = availableHeight + "px";
-				canvas.width = availableWidth;
-				canvas.height = availableHeight;
-				if (gl) gl.viewport(0, 0, availableWidth, availableHeight);
+				// Get device pixel ratio for high-DPI displays (prevents stretching)
+				const dpr = window.devicePixelRatio || 1;
+
+				// Set CSS size (logical pixels) - use setProperty with important to override CSS !important
+				canvas.style.setProperty('width', availableWidth + "px", 'important');
+				canvas.style.setProperty('height', availableHeight + "px", 'important');
+				
+				// Set actual canvas resolution (physical pixels) - ensures square gridlines
+				canvas.width = availableWidth * dpr;
+				canvas.height = availableHeight * dpr;
+				
+				// Update viewport to match actual canvas dimensions
+				if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
 			}
 
 			/* master switch */
@@ -5573,8 +5580,10 @@ window.addEventListener("keydown", (e) => {
 			   EXPORT HELPERS
 			----------------------------------- */
 			function exportSVG() {
-				const w = canvas.width,
-					h = canvas.height;
+				// Get logical canvas dimensions (CSS size, not high-DPI resolution)
+				const rect = canvas.getBoundingClientRect();
+				const w = rect.width;
+				const h = rect.height;
 				const parts = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" style="background:white;">`];
 				
 				chains.forEach(obj => {
@@ -5616,17 +5625,36 @@ window.addEventListener("keydown", (e) => {
 			}
 
 			function exportJPG() {
-				const size = 1500;
+				// Get logical canvas dimensions (CSS size, not high-DPI resolution)
+				const rect = canvas.getBoundingClientRect();
+				const logicalWidth = rect.width;
+				const logicalHeight = rect.height;
+				
+				// Maintain aspect ratio - scale to 1500px on longest side
+				const maxExportSize = 1500;
+				const aspectRatio = logicalWidth / logicalHeight;
+				let exportWidth, exportHeight;
+				
+				if (logicalWidth >= logicalHeight) {
+					exportWidth = maxExportSize;
+					exportHeight = maxExportSize / aspectRatio;
+				} else {
+					exportHeight = maxExportSize;
+					exportWidth = maxExportSize * aspectRatio;
+				}
+				
 				const offscreen = document.createElement("canvas");
-				offscreen.width = size;
-				offscreen.height = size;
+				offscreen.width = Math.round(exportWidth);
+				offscreen.height = Math.round(exportHeight);
 				const ctx = offscreen.getContext("2d");
 				
 				// Draw white background (no canvas background color or grid in exports)
 				ctx.fillStyle = "#fff";
-				ctx.fillRect(0, 0, size, size);
+				ctx.fillRect(0, 0, offscreen.width, offscreen.height);
 				
-				const scale = size / canvas.width;
+				// Scale from logical canvas dimensions to export dimensions
+				const scaleX = exportWidth / logicalWidth;
+				const scaleY = exportHeight / logicalHeight;
 
 				chains.forEach(obj => {
 					const ch = obj.chain;
@@ -5638,16 +5666,17 @@ window.addEventListener("keydown", (e) => {
 					ctx.lineCap = "round";
 					ctx.lineJoin = "round";
 					ctx.beginPath();
-					ctx.moveTo(spline[0] * scale, spline[1] * scale);
+					ctx.moveTo(spline[0] * scaleX, spline[1] * scaleY);
 					for (let i = 2; i < spline.length; i += 2) {
-						ctx.lineTo(spline[i] * scale, spline[i + 1] * scale);
+						ctx.lineTo(spline[i] * scaleX, spline[i + 1] * scaleY);
 					}
 					if (obj.isClosed) ctx.closePath();
 					
 					// Use current appearance settings
 					const shouldFill = (showFilled && obj.isClosed);
 					const shouldStroke = showOutline;
-					const strokeWidth = outlineWidth * scale;
+					// Use average scale for stroke width to maintain proportions
+					const strokeWidth = outlineWidth * ((scaleX + scaleY) / 2);
 					
 					if (shouldFill && shouldStroke) {
 						// Both fill and outline - draw filled with black border
