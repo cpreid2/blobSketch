@@ -188,14 +188,7 @@ body {
   flex: 1;                          /* take remaining height so centering is obvious */
 }
 
-/* Edit tools neon outline when active group is engaged */
-#editToolsSection.edit-on {
-  outline: 3px solid #ff3b3b;
-  box-shadow:
-    0 0 6px 2px #ff3b3b inset,
-    0 0 6px 2px #ff3b3b;
-  transition: outline-color .2s, box-shadow .2s;
-}
+/* Edit tools neon outline when active group is engaged - removed red highlight */
 
 /* 4-C Icon buttons – 3D beige console style */
 .icon {
@@ -369,6 +362,52 @@ body {
   border-radius: 12px;
   margin-top: 18px;
   box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}
+
+/* Drum Pad Styles */
+.drum-pad {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  border: 3px solid #000;
+  background: #f7f2e4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 18px;
+  user-select: none;
+  position: relative;
+  box-shadow: 4px 4px 0 #000;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.drum-pad:hover {
+  transform: translateY(-2px);
+  box-shadow: 6px 6px 0 #000;
+}
+
+.drum-pad:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 #000;
+}
+
+.drum-pad.active {
+  background: #ffd700;
+  animation: drumPadPulse 0.3s ease-out;
+}
+
+@keyframes drumPadPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.drum-pad-label {
+  font-family: "Courier New", monospace;
+  color: #000;
+  text-align: center;
 }
 
 #sliders > div {
@@ -799,38 +838,51 @@ input[type="range"]::-moz-range-thumb {
 			@media (hover: none) and (pointer: coarse) {
 
 				/* =========================================================
- BlobSketch CSS — Clean Split: Desktop (default) + iPad
- Order matters: Tokens → Base → Components → Layout → States → iPad
+ BlobSketch CSS — Modern iPad Full-Screen Layout
  ========================================================= */
 
 				/* ------------------ 0. Tokens / Theme ------------------ */
 				:root {
-					/* Palette (light) */
-					--bg: #f7f7f8;
-					--panel: #ffffff;
-					--panel-2: #fbfbfc;
-					--text: #111317;
-					--muted: #5a5f6a;
-					--accent: #2563eb;
-
-					/* blue rim/accent */
-					--border: rgba(0, 0, 0, 0.10);
+					/* Modern palette */
+					--bg: #ffffff;
+					--panel: rgba(255, 255, 255, 0.95);
+					--panel-2: rgba(255, 255, 255, 0.9);
+					--panel-glass: rgba(255, 255, 255, 0.1);
+					--panel-glass-border: rgba(255, 255, 255, 0.2);
+					--text: #1a1a1a;
+					--muted: #6b7280;
+					--accent: #3b82f6;
+					--accent-hover: #2563eb;
+					--border: rgba(0, 0, 0, 0.08);
+					--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+					--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+					--shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+					--shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+					--backdrop-blur: blur(20px);
+					--backdrop-blur-strong: blur(24px);
 
 					/* Sizing */
-					--radius-sm: 6px;
-					--radius-md: 10px;
-					--radius-lg: 12px;
-					--gap-1: 6px;
-					--gap-2: 10px;
-					--gap-3: 12px;
+					--radius-sm: 8px;
+					--radius-md: 12px;
+					--radius-lg: 16px;
+					--radius-xl: 20px;
+					--gap-1: 8px;
+					--gap-2: 12px;
+					--gap-3: 16px;
 
 					/* Icon */
-					--icon-size: 36px;
+					--icon-size: 44px;
+
+					/* Panel widths */
+					--panel-left-width: calc(var(--icon-size) + var(--gap-2) * 2); /* Single icon width */
+					--panel-bottom-height: 200px; /* Increased to fit all sliders */
 
 					/* Z-index */
-					--z-submenu: 900;
+					--z-submenu: 100900;
 					--z-dialog: 2000;
 					--z-splash: 9999;
+					--z-panel: 100;
+					--z-toggle: 200;
 				}
 
 				/* ------------------ 1. Base / Reset ------------------ */
@@ -841,7 +893,7 @@ input[type="range"]::-moz-range-thumb {
 				html,
 				body {
 					height: 100%;
-
+					overflow: hidden;
 				}
 
 				body {
@@ -849,7 +901,7 @@ input[type="range"]::-moz-range-thumb {
 					padding: 0;
 					background: var(--bg);
 					color: var(--text);
-					font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 				}
 
 				img {
@@ -869,7 +921,6 @@ input[type="range"]::-moz-range-thumb {
 					user-select: none;
 					-webkit-user-drag: none;
 					touch-action: none;
-					/* Apple Pencil / multi-touch */
 				}
 
 				/* ------------------ 2. App Shell ------------------ */
@@ -996,11 +1047,9 @@ input[type="range"]::-moz-range-thumb {
 					gap: var(--gap-1);
 				}
 
-				/* Edit tools “glow” when active group is engaged */
+				/* Edit tools "glow" when active group is engaged - removed red highlight */
 				#editToolsSection.edit-on {
-					outline: 3px solid #ff3b3b;
-					box-shadow: 0 0 6px 2px #ff3b3b inset, 0 0 6px 2px #ff3b3b;
-					transition: outline-color .2s, box-shadow .2s;
+					/* Red highlight removed */
 				}
 
 				/* ------------------ 4. Icons ------------------ */
@@ -1069,6 +1118,7 @@ input[type="range"]::-moz-range-thumb {
 					position: absolute;
 					bottom: -24px;
 					left: 50%;
+					transform: translateX(-50%);
 					font: 12px "Courier New", monospace;
 					color: #fff;
 					background: #111317;
@@ -1085,6 +1135,28 @@ input[type="range"]::-moz-range-thumb {
 				.icon:hover::before,
 				.icon:focus-visible::before {
 					opacity: 1;
+				}
+
+				/* iPad: Tooltip to the right of icon - allow overflow onto canvas */
+				.window.ipad .icon[data-label]::before {
+					position: fixed;
+					bottom: auto;
+					display: none;
+					top: auto;
+					transform: translateY(-50%);
+					margin-left: 0px;
+					white-space: nowrap;
+					z-index: -1; /* Higher than panel z-index to appear on top of canvas */
+					/* Keep absolute positioning but ensure parent allows overflow */
+				}
+				
+				/* Ensure icon container allows tooltip overflow */
+				.window.ipad .icon-group {
+					overflow: visible;
+				}
+				
+				.window.ipad .toolbar-section {
+					overflow: visible;
 				}
 
 				.icon:focus-visible {
@@ -1479,17 +1551,7 @@ input[type="range"]::-moz-range-thumb {
 					z-index: 10000;
 				}
 
-				/* ------------------ 8. iPad Layout Overrides ------------------ */
-				/* Scope to .window.ipad so you can toggle via UA detection or feature flag */
-				/* Default (desktop) */
-
-				/* iPad: larger touch target (tweak as you like) */
-				.window.ipad {
-					--icon-size: 39px;
-					--icon-gap: 9px;
-				}
-
-
+				/* ------------------ 8. iPad Full-Screen Layout ------------------ */
 				.window.ipad {
 					width: 100%;
 					height: 100dvh;
@@ -1497,95 +1559,150 @@ input[type="range"]::-moz-range-thumb {
 					border-radius: 0;
 					border: 0;
 					box-shadow: none;
-					background: var(--panel);
-
-					/* Grid rows: title | canvas | tools | sliders */
-					display: grid;
-					grid-template-rows: 40px 1fr 100px 240px;
+					background: var(--bg);
+					position: fixed;
+					inset: 0;
+					overflow: hidden;
+					display: block;
 				}
 
+				/* Title bar on iPad - compact floating style */
 				.window.ipad .title-bar {
-					height: 40px;
+					position: fixed;
+					top: 0;
+					left: 0;
+					right: 0;
+					height: 44px;
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur-strong);
+					-webkit-backdrop-filter: var(--backdrop-blur-strong);
+					border-bottom: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-md);
+					z-index: var(--z-toggle);
 					padding: 4px 8px;
-					border-bottom: 1px solid var(--border);
+					display: flex;
+					align-items: center;
+					gap: 12px;
 				}
 
+				.window.ipad .menu-bar {
+					display: flex;
+					gap: 12px;
+					flex-wrap: wrap;
+				}
+
+				.window.ipad .menu-bar span {
+					font-size: 13px;
+					font-weight: 600;
+				}
+
+				.window.ipad .title-actions {
+					margin-left: auto;
+					display: flex;
+					gap: 6px;
+				}
+
+				.window.ipad .reset-icon {
+					width: 28px;
+					height: 28px;
+					font-size: 16px;
+				}
+
+				/* Ensure submenus appear above toggle buttons on iPad */
+				.window.ipad .submenu {
+					z-index: 1000; /* Higher than toggle button (200) */
+				}
+
+				/* Full-screen canvas container */
 				.window.ipad .content {
+					position: absolute;
+					top: 44px; /* Below title bar */
+					left: 0;
+					right: 0;
+					bottom: 0;
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					border-bottom: 1px solid var(--border);
-					padding: 8px;
-				}
-
-				/* Canvas fills the central row without changing visual style */
-				.window.ipad #glCanvas {
+					padding: 0;
 					margin: 0;
-					border: 1px solid var(--border);
 				}
 
-				/* Bottom toolbars: horizontal sections across the row */
-				/* AFTER: each section sizes to its content; no equal widths /* iPad: full-width horizontal toolbar with scroll */
-				.window.ipad .toolbar {
+				.window.ipad .main-area {
+					position: absolute;
+					inset: 0;
 					width: 100%;
-					/* override desktop width:150px */
 					height: 100%;
-					display: grid;
-					grid-auto-flow: column;
-					grid-template-columns: none;
-					grid-auto-columns: max-content;
-					align-items: start;
+					display: flex;
+					align-items: center;
 					justify-content: center;
-					gap: 6px;
-					padding: 6px 6px;
-					border-right: 0;
-					overflow-x: auto;
+					padding: 0;
+					background: transparent;
+				}
 
-					/* was overflow: hidden */
-					overflow-y: hidden;
-					  overflow: visible !important;
-  position: relative;
-  z-index: 1;
+				/* Canvas - full screen */
+				.window.ipad #glCanvas {
+					width: 100% !important;
+					height: 100% !important;
+					margin: 0;
+					border: none;
+					border-radius: 0;
+					background: var(--panel);
+					display: block;
+				}
+
+				/* ------------------ Left Toolbar Panel (Slide-out) ------------------ */
+				.window.ipad .toolbar {
+					position: fixed;
+					left: 0;
+					top: 44px; /* Below title bar */
+					bottom: 0;
+					width: calc(var(--icon-size) + var(--gap-2) * 2); /* Single icon width + padding */
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur-strong);
+					-webkit-backdrop-filter: var(--backdrop-blur-strong);
+					border-right: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-xl);
+					z-index: var(--z-panel);
+					transform: translateX(0); /* Open by default */
+					transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+					overflow-y: auto;
+					overflow-x: visible; /* Allow tooltips to overflow */
+					padding: var(--gap-2);
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-2);
 					-webkit-overflow-scrolling: touch;
-					scrollbar-gutter: stable both-edges;
-					/* optional: avoids layout shift */
 				}
 
-				/* keep icon rows on one line per section */
-				.window.ipad .toolbar-section .icon-group {
-					flex-wrap: nowrap;
-				}
-
-				/* let a chosen section soak up leftover space (optional) */
-				.window.ipad .toolbar-section.toolbar--fluid {
-					width: auto;
-					/* allow growth */
+				.window.ipad .toolbar:not(.panel-visible) {
+					transform: translateX(-100%);
 				}
 
 				.window.ipad .toolbar-section {
+					background: transparent;
+					border: none;
+					border-radius: 0;
+					padding: var(--gap-2) 0;
 					margin: 0;
-					padding: 6px;
-					border: 1px solid var(--border);
-					border-radius: var(--radius-lg);
+					box-shadow: none;
+					border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Visual separator */
 				}
 
+				.window.ipad .toolbar-section:last-child {
+					border-bottom: none;
+				}
+
+				/* Hide headers on iPad */
 				.window.ipad .toolbar-section h4 {
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+					display: none;
+				}
 
-  /* new “chip” styling to match the UI */
-  background: linear-gradient(180deg, #ffffff, #f5f6f1);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 4px 8px;
-  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset;
-}
-
+				.window.ipad .toolbar-section .icon-group {
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-1);
+					align-items: center;
+				}
 
 				.window.ipad .icon,
 				.window.ipad .icon img {
@@ -1593,101 +1710,296 @@ input[type="range"]::-moz-range-thumb {
 					height: var(--icon-size);
 				}
 
-				/* Sliders row: edge-to-edge grid with consistent rows */
+				/* ------------------ Bottom Sliders Panel (Slide-up) ------------------ */
 				.window.ipad .bottom-panel {
-					align-items: stretch;
-					padding: 8px 80px;
+					position: fixed;
+					left: 0;
+					right: 0;
+					bottom: 0;
+					height: var(--panel-bottom-height);
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur-strong);
+					-webkit-backdrop-filter: var(--backdrop-blur-strong);
+					border-top: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-xl);
+					z-index: var(--z-panel);
+					transform: translateY(100%);
+					transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+					overflow-y: auto;
+					overflow-x: hidden;
+					padding: 16px 20px; /* Increased padding on left and right to prevent text overlap */
+					display: flex;
+					flex-direction: column;
+					-webkit-overflow-scrolling: touch;
+				}
 
-					/* symmetric breathing room */
+				/* iPad Drum Pad Styles */
+				.window.ipad .drum-pad {
+					width: 140px;
+					height: 140px;
+					border-radius: var(--radius-lg);
+					border: 2px solid var(--border);
+					background: var(--panel-2);
+					box-shadow: var(--shadow-md);
+					font-size: 20px;
+				}
+
+				.window.ipad .drum-pad:active {
+					background: var(--accent);
+					color: #fff;
+				}
+
+				.window.ipad .drum-pad.active {
+					background: #ffd700;
+					animation: drumPadPulse 0.3s ease-out;
+				}
+
+				.window.ipad .bottom-panel.panel-visible {
+					transform: translateY(0);
 				}
 
 				.window.ipad #sliders {
-					grid-template-columns: 1fr;
-					/* one control per line */
-					grid-auto-rows: 28px;
-					gap: 6px;
+					display: flex;
+					flex-direction: column;
+					gap: 0; /* No gap between sliders */
+					width: 100%;
 				}
 
-				.window.ipad #sliders>div {
+				.window.ipad #sliders > div {
+					display: grid;
 					grid-template-columns: auto auto 1fr;
-					column-gap: 10px;
+					align-items: center;
+					column-gap: var(--gap-2);
+					padding: 0; /* No padding */
+					min-height: 28px; /* Ultra compact row height */
+					margin: 0; /* No margin */
 				}
 
-				/* Larger thumb for touch; keeps track centered */
+
+				.window.ipad #sliders label {
+					font-size: 18px;
+					font-weight: 500;
+					color: var(--text);
+					white-space: nowrap;
+					margin: 0;
+					min-width: 120px;
+					line-height: 1.3;
+				}
+
+				.window.ipad #sliders label span {
+					font-size: 16px;
+					margin-left: 4px;
+				}
+
+				/* Modern range sliders */
+				.window.ipad input[type="range"] {
+					height: 4px;
+					background: rgba(0, 0, 0, 0.1);
+					border-radius: 999px;
+					border: none;
+					margin: 0;
+					align-self: center;
+				}
+
 				.window.ipad input[type="range"]::-webkit-slider-thumb {
-					width: 28px;
-					height: 28px;
+					width: 32px; /* Larger thumb for easier grabbing */
+					height: 32px; /* Larger thumb for easier grabbing */
 					border-radius: 50%;
-					margin-top: 0;
-					background: #2563eb;
-					border: 2px solid #000;
+					background: var(--accent);
+					border: 3px solid white;
+					box-shadow: var(--shadow-md);
+					margin-top: -8px; /* Adjusted for larger thumb */
+					transition: all 0.2s ease;
+					cursor: grab;
+					
+				}
+
+				.window.ipad input[type="range"]::-webkit-slider-thumb:active {
+					transform: scale(1.1);
+					background: var(--accent-hover);
+					cursor: grabbing;
 				}
 
 				.window.ipad input[type="range"]::-moz-range-thumb {
-					width: 28px;
-					height: 28px;
+					width: 32px; /* Larger thumb for easier grabbing */
+					height: 32px; /* Larger thumb for easier grabbing */
 					border-radius: 50%;
-					background: #c0c0c0;
-					border: 2px solid #000;
+					background: var(--accent);
+					border: 3px solid white;
+					box-shadow: var(--shadow-md);
+					transition: all 0.2s ease;
+					cursor: grab;
 				}
 
-				/* Label comfort + alignment */
-				.window.ipad #sliders label {
-					width: 200px;
-					/* give longer labels room */
-					text-align: right;
-					white-space: nowrap;
-					margin: 0;
+				.window.ipad input[type="range"]::-moz-range-thumb:active {
+					transform: scale(1.1);
+					background: var(--accent-hover);
+					cursor: grabbing;
+				}
+
+				/* ------------------ Toggle Buttons ------------------ */
+				.panel-toggle {
+					position: fixed;
+					z-index: var(--z-toggle);
+					width: 48px;
+					height: 48px;
+					border-radius: var(--radius-lg);
+					background: var(--panel-glass);
+					backdrop-filter: var(--backdrop-blur);
+					-webkit-backdrop-filter: var(--backdrop-blur);
+					border: 1px solid var(--panel-glass-border);
+					box-shadow: var(--shadow-lg);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					cursor: pointer;
+					transition: all 0.2s ease;
+					font-size: 20px;
+					color: var(--text);
+					user-select: none;
+					-webkit-tap-highlight-color: transparent;
+					z-index: 100;
+				}
+
+				.panel-toggle:active {
+					transform: scale(0.95);
+				}
+
+				.panel-toggle-left {
+					left: calc(var(--panel-left-width) + var(--gap-2)); /* Panel open by default */
+					top: calc(44px + var(--gap-2)); /* Below title bar */
+					transform: none;
+				}
+
+				.panel-toggle-left.panel-visible {
+					left: calc(var(--panel-left-width) + var(--gap-2));
+				}
+
+				/* When panel is hidden, move toggle button back */
+				.window.ipad .toolbar:not(.panel-visible) ~ .panel-toggle-left,
+				.window.ipad .toolbar:not(.panel-visible) + * ~ .panel-toggle-left {
+					left: var(--gap-2);
+				}
+
+				/* Alternative: when panel is hidden, button should be at left edge */
+				.window.ipad .panel-toggle-left:not(.panel-visible) {
+					left: var(--gap-2) !important;
+				}
+
+				.panel-toggle-bottom {
+					bottom: var(--gap-2);
+					right: var(--gap-2);
+				}
+
+				.panel-toggle-bottom.panel-visible {
+					bottom: calc(var(--panel-bottom-height) + var(--gap-2));
 				}
 
 
-				/* Keep splash/toast absolute on iPad, but dialogs must be fixed */
-				.window.ipad #splashOverlay,
+				/* ------------------ Overlays & Dialogs ------------------ */
+				.window.ipad #splashOverlay {
+					position: fixed;
+					inset: 0;
+					z-index: var(--z-splash);
+				}
+
 				.window.ipad #toastStack {
-					position: absolute;
+					position: fixed;
+					top: calc(44px + var(--gap-2)); /* Below title bar */
+					right: var(--gap-2);
+					z-index: var(--z-toggle);
 				}
 
 				.window.ipad .dialog-backdrop {
 					position: fixed;
-					/* was absolute via grouped selector */
+					inset: 0;
+					z-index: var(--z-dialog);
 				}
 
-				/* Make the start instruction look like a tappable button on iPad */
 				.window.ipad #splashOverlay .splashText {
 					display: inline-block;
-					padding: 10px 16px;
-					margin-top: 12px;
-					background: #2563eb;
-					/* bright blue */
+					padding: 12px 24px;
+					margin-top: 16px;
+					background: var(--accent);
 					color: #fff;
-					font-weight: bold;
-					border-radius: 8px;
-					box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
-					border: 2px solid #000;
+					font-weight: 600;
+					border-radius: var(--radius-lg);
+					box-shadow: var(--shadow-lg);
 					text-align: center;
+					font-size: 16px;
 				}
 
-				/* Hide any legacy mobile warning while in iPad layout */
-				.window.ipad~#mobileWarning {
+				/* Hide mobile warning on iPad */
+				.window.ipad ~ #mobileWarning {
 					display: none !important;
 				}
 
-				#sliders .help-icon-container {
+				/* Help icons */
+				.window.ipad #sliders .help-icon-container {
 					display: flex;
 					align-items: center;
 					justify-content: center;
-					/* centers the ⓘ in its 32px cell */
+					width: 20px;
+					height: 20px;
 				}
 
-				#sliders .help-icon {
-					width: 24px;
-					/* fits comfortably in a 40px row */
-					height: 24px;
-					line-height: 24px;
+				.window.ipad #sliders .help-icon {
+					width: 16px;
+					height: 16px;
+					line-height: 16px;
+					font-size: 10px;
+					background: rgba(0, 0, 0, 0.1);
+					border: 1px solid rgba(0, 0, 0, 0.15);
 				}
 
-				/* Lighter grid lines to match light theme */
+				/* Shape settings in toolbar - narrow vertical layout */
+				.window.ipad .shape-settings {
+					display: flex;
+					flex-direction: column;
+					gap: var(--gap-1);
+					align-items: center;
+				}
 
+				.window.ipad .shape-settings > div {
+					display: flex;
+					flex-direction: column;
+					gap: 4px;
+					align-items: center;
+					width: 100%;
+				}
+
+				.window.ipad .shape-settings label {
+					font-size: 10px;
+					font-weight: 500;
+					color: var(--muted);
+					text-align: center;
+				}
+
+				.window.ipad .shape-settings input[type="color"],
+				.window.ipad .shape-settings input[type="number"] {
+					width: var(--icon-size);
+					height: var(--icon-size);
+					border: 1px solid var(--border);
+					border-radius: var(--radius-md);
+					padding: 0;
+				}
+
+				/* Edit tools glow effect - removed red highlight */
+
+				/* Icon active state */
+				.window.ipad .icon.icon-active {
+					background: var(--accent);
+					color: white;
+					border-color: var(--accent);
+					box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), var(--shadow-md);
+				}
+
+				.window.ipad .icon.icon-active::after {
+					background: #ff0;
+					color: #000;
+					font-size: 9px;
+					padding: 2px 5px;
+				}
 
 			}
 		}
@@ -1735,6 +2047,10 @@ input[type="range"]::-moz-range-thumb {
 				<span id="notifToggle" class="reset-icon" title="Disable tips">🔔</span>
 			</div>
 		</div>
+
+		<!-- Panel Toggle Buttons (iPad only) -->
+		<button class="panel-toggle panel-toggle-left" id="toggleToolbar" aria-label="Toggle Tools Panel">☰</button>
+		<button class="panel-toggle panel-toggle-bottom" id="toggleSliders" aria-label="Toggle Sliders Panel">⚙</button>
 
 		<!-- Main Content -->
 		<div class="content">
@@ -1798,6 +2114,7 @@ input[type="range"]::-moz-range-thumb {
 					<div class="icon-group">
 						<div class="icon" id="iconAppearance" data-label="Appearance">🎨</div>
 						<div class="icon" id="iconDiffusion" data-label="High Blob Repel"><img src="images/repel.png" alt="Overlap Guard" /></div>
+						<div class="icon" id="iconNoise" data-label="Auto Movement"><img src="images/Lava.png" alt="Auto Movement" /></div>
 						<div class="icon" id="iconUndo" data-label="Undo Last Item">⎌</div>
 						<div class="icon" id="iconGravity" data-label="Gravity (G)">G</div>
 					</div>
@@ -1812,6 +2129,7 @@ input[type="range"]::-moz-range-thumb {
 
 		<!-- Bottom Panel: Sliders -->
 		<div class="bottom-panel">
+			<!-- Sliders Panel -->
 			<div id="sliders">
 				<div>
 					<div class="help-icon-container">
@@ -1868,7 +2186,7 @@ input[type="range"]::-moz-range-thumb {
 							Shapes animate faster when higher.
 						</div>
 					</div>
-					<label for="timeStepSlider">Simulation Speed: <span id="timeStepValue">47%</span></label>
+					<label for="timeStepSlider">Speed: <span id="timeStepValue">47%</span></label>
 					<input type="range" id="timeStepSlider" min="0" max="100" value="47" step="1">
 				</div>
 
@@ -3027,34 +3345,44 @@ input[type="range"]::-moz-range-thumb {
 				return /iPad/.test(ua) || (platform === "MacIntel" && touch > 1);
 			}
 
-			/* move toolbar below the canvas for iPad; put it back for desktop */
-			let toolbarHomeParent = toolbarEl.parentElement; // remember original parent
-			let toolbarHomeNext = toolbarEl.nextSibling; // remember original position
+			/* iPad panels are now fixed position, no DOM manipulation needed */
+			let toolbarHomeParent = toolbarEl.parentElement;
+			let toolbarHomeNext = toolbarEl.nextSibling;
 
 			function adoptIPadDOM() {
+				// Panels are fixed position on iPad, no DOM changes needed
+				// But ensure they're in the window for proper z-index stacking
 				if (toolbarEl.parentElement !== rootWindow) {
-					rootWindow.insertBefore(toolbarEl, bottomEl); // place as row 3
+					rootWindow.appendChild(toolbarEl);
+				}
+				if (bottomEl.parentElement !== rootWindow) {
+					rootWindow.appendChild(bottomEl);
 				}
 			}
 
 			function restoreDesktopDOM() {
+				// Restore original desktop layout
 				if (toolbarHomeNext && toolbarHomeNext.parentNode === toolbarHomeParent) {
 					toolbarHomeParent.insertBefore(toolbarEl, toolbarHomeNext);
-				} else {
+				} else if (toolbarHomeParent) {
 					toolbarHomeParent.appendChild(toolbarEl);
 				}
 			}
 
-			/* square canvas that fits the middle row (cap at 1000) */
+			/* Full-screen canvas for iPad - fixed size regardless of panel state */
 			function fitCanvasForIPad() {
+				const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
+				const titleBarHeight = 44;
+				// Always account for panel width - canvas size stays constant
+				const availableWidth = window.innerWidth - panelWidth;
+				const availableHeight = window.innerHeight - titleBarHeight;
 
-				const size = 640; //Math.min(1000, Math.floor(Math.min(availW, availH) * CANVAS_SCALE));
-
-				canvas.style.width = size + "px";
-				canvas.style.height = size + "px";
-				canvas.width = size;
-				canvas.height = size;
-				if (gl) gl.viewport(0, 0, size, size);
+				// Fill entire available space (panel space is always reserved)
+				canvas.style.width = availableWidth + "px";
+				canvas.style.height = availableHeight + "px";
+				canvas.width = availableWidth;
+				canvas.height = availableHeight;
+				if (gl) gl.viewport(0, 0, availableWidth, availableHeight);
 			}
 
 			/* master switch */
@@ -3077,6 +3405,80 @@ input[type="range"]::-moz-range-thumb {
 			$("splashOverlay").style.display = "flex"; // ← show splash on load
 			window.addEventListener("resize", applyResponsiveLayout);
 			window.addEventListener("orientationchange", applyResponsiveLayout);
+
+			/* ───────── iPad Panel Toggle Functionality ───────── */
+			const toggleToolbarBtn = $("toggleToolbar");
+			const toggleSlidersBtn = $("toggleSliders");
+			const toolbarPanel = toolbarEl;
+			const bottomPanel = bottomEl;
+
+			function setupPanelToggles() {
+				if (!rootWindow.classList.contains("ipad")) {
+					// Hide toggle buttons on desktop
+					if (toggleToolbarBtn) toggleToolbarBtn.style.display = "none";
+					if (toggleSlidersBtn) toggleSlidersBtn.style.display = "none";
+					return;
+				}
+
+				// Show toggle buttons on iPad
+				if (toggleToolbarBtn) toggleToolbarBtn.style.display = "flex";
+				if (toggleSlidersBtn) toggleSlidersBtn.style.display = "flex";
+
+				// Open toolbar panel by default on iPad
+				if (toolbarPanel) {
+					toolbarPanel.classList.add("panel-visible");
+				}
+				if (toggleToolbarBtn) {
+					toggleToolbarBtn.classList.add("panel-visible");
+					// Set initial button position
+					const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
+					toggleToolbarBtn.style.left = `calc(${panelWidth}px + var(--gap-2))`;
+				}
+
+				// Open bottom panel by default on iPad
+				if (bottomPanel) {
+					bottomPanel.classList.add("panel-visible");
+				}
+				if (toggleSlidersBtn) {
+					toggleSlidersBtn.classList.add("panel-visible");
+				}
+
+				// Toolbar toggle
+				if (toggleToolbarBtn && toolbarPanel) {
+					toggleToolbarBtn.onclick = (e) => {
+						e.stopPropagation();
+						toolbarPanel.classList.toggle("panel-visible");
+						toggleToolbarBtn.classList.toggle("panel-visible");
+						
+						// Update button position based on panel state
+						const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
+						if (toolbarPanel.classList.contains("panel-visible")) {
+							toggleToolbarBtn.style.left = `calc(${panelWidth}px + var(--gap-2))`;
+						} else {
+							toggleToolbarBtn.style.left = "var(--gap-2)";
+						}
+						
+						// Canvas size stays constant - no need to resize
+					};
+				}
+
+				// Sliders toggle
+				if (toggleSlidersBtn && bottomPanel) {
+					toggleSlidersBtn.onclick = (e) => {
+						e.stopPropagation();
+						bottomPanel.classList.toggle("panel-visible");
+						toggleSlidersBtn.classList.toggle("panel-visible");
+					};
+				}
+
+				// Panels stay open when drawing - only toggle via buttons
+			}
+
+			// Setup toggles after layout is applied
+			setTimeout(setupPanelToggles, 100);
+			window.addEventListener("resize", () => {
+				setTimeout(setupPanelToggles, 100);
+			});
 
 			/* -----------------------------------
 			   GLOBALS & DATA
@@ -3135,8 +3537,13 @@ input[type="range"]::-moz-range-thumb {
 
 			let prevDamping = damping; // remembers last non-zero value
 
-			/* 8. Global shape settings */
-			let globalRadiusAvg = 4,
+			/* 8. Noise movement state */
+			let noiseActive = false;
+			let noiseTime = 0;
+			let noiseRampTime = 0; // Time for ramping oscillation
+
+			/* 9. Global shape settings */
+			let globalRadiusAvg = 5,
 				globalRadiusVar = 0;
 
 				let turgorPressure = 0.0; // 0..1 — 0 = no inflation, 1 = max
@@ -4054,8 +4461,8 @@ window.addEventListener("keydown", (e) => {
 	    const ch = chains[c].chain;
 	    for (let i = 0; i < ch.length; i++) {
 	      const dot = ch[i];
-	      const dx = x - dot.x;
-	      const dy = y - dot.y;
+	      const dx = mouseX - dot.x;
+	      const dy = mouseY - dot.y;
 	      const dist = Math.sqrt(dx * dx + dy * dy);
 	      if (dist < pickRadius && dist < bestDist) {
 	        bestDist = dist;
@@ -4073,7 +4480,7 @@ window.addEventListener("keydown", (e) => {
 
 	  // 2) Only if no blob dot was hit, allow circle dragging
 	  const circlePad = 3; // was effectively 5; smaller reduces accidental grabs
-	  const ci = pickCircleIndex(x, y, circlePad);
+	  const ci = pickCircleIndex(mouseX, mouseY, circlePad);
 	  if (ci !== null) {
 	    draggingCircleIndex = ci;
 	    return;
@@ -4713,6 +5120,8 @@ window.addEventListener("keydown", (e) => {
 			function drawGrid(size = 20) {
 				const w = canvas.width,
 					h = canvas.height;
+				// Ensure square grid cells by using the same size for both dimensions
+				// This ensures no "hangover" - grid cells are perfectly square
 				let gridVerts = [];
 				for (let x = 0; x <= w; x += size) {
 					gridVerts.push(x, 0, x, h);
@@ -4960,6 +5369,9 @@ window.addEventListener("keydown", (e) => {
 				chains.forEach((c, i) => simulateChain(c, i));
 				simulateInterChainRepulsion();
 				simulateCircleRepulsion();
+				
+				// Apply noise forces if active
+				applyNoiseForces();
 
 				// Clear & draw
 
@@ -5283,6 +5695,209 @@ window.addEventListener("keydown", (e) => {
     v.textContent = s.value + "%";
   });
 }
+
+			/* -----------------------------------
+			   DRUM PAD PANEL
+			----------------------------------- */
+			let originalDamping = damping;
+			let dampingRestoreTimer = null;
+			let dampingRestoreStartTime = null;
+			let dampingRestoreDuration = 100; // ms for decay (increased from 500 for longer visible movement)
+
+			// Attack/Decay damping restoration
+			function restoreDampingWithDecay() {
+				if (dampingRestoreTimer) {
+					cancelAnimationFrame(dampingRestoreTimer);
+				}
+				
+				const startDamping = damping;
+				const targetDamping = originalDamping;
+				const startTime = performance.now();
+				
+				function animate() {
+					const elapsed = performance.now() - startTime;
+					const progress = Math.min(elapsed / dampingRestoreDuration, 1);
+					
+					// Exponential decay for smooth transition
+					const easeOut = 1 - Math.pow(1 - progress, 3);
+					damping = startDamping + (targetDamping - startDamping) * easeOut;
+					
+					// Update UI
+					const s = $("dampingSlider");
+					const v = $("dampingValue");
+					if (s && v) {
+						s.value = damping * 100;
+						v.textContent = Math.round(s.value) + "%";
+					}
+					
+					if (progress < 1) {
+						dampingRestoreTimer = requestAnimationFrame(animate);
+					} else {
+						damping = targetDamping;
+						dampingRestoreTimer = null;
+					}
+				}
+				
+				dampingRestoreTimer = requestAnimationFrame(animate);
+			}
+
+			// Temporarily boost excitability (set damping to 0.001 = 99.9% excitability)
+			function boostExcitability() {
+				originalDamping = damping; // Store current value
+				damping = 0.001; // 99.9% excitability (much more responsive)
+				
+				const s = $("dampingSlider");
+				const v = $("dampingValue");
+				if (s && v) {
+					s.value = damping * 100;
+					v.textContent = Math.round(s.value) + "%";
+				}
+				
+				// Restore after a short delay with decay
+				setTimeout(() => {
+					restoreDampingWithDecay();
+				}, 300); // Attack phase: 300ms at high excitability (longer for more movement)
+			}
+
+			// Simple 2D noise function (Perlin-like)
+			function noise2D(x, y) {
+				const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+				return n - Math.floor(n);
+			}
+			
+			// Smooth noise interpolation
+			function smoothNoise(x, y) {
+				const intX = Math.floor(x);
+				const intY = Math.floor(y);
+				const fracX = x - intX;
+				const fracY = y - intY;
+				
+				const v1 = noise2D(intX, intY);
+				const v2 = noise2D(intX + 1, intY);
+				const v3 = noise2D(intX, intY + 1);
+				const v4 = noise2D(intX + 1, intY + 1);
+				
+				const i1 = v1 * (1 - fracX) + v2 * fracX;
+				const i2 = v3 * (1 - fracX) + v4 * fracX;
+				return i1 * (1 - fracY) + i2 * fracY;
+			}
+			
+			// Apply noise-based forces to all blobs (called from animation loop)
+			// Very subtle enhancement that works WITH blob physics, not against it
+			function applyNoiseForces() {
+				if (!noiseActive) return;
+				
+				noiseTime += 0.003; // Slower time evolution for more subtle changes
+				noiseRampTime += 0.0015; // Ramping oscillation time (slower for smooth breathing)
+				const noiseScale = 0.01; // Spatial scale - samples noise at each vertex position
+				const baseNoiseStrength = 0.2; // Strong enough to drive blob movement
+				
+				// Create smooth breathing pattern: 0.5x -> peak -> down -> back up
+				// Using sine wave for smooth oscillation (0 to 1 range)
+				const rampPhase = (Math.sin(noiseRampTime) + 1) / 2; // 0 to 1
+				// Apply easing to make it feel more organic (ease in/out)
+				const easedRamp = rampPhase < 0.5 
+					? 2 * rampPhase * rampPhase // Ease in
+					: 1 - Math.pow(-2 * rampPhase + 2, 2) / 2; // Ease out
+				
+				// Current noise strength ramps from 0.5x to peak (baseNoiseStrength)
+				// Maps easedRamp (0-1) to (0.5-1.0) so it never goes below half strength
+				const strengthMultiplier = 0.5 + easedRamp * 0.5; // Range: 0.5 to 1.0
+				const currentNoiseStrength = baseNoiseStrength * strengthMultiplier;
+				
+				chains.forEach(chainObj => {
+					if (chainObj.frozen) return;
+					
+					// Apply very subtle noise enhancement per-vertex
+					chainObj.chain.forEach(vertex => {
+						if (vertex.pinned) return;
+						
+						// Calculate distance from canvas center
+						const centerX = canvas.width / 2;
+						const centerY = canvas.height / 2;
+						const distFromCenterX = Math.abs(vertex.x - centerX) / (canvas.width / 2);
+						const distFromCenterY = Math.abs(vertex.y - centerY) / (canvas.height / 2);
+						const edgeProximity = Math.max(distFromCenterX, distFromCenterY); // 0 = center, 1 = edge
+						
+						// Get current vertex velocity and speed
+						const vertexSpeed = Math.hypot(vertex.vx, vertex.vy);
+						
+						// Sample noise at each vertex's position - creates spatial variation
+						const nx = smoothNoise(vertex.x * noiseScale, noiseTime);
+						const ny = smoothNoise(vertex.y * noiseScale, noiseTime + 1000);
+						
+						// Convert noise (0-1) to direction modifier (-1 to 1)
+						// Full range to drive movement strongly
+						const noiseModX = (nx - 0.5) * 2;
+						const noiseModY = (ny - 0.5) * 2;
+						
+						// Scale noise influence - give minimum boost even when stationary
+						// This allows noise to drive even stationary blobs
+						const velocityScale = Math.max(0.3, Math.min(vertexSpeed / 2, 1.0)); // Minimum 0.3, scales up with speed
+						
+						// Apply noise as a driving force - can create new movement
+						// Strong enough to drive blobs while still working with physics
+						const noiseInfluence = currentNoiseStrength * velocityScale * 1.0; // Strong influence to drive movement
+						const noiseNudgeX = noiseModX * noiseInfluence;
+						const noiseNudgeY = noiseModY * noiseInfluence;
+						
+						// Add gentle center-seeking force when near edges (pushes back toward center)
+						const centerSeekStrength = 0.12; // Slightly reduced
+						const centerSeekFactor = Math.max(0, edgeProximity - 0.3); // Only active when >30% from center
+						const centerSeekX = (centerX - vertex.x) / (canvas.width / 2);
+						const centerSeekY = (centerY - vertex.y) / (canvas.height / 2);
+						const centerForceX = centerSeekX * centerSeekStrength * centerSeekFactor;
+						const centerForceY = centerSeekY * centerSeekStrength * centerSeekFactor;
+						
+						// Apply very subtle noise nudge to existing velocity (enhancement, not new force)
+						vertex.vx += noiseNudgeX + centerForceX;
+						vertex.vy += noiseNudgeY + centerForceY;
+					});
+				});
+			}
+			
+			// Noise Movement: Random noise movement (ambient noise field) - TOGGLE
+			$("iconNoise").addEventListener("click", () => {
+				if (chains.length === 0) {
+					toast("No blobs to move", 1500);
+					return;
+				}
+				
+				if (noiseActive) {
+					// Turn OFF noise
+					noiseActive = false;
+					
+					// Restore excitability
+					restoreDampingWithDecay();
+					
+					// Update button visual state
+					toggleActiveIcon($("iconNoise"), false);
+					
+					toast("Noise OFF", 800);
+				} else {
+					// Turn ON noise
+					noiseActive = true;
+					noiseTime = Math.random() * 1000; // Random starting point
+					noiseRampTime = 0; // Start ramping from 0
+					
+					// STEP 1: Boost excitability to 99% (0.01 damping)
+					originalDamping = damping;
+					damping = 0.95; // 95% excitability
+					
+					const s = $("dampingSlider");
+					const v = $("dampingValue");
+					if (s && v) {
+						s.value = damping * 100;
+						v.textContent = Math.round(s.value) + "%";
+					}
+					
+					// Update button visual state
+					toggleActiveIcon($("iconNoise"), true);
+					
+					toast("Noise ON", 800);
+				}
+			});
+
 
 
 			window.addEventListener("keydown", e => {
