@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="UTF-8">
-	<title>blobSketch version 1.32</title>
+	<title>blobSketch version 1.31</title>
 
 	<style>
 	/* ---------- Desktop defaults: Retro Beige Console ---------- */
@@ -2306,7 +2306,7 @@ input[type="range"]::-moz-range-thumb {
 		<!-- Modals/Dialogs: About and Help -->
 		<div class="dialog-backdrop" id="aboutBackdrop">
 			<div class="dialog-content">
-				<p>blobSketch version 1.32</p>
+				<p>blobSketch version 1.31</p>
 				<p>by Colin Reid</p>
 				<button id="closeAbout">OK</button>
 			</div>
@@ -2525,13 +2525,14 @@ input[type="range"]::-moz-range-thumb {
 
 			function buildSpatialHash() {
 				spatialHash.clear();
+				const invCellSize = 1 / cellSize; // Cache inverse for faster division
 				for (let c = 0; c < chains.length; c++) {
 					const ch = chains[c].chain;
 					const rA = chains[c].baseDotRadius * dotScaleFactor;
 					for (let i = 0; i < ch.length; i++) {
 						const p = ch[i];
-						const cx = Math.floor(p.x / cellSize);
-						const cy = Math.floor(p.y / cellSize);
+						const cx = Math.floor(p.x * invCellSize); // Multiply instead of divide
+						const cy = Math.floor(p.y * invCellSize);
 						const key = hashKey(cx, cy);
 						if (!spatialHash.has(key)) spatialHash.set(key, []);
 						spatialHash.get(key).push({ c, i, p, r: rA });
@@ -4739,13 +4740,14 @@ window.addEventListener("keydown", (e) => {
 			function applySpring(chain, forces, i, j, restDist) {
 				const a = chain[i],
 					b = chain[j];
-				let dx = b.x - a.x,
-					dy = b.y - a.y,
-					dist = Math.sqrt(dx * dx + dy * dy);
+				const dx = b.x - a.x,
+					dy = b.y - a.y;
+				let dist = Math.sqrt(dx * dx + dy * dy);
 				if (dist < 1e-4) dist = 1e-4;
-				const f = springConstant * (dist - restDist),
-					nx = dx / dist,
-					ny = dy / dist;
+				const invDist = 1 / dist; // Cache inverse
+				const f = springConstant * (dist - restDist);
+				const nx = dx * invDist;
+				const ny = dy * invDist;
 				forces[i].x += f * nx;
 				forces[i].y += f * ny;
 				forces[j].x -= f * nx;
@@ -4782,19 +4784,24 @@ window.addEventListener("keydown", (e) => {
 					}
 				}
 
-				// Self repulsion
+				// Self repulsion - OPTIMIZED: use squared distances to avoid Math.sqrt
+				const minDSq = (dotR * 2) * (dotR * 2); // squared minimum distance
 				for (let i = 0; i < arr.length; i++) {
+					const a = arr[i];
 					for (let j = i + 1; j < arr.length; j++) {
-						const a = arr[i],
-							b = arr[j];
-						const minD = dotR * 2,
-							dx = b.x - a.x,
-							dy = b.y - a.y,
-							dist = Math.sqrt(dx * dx + dy * dy);
-						if (dist > 0 && dist < minD) {
-							const overlap = (minD - dist),
-								nx = dx / dist,
-								ny = dy / dist;
+						const b = arr[j];
+						const dx = b.x - a.x;
+						const dy = b.y - a.y;
+						const distSq = dx * dx + dy * dy;
+						
+						// Early exit: only calculate sqrt if particles are close enough
+						if (distSq > 0 && distSq < minDSq) {
+							const dist = Math.sqrt(distSq);
+							const minD = dotR * 2;
+							const overlap = minD - dist;
+							const invDist = 1 / dist; // cache 1/dist instead of recalculating
+							const nx = dx * invDist;
+							const ny = dy * invDist;
 							const f = repulsionConstant * overlap;
 							forces[i].x -= f * nx;
 							forces[i].y -= f * ny;
@@ -4804,14 +4811,18 @@ window.addEventListener("keydown", (e) => {
 					}
 				}
 
-				// Boundary push-back
+				// Boundary push-back - OPTIMIZED: cache canvas dimensions
+				const canvasWidth = canvas.width;
+				const canvasHeight = canvas.height;
+				const rightBound = canvasWidth - dotR;
+				const bottomBound = canvasHeight - dotR;
 				for (let i = 0; i < arr.length; i++) {
 					const a = arr[i];
 					if (a.x < dotR) forces[i].x += (dotR - a.x) * 0.5;
-					else if (a.x > canvas.width - dotR) forces[i].x -= (a.x - (canvas.width - dotR)) * 0.5;
+					else if (a.x > rightBound) forces[i].x -= (a.x - rightBound) * 0.5;
 
 					if (a.y < dotR) forces[i].y += (dotR - a.y) * 0.5;
-					else if (a.y > canvas.height - dotR) forces[i].y -= (a.y - (canvas.height - dotR)) * 0.5;
+					else if (a.y > bottomBound) forces[i].y -= (a.y - bottomBound) * 0.5;
 				}
 
 				// --- Internal vs External Pressure Equilibrium (runaway-proof) ---
@@ -5050,12 +5061,16 @@ window.addEventListener("keydown", (e) => {
 
 							    const dx = dotB.x - dotA.x;
 							    const dy = dotB.y - dotA.y;
-							    const dist = Math.hypot(dx, dy);
+							    const distSq = dx * dx + dy * dy;
+							    const minDSq = minD * minD;
 
-							    if (dist > 0 && dist < minD) {
+							    // Early exit with squared distance comparison
+							    if (distSq > 0 && distSq < minDSq) {
+							        const dist = Math.sqrt(distSq);
 							        const overlap = (minD - dist);
-							        const nx = dx / dist;
-							        const ny = dy / dist;
+							        const invDist = 1 / dist; // Cache inverse
+							        const nx = dx * invDist;
+							        const ny = dy * invDist;
 
 							        // Same-chain vs inter-blob multiplier
 							        const repelMult = sameChain ? 1.0 : interRepelMult;
@@ -5079,33 +5094,55 @@ window.addEventListener("keydown", (e) => {
 			}
 
 			function simulateCircleRepulsion() {
+				const hardWall = (interRepelMult === 3); // Cache this check outside loops
+				const circleRadiusSq = circles.length > 0 ? circles[0].radius * circles[0].radius : 0; // Pre-calculate if all circles same size
+				
 				for (let c = 0; c < circles.length; c++) {
 					const circle = circles[c];
+					const circleRadius = circle.radius;
+					const circleRadiusSq = circleRadius * circleRadius; // Squared for comparison
+					
 					for (let ch = 0; ch < chains.length; ch++) {
 						if (chains[ch].frozen) continue;
 						const arr = chains[ch].chain;
-						for (let i = 0; i < arr.length; i++) {
-							const d = arr[i];
-							const dx = d.x - circle.x,
-								dy = d.y - circle.y,
-								dist = Math.sqrt(dx * dx + dy * dy);
-							const hardWall = (interRepelMult === 3); // button ON → hard wall
-							if (hardWall) { // ─── HARD mode ───
-								const dotR = chains[ch].baseDotRadius * dotScaleFactor;
-								const minD = circle.radius + dotR;
-								if (dist < minD) {
-									const nx = dx / dist,
-										ny = dy / dist;
+						const dotR = chains[ch].baseDotRadius * dotScaleFactor;
+						
+						if (hardWall) { // ─── HARD mode ───
+							const minD = circleRadius + dotR;
+							const minDSq = minD * minD;
+							
+							for (let i = 0; i < arr.length; i++) {
+								const d = arr[i];
+								const dx = d.x - circle.x;
+								const dy = d.y - circle.y;
+								const distSq = dx * dx + dy * dy;
+								
+								// Early exit with squared distance
+								if (distSq < minDSq && distSq > 0) {
+									const dist = Math.sqrt(distSq);
+									const invDist = 1 / dist;
+									const nx = dx * invDist;
+									const ny = dy * invDist;
 									d.x = circle.x + nx * minD;
 									d.y = circle.y + ny * minD;
 									d.vx = d.vy = 0;
 								}
-							} else { // ─── SOFT mode ───
-								if (dist > 1e-4 && dist < circle.radius) {
-									const f = repulsionConstant * (circle.radius - dist);
+							}
+						} else { // ─── SOFT mode ───
+							for (let i = 0; i < arr.length; i++) {
+								const d = arr[i];
+								const dx = d.x - circle.x;
+								const dy = d.y - circle.y;
+								const distSq = dx * dx + dy * dy;
+								
+								// Early exit: only calculate sqrt if inside circle
+								if (distSq > 1e-8 && distSq < circleRadiusSq) {
+									const dist = Math.sqrt(distSq);
+									const f = repulsionConstant * (circleRadius - dist);
 									if (!d.pinned) {
-										d.vx += f * (dx / dist);
-										d.vy += f * (dy / dist);
+										const invDist = 1 / dist;
+										d.vx += f * (dx * invDist);
+										d.vy += f * (dy * invDist);
 									}
 								}
 							}
@@ -5783,7 +5820,7 @@ window.addEventListener("keydown", (e) => {
 			}
 			
 			// Apply noise-based forces to all blobs (called from animation loop)
-			// Very subtle enhancement that works WITH blob physics, not against it
+			// Subtle per-vertex perturbations with organic ramping (0 -> peak -> down -> up)
 			function applyNoiseForces() {
 				if (!noiseActive) return;
 				
@@ -5842,6 +5879,7 @@ window.addEventListener("keydown", (e) => {
 						const noiseNudgeY = noiseModY * noiseInfluence;
 						
 						// Add gentle center-seeking force when near edges (pushes back toward center)
+						// Strength increases as blob gets closer to edges
 						const centerSeekStrength = 0.12; // Slightly reduced
 						const centerSeekFactor = Math.max(0, edgeProximity - 0.3); // Only active when >30% from center
 						const centerSeekX = (centerX - vertex.x) / (canvas.width / 2);
