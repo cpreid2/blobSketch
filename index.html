@@ -508,7 +508,7 @@ input[type="range"]::-moz-range-thumb {
 
 .appearance-dialog-content {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   margin: 16px 0;
 }
 
@@ -516,13 +516,17 @@ input[type="range"]::-moz-range-thumb {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 0;
+}
+
+.appearance-section {
+  padding-bottom: 4px;
 }
 
 .appearance-control-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .appearance-control-group label {
@@ -530,6 +534,24 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: 8px;
   font-size: 13px;
+}
+
+.appearance-checkbox-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 4px;
+}
+
+.appearance-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.appearance-checkbox-label input[type="checkbox"] {
+  cursor: pointer;
 }
 
 .appearance-control-group input[type="range"] {
@@ -2342,37 +2364,58 @@ input[type="range"]::-moz-range-thumb {
 				<div class="appearance-dialog-content">
 					<div class="appearance-controls">
 						<div class="appearance-section">
-							<h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; color: #333;">Blob</h4>
+							<h4 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; color: #333;">Blob Style</h4>
 							
-							<div class="appearance-control-group">
-								<label>
+							<div class="appearance-checkbox-row">
+								<label class="appearance-checkbox-label">
 									<input type="checkbox" id="appearanceOutline" checked>
-									Outline
+									<span>Outline</span>
 								</label>
-								<label>
+								<label class="appearance-checkbox-label">
 									<input type="checkbox" id="appearanceFilled" checked>
-									Filled
+									<span>Filled</span>
 								</label>
 							</div>
 
-							<div class="appearance-control-group" id="appearanceOutlineWidthGroup" style="margin-top: 20px; margin-bottom: 0;">
-								<label for="appearanceOutlineWidth">Outline Width: <span id="appearanceOutlineWidthValue">4</span></label>
+							<div class="appearance-control-group" id="appearanceOutlineWidthGroup" style="margin-top: 12px;">
+								<label for="appearanceOutlineWidth" style="font-size: 12px; color: #666;">Width: <span id="appearanceOutlineWidthValue">4</span></label>
 								<input type="range" id="appearanceOutlineWidth" min="1" max="10" value="4" step="1">
 							</div>
 						</div>
 
-						<div class="appearance-section" style="margin-top: 25px; padding-top: 25px; border-top: 2px solid #ddd;">
-							<h4 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; color: #333;">Canvas</h4>
+						<div class="appearance-section" id="appearanceTravelingSegmentSection" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0;">
+							<div class="appearance-control-group" style="margin-bottom: 0;">
+								<label class="appearance-checkbox-label" style="margin-bottom: 12px;">
+									<input type="checkbox" id="appearanceTravelingSegment" unchecked>
+									<span style="font-weight: 500;">Traveling Segment</span>
+								</label>
+							</div>
 							
-							<div class="appearance-control-group">
-								<label for="appearanceBackgroundColor">Background Color:</label>
-								<input type="color" id="appearanceBackgroundColor" value="#bfccab" style="width: 100%; height: 40px; cursor: pointer;">
+							<div id="appearanceTravelingSegmentControls" style="display: none; margin-top: 8px; padding-left: 24px; border-left: 2px solid #e0e0e0;">
+								<div class="appearance-control-group" style="margin-bottom: 10px;">
+									<label for="appearanceTravelingSegmentLength" style="font-size: 12px; color: #666;">Length: <span id="appearanceTravelingSegmentLengthValue">50</span>px</label>
+									<input type="range" id="appearanceTravelingSegmentLength" min="10" max="200" value="50" step="5">
+								</div>
+								
+								<div class="appearance-control-group" style="margin-bottom: 0;">
+									<label for="appearanceTravelingSegmentSpeed" style="font-size: 12px; color: #666;">Speed: <span id="appearanceTravelingSegmentSpeedValue">100</span> px/s</label>
+									<input type="range" id="appearanceTravelingSegmentSpeed" min="10" max="500" value="100" step="10">
+								</div>
+							</div>
+						</div>
+
+						<div class="appearance-section" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e0e0e0;">
+							<h4 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 600; color: #333;">Canvas</h4>
+							
+							<div class="appearance-control-group" style="margin-bottom: 12px;">
+								<label for="appearanceBackgroundColor" style="font-size: 12px; color: #666; margin-bottom: 6px;">Background Color</label>
+								<input type="color" id="appearanceBackgroundColor" value="#bfccab" style="width: 100%; height: 36px; cursor: pointer; border-radius: 4px;">
 							</div>
 
-							<div class="appearance-control-group">
-								<label>
+							<div class="appearance-control-group" style="margin-bottom: 0;">
+								<label class="appearance-checkbox-label">
 									<input type="checkbox" id="appearanceShowGrid" checked>
-									Show Grid
+									<span>Show Grid</span>
 								</label>
 							</div>
 						</div>
@@ -3527,6 +3570,13 @@ input[type="range"]::-moz-range-thumb {
 			let outlineWidth = 4; // Width of outline/border
 			let canvasBackgroundColor = [0.75, 0.80, 0.67, 1.0]; // Canvas background color [r, g, b, a]
 			let showGrid = true; // Show grid on canvas
+			
+			// Traveling segment mode
+			let travelingSegmentEnabled = false; // Enable traveling segment mode
+			let travelingSegmentLength = 50; // Length of the visible segment in pixels
+			let travelingSegmentSpeed = 100; // Speed of travel (pixels per second)
+			let travelingSegmentNormalizedPosition = {}; // Store normalized position (0-1) per chain to avoid flickering
+			let travelingSegmentLastTime = performance.now(); // Last frame time for delta calculation
 
 			/* 7. Physics parameters (defaults) */
 			let springConstant = 0.3, // ~30 %
@@ -3717,6 +3767,14 @@ input[type="range"]::-moz-range-thumb {
 				// Show/hide outline width based on outline checkbox
 				$("appearanceOutlineWidthGroup").style.display = showOutline ? "block" : "none";
 				
+				// Traveling segment settings
+				$("appearanceTravelingSegment").checked = travelingSegmentEnabled;
+				$("appearanceTravelingSegmentLength").value = travelingSegmentLength;
+				$("appearanceTravelingSegmentLengthValue").textContent = travelingSegmentLength;
+				$("appearanceTravelingSegmentSpeed").value = travelingSegmentSpeed;
+				$("appearanceTravelingSegmentSpeedValue").textContent = travelingSegmentSpeed;
+				$("appearanceTravelingSegmentControls").style.display = travelingSegmentEnabled ? "block" : "none";
+				
 				// Canvas settings
 				const bgColor = canvasBackgroundColor;
 				const hexColor = "#" + [Math.round(bgColor[0] * 255), Math.round(bgColor[1] * 255), Math.round(bgColor[2] * 255)]
@@ -3740,6 +3798,15 @@ input[type="range"]::-moz-range-thumb {
 				
 				// Update line thickness based on outline width
 				currentLineThickness = outlineWidth;
+				
+				// Traveling segment settings
+				travelingSegmentEnabled = $("appearanceTravelingSegment").checked;
+				travelingSegmentLength = parseInt($("appearanceTravelingSegmentLength").value);
+				travelingSegmentSpeed = parseInt($("appearanceTravelingSegmentSpeed").value);
+				if (travelingSegmentEnabled) {
+					travelingSegmentNormalizedPosition = {}; // Reset positions for all chains
+					travelingSegmentLastTime = performance.now(); // Reset time tracking
+				}
 				
 				// Canvas settings
 				const hexColor = $("appearanceBackgroundColor").value;
@@ -3765,6 +3832,23 @@ input[type="range"]::-moz-range-thumb {
 			});
 			$("appearanceOutlineWidth").addEventListener("input", () => {
 				$("appearanceOutlineWidthValue").textContent = $("appearanceOutlineWidth").value;
+				updateAppearancePreview();
+			});
+			$("appearanceTravelingSegment").addEventListener("change", () => {
+				const enabled = $("appearanceTravelingSegment").checked;
+				$("appearanceTravelingSegmentControls").style.display = enabled ? "block" : "none";
+				// Uncheck filled when traveling segment is enabled
+				if (enabled) {
+					$("appearanceFilled").checked = false;
+				}
+				updateAppearancePreview();
+			});
+			$("appearanceTravelingSegmentLength").addEventListener("input", () => {
+				$("appearanceTravelingSegmentLengthValue").textContent = $("appearanceTravelingSegmentLength").value;
+				updateAppearancePreview();
+			});
+			$("appearanceTravelingSegmentSpeed").addEventListener("input", () => {
+				$("appearanceTravelingSegmentSpeedValue").textContent = $("appearanceTravelingSegmentSpeed").value;
 				updateAppearancePreview();
 			});
 			$("appearanceBackgroundColor").addEventListener("input", updateAppearancePreview);
@@ -3807,37 +3891,94 @@ input[type="range"]::-moz-range-thumb {
 				const showOutlineCheck = $("appearanceOutline").checked;
 				const showFilledCheck = $("appearanceFilled").checked;
 				const outlineWidthVal = parseInt($("appearanceOutlineWidth").value);
+				const travelingSegmentCheck = $("appearanceTravelingSegment").checked;
+				const travelingSegmentLengthVal = parseInt($("appearanceTravelingSegmentLength").value);
+				const travelingSegmentSpeedVal = parseInt($("appearanceTravelingSegmentSpeed").value);
 				
 				ctx.save();
 				
 				// Create blob path (simple rounded shape)
-				ctx.beginPath();
-				const numPoints = 8;
+				const numPoints = 32; // More points for smoother preview
+				const blobPoints = [];
 				for (let i = 0; i < numPoints; i++) {
 					const angle = (i / numPoints) * Math.PI * 2;
 					const r = radius + Math.sin(angle * 3) * 15;
 					const x = centerX + Math.cos(angle) * r;
 					const y = centerY + Math.sin(angle) * r;
-					if (i === 0) {
-						ctx.moveTo(x, y);
-					} else {
-						ctx.lineTo(x, y);
-					}
+					blobPoints.push({x, y});
 				}
-				ctx.closePath();
+				
+				// Create spline array for preview
+				const previewSpline = new Float32Array(numPoints * 2);
+				for (let i = 0; i < numPoints; i++) {
+					previewSpline[i * 2] = blobPoints[i].x;
+					previewSpline[i * 2 + 1] = blobPoints[i].y;
+				}
 				
 				// Draw filled area if enabled
 				if (showFilledCheck) {
+					ctx.beginPath();
+					ctx.moveTo(blobPoints[0].x, blobPoints[0].y);
+					for (let i = 1; i < blobPoints.length; i++) {
+						ctx.lineTo(blobPoints[i].x, blobPoints[i].y);
+					}
+					ctx.closePath();
 					ctx.fillStyle = "#0066ff";
 					ctx.fill();
 				}
 				
 				// Draw outline if enabled
 				if (showOutlineCheck) {
-					ctx.strokeStyle = showFilledCheck ? "#000" : "#0066ff";
-					ctx.lineWidth = outlineWidthVal;
-					ctx.setLineDash([]);
-					ctx.stroke();
+					if (travelingSegmentCheck) {
+						// Draw traveling segment (preview uses simple time-based approach)
+						const currentTime = performance.now();
+						if (!window.previewLastTime) window.previewLastTime = currentTime;
+						const deltaTime = (currentTime - window.previewLastTime) / 1000;
+						window.previewLastTime = currentTime;
+						
+						const totalLength = calculateSplineLength(previewSpline);
+						if (!window.previewNormalizedPos) window.previewNormalizedPos = 0;
+						
+						if (totalLength > 0) {
+							const distanceTraveled = deltaTime * travelingSegmentSpeedVal;
+							const normalizedAdvance = distanceTraveled / totalLength;
+							window.previewNormalizedPos = (window.previewNormalizedPos + normalizedAdvance) % 1.0;
+						}
+						
+						const currentPosition = window.previewNormalizedPos * totalLength;
+						const segment = extractTravelingSegment(previewSpline, currentPosition, travelingSegmentLengthVal);
+						
+						if (segment.length >= 4) {
+							ctx.beginPath();
+							ctx.moveTo(segment[0], segment[1]);
+							for (let i = 2; i < segment.length; i += 2) {
+								ctx.lineTo(segment[i], segment[i + 1]);
+							}
+							ctx.strokeStyle = showFilledCheck ? "#000" : "#0066ff";
+							ctx.lineWidth = outlineWidthVal;
+							ctx.setLineDash([]);
+							ctx.stroke();
+						}
+						
+						// Animate preview
+						requestAnimationFrame(() => {
+							if ($("appearanceBackdrop").style.display === "flex") {
+								updateAppearancePreview();
+							}
+						});
+					} else {
+						// Draw full outline
+						ctx.beginPath();
+						ctx.moveTo(blobPoints[0].x, blobPoints[0].y);
+						for (let i = 1; i < blobPoints.length; i++) {
+							ctx.lineTo(blobPoints[i].x, blobPoints[i].y);
+						}
+						ctx.closePath();
+						ctx.strokeStyle = showFilledCheck ? "#000" : "#0066ff";
+						ctx.lineWidth = outlineWidthVal;
+						ctx.setLineDash([]);
+						ctx.stroke();
+					}
 				}
 				
 				ctx.restore();
@@ -4708,6 +4849,54 @@ window.addEventListener("keydown", (e) => {
 				return thickScratch.subarray(0, needed);
 			}
 
+			// Version for open segments (non-closed paths)
+			function getThickLineVerticesOpen(splinePts, thickness) {
+				const n = splinePts.length >> 1; // points count
+				if (n < 2) return new Float32Array(0);
+				const needed = n * 4; // 2 verts per point
+				if (thickScratch.length < needed) thickScratch = new Float32Array(needed);
+
+				const half = thickness * 0.5;
+				for (let i = 0; i < n; i++) {
+					const currX = splinePts[i * 2],
+						currY = splinePts[i * 2 + 1];
+					
+					let tx, ty;
+					if (i === 0) {
+						// First point: use direction to next
+						const nextX = splinePts[(i + 1) * 2],
+							nextY = splinePts[(i + 1) * 2 + 1];
+						tx = nextX - currX;
+						ty = nextY - currY;
+					} else if (i === n - 1) {
+						// Last point: use direction from previous
+						const prevX = splinePts[(i - 1) * 2],
+							prevY = splinePts[(i - 1) * 2 + 1];
+						tx = currX - prevX;
+						ty = currY - prevY;
+					} else {
+						// Middle points: average of both directions
+						const prevX = splinePts[(i - 1) * 2],
+							prevY = splinePts[(i - 1) * 2 + 1];
+						const nextX = splinePts[(i + 1) * 2],
+							nextY = splinePts[(i + 1) * 2 + 1];
+						tx = nextX - prevX;
+						ty = nextY - prevY;
+					}
+
+					const invLen = 1 / Math.hypot(tx, ty || 1); // avoid /0
+					const nx = -ty * invLen,
+						ny = tx * invLen; // normal
+
+					const base = i * 4;
+					thickScratch[base] = currX + nx * half;
+					thickScratch[base + 1] = currY + ny * half;
+					thickScratch[base + 2] = currX - nx * half;
+					thickScratch[base + 3] = currY - ny * half;
+				}
+				return thickScratch.subarray(0, needed);
+			}
+
 			/* -----------------------------------
 			   "DASHED" RENDER FOR FROZEN
 			----------------------------------- */
@@ -5237,6 +5426,101 @@ window.addEventListener("keydown", (e) => {
 				gl.drawArrays(gl.LINE_LOOP, 0, seg);
 			}
 
+			/* -----------------------------------
+			   TRAVELING SEGMENT FUNCTIONS
+			----------------------------------- */
+			// Calculate the total perimeter length of a spline
+			function calculateSplineLength(spline) {
+				let totalLength = 0;
+				const n = spline.length / 2;
+				for (let i = 0; i < n; i++) {
+					const x1 = spline[i * 2];
+					const y1 = spline[i * 2 + 1];
+					const x2 = spline[((i + 1) % n) * 2];
+					const y2 = spline[((i + 1) % n) * 2 + 1];
+					const dx = x2 - x1;
+					const dy = y2 - y1;
+					totalLength += Math.sqrt(dx * dx + dy * dy);
+				}
+				return totalLength;
+			}
+
+			// Extract a segment from the spline starting at a given distance along the perimeter
+			function extractTravelingSegment(spline, startDistance, segmentLength) {
+				const n = spline.length / 2;
+				const totalLength = calculateSplineLength(spline);
+				
+				// Normalize startDistance to be within [0, totalLength)
+				startDistance = ((startDistance % totalLength) + totalLength) % totalLength;
+				
+				const segment = [];
+				let currentDistance = 0;
+				let segmentRemaining = segmentLength;
+				let foundStart = false;
+				let iterations = 0;
+				const maxIterations = n * 2; // Prevent infinite loops
+				
+				// Iterate through spline points, potentially wrapping around
+				for (let iter = 0; iter < maxIterations && segmentRemaining > 0.01; iter++) {
+					const i = iter % n;
+					const x1 = spline[i * 2];
+					const y1 = spline[i * 2 + 1];
+					const x2 = spline[((i + 1) % n) * 2];
+					const y2 = spline[((i + 1) % n) * 2 + 1];
+					
+					const dx = x2 - x1;
+					const dy = y2 - y1;
+					const segmentLen = Math.sqrt(dx * dx + dy * dy);
+					if (segmentLen < 0.001) continue; // Skip zero-length segments
+					
+					const nextDistance = currentDistance + segmentLen;
+					
+					if (!foundStart) {
+						if (nextDistance >= startDistance) {
+							// Start point is on this segment
+							const t = (startDistance - currentDistance) / segmentLen;
+							const startX = x1 + dx * t;
+							const startY = y1 + dy * t;
+							segment.push(startX, startY);
+							foundStart = true;
+							
+							// Check if the entire segment fits in this spline segment
+							const remainingInSegment = nextDistance - startDistance;
+							if (remainingInSegment >= segmentRemaining) {
+								// End point is also on this segment
+								const endT = (startDistance + segmentRemaining - currentDistance) / segmentLen;
+								const endX = x1 + dx * endT;
+								const endY = y1 + dy * endT;
+								segment.push(endX, endY);
+								break;
+							} else {
+								// Continue to next segment
+								segment.push(x2, y2);
+								segmentRemaining -= remainingInSegment;
+							}
+						}
+					} else {
+						// We're collecting points for the segment
+						if (segmentLen >= segmentRemaining) {
+							// End point is on this segment
+							const t = segmentRemaining / segmentLen;
+							const endX = x1 + dx * t;
+							const endY = y1 + dy * t;
+							segment.push(endX, endY);
+							break;
+						} else {
+							// Add this point and continue
+							segment.push(x2, y2);
+							segmentRemaining -= segmentLen;
+						}
+					}
+					
+					currentDistance = nextDistance;
+				}
+				
+				return new Float32Array(segment);
+			}
+
 			function drawChain(chainObj, chainIndex) {
 				const ch = chainObj.chain;
 				if (ch.length < 2) return;
@@ -5332,6 +5616,34 @@ window.addEventListener("keydown", (e) => {
 					if (chainObj.frozen) {
 						// Use dashed style for frozen blobs
 						drawDashedSpline(spline, outlineColor);
+					} else if (travelingSegmentEnabled && chainObj.isClosed) {
+						// Traveling segment mode - only render a segment that travels around
+						const currentPerimeterLength = calculateSplineLength(spline);
+						
+						// Initialize normalized position for this chain if not exists
+						if (!(chainIndex in travelingSegmentNormalizedPosition)) {
+							travelingSegmentNormalizedPosition[chainIndex] = 0;
+						}
+						
+						// Use normalized position (0-1) to avoid flickering when blob deforms
+						// Position is updated once per frame in animate() function
+						// Convert normalized position to absolute distance
+						const currentPosition = travelingSegmentNormalizedPosition[chainIndex] * currentPerimeterLength;
+						
+						const segment = extractTravelingSegment(spline, currentPosition, travelingSegmentLength);
+						
+						if (segment.length >= 4) {
+							if (outlineWidth === 1) {
+								gl.bufferData(gl.ARRAY_BUFFER, segment, gl.DYNAMIC_DRAW);
+								gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+								gl.drawArrays(gl.LINE_STRIP, 0, segment.length / 2);
+							} else {
+								const thickVerts = getThickLineVerticesOpen(segment, outlineWidth);
+								gl.bufferData(gl.ARRAY_BUFFER, thickVerts, gl.DYNAMIC_DRAW);
+								gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+								gl.drawArrays(gl.TRIANGLE_STRIP, 0, thickVerts.length / 2);
+							}
+						}
 					} else {
 						// normal stroke using outlineWidth
 						if (outlineWidth === 1) {
@@ -5430,6 +5742,34 @@ window.addEventListener("keydown", (e) => {
 
 
 			function animate() {
+				// Update traveling segment positions once per frame
+				if (travelingSegmentEnabled) {
+					const currentTime = performance.now();
+					const deltaTime = (currentTime - travelingSegmentLastTime) / 1000; // Delta in seconds
+					travelingSegmentLastTime = currentTime;
+					
+					// Update normalized positions for all chains
+					chains.forEach((chainObj, chainIndex) => {
+						if (chainObj.isClosed && chainObj.chain.length >= 2) {
+							// Initialize if needed
+							if (!(chainIndex in travelingSegmentNormalizedPosition)) {
+								travelingSegmentNormalizedPosition[chainIndex] = 0;
+							}
+							
+							// Calculate current perimeter length
+							const spline = getClosedSmoothCurve(chainObj.chain, 10);
+							if (spline.length >= 4) {
+								const currentPerimeterLength = calculateSplineLength(spline);
+								if (currentPerimeterLength > 0) {
+									// Calculate how much to advance the normalized position this frame
+									const distanceTraveled = deltaTime * travelingSegmentSpeed;
+									const normalizedAdvance = distanceTraveled / currentPerimeterLength;
+									travelingSegmentNormalizedPosition[chainIndex] = (travelingSegmentNormalizedPosition[chainIndex] + normalizedAdvance) % 1.0;
+								}
+							}
+						}
+					});
+				}
 
 				// Physics
 				chains.forEach((c, i) => simulateChain(c, i));
