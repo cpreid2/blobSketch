@@ -1651,18 +1651,25 @@ input[type="range"]::-moz-range-thumb {
 
 				.window.ipad .main-area {
 					position: absolute;
-					inset: 0;
+					top: 0;
+					left: 0;
+					right: 0;
+					bottom: 0;
 					width: 100%;
 					height: 100%;
-					display: flex;
-					align-items: center;
-					justify-content: center;
 					padding: 0;
+					margin: 0;
 					background: transparent;
+					display: block;
 				}
 
-				/* Canvas - full screen */
+				/* Canvas - full screen, fills entire iPad width */
 				.window.ipad #glCanvas {
+					position: absolute;
+					top: 0;
+					left: 0;
+					width: 100%;
+					height: 100%;
 					margin: 0;
 					border: none;
 					border-radius: 0;
@@ -3412,20 +3419,19 @@ input[type="range"]::-moz-range-thumb {
 				}
 			}
 
-			/* Full-screen canvas for iPad - fixed size regardless of panel state */
+			/* Full-screen canvas for iPad - fills entire screen, panel overlays */
 			function fitCanvasForIPad() {
-				const panelWidth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--panel-left-width')) || 60;
 				const titleBarHeight = 44;
-				// Always account for panel width - canvas size stays constant
-				const availableWidth = window.innerWidth - panelWidth;
-				const availableHeight = window.innerHeight - titleBarHeight;
+				// Canvas fills entire screen width and height (panel overlays on top)
+				const fullWidth = window.innerWidth;
+				const fullHeight = window.innerHeight - titleBarHeight;
 
-				// Fill entire available space (panel space is always reserved)
-				canvas.style.width = availableWidth + "px";
-				canvas.style.height = availableHeight + "px";
-				canvas.width = availableWidth;
-				canvas.height = availableHeight;
-				if (gl) gl.viewport(0, 0, availableWidth, availableHeight);
+				// Fill entire screen
+				canvas.style.width = fullWidth + "px";
+				canvas.style.height = fullHeight + "px";
+				canvas.width = fullWidth;
+				canvas.height = fullHeight;
+				if (gl) gl.viewport(0, 0, fullWidth, fullHeight);
 			}
 
 			/* master switch */
