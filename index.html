@@ -3457,11 +3457,11 @@ input[type="range"]::-moz-range-thumb {
 				const fullHeight = window.innerHeight - titleBarHeight;
 
 			// Fill entire screen
-			// PERFORMANCE: Downscale iPad internal canvas resolution (0.7x) for huge performance win
+			// PERFORMANCE: Downscale iPad internal canvas resolution (0.85x) for huge performance win
 			// CSS size stays the same, but internal resolution is lower, reducing fill rate
 			const isIPadDevice = /iPad/i.test(navigator.userAgent) || 
 				(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-			const resolutionScale = isIPadDevice ? 0.7 : 1.0;
+			const resolutionScale = isIPadDevice ? 0.85 : 1.0;
 			
 			canvas.style.width = fullWidth + "px";
 			canvas.style.height = fullHeight + "px";
