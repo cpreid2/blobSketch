@@ -2573,6 +2573,12 @@ input[type="range"]::-moz-range-thumb {
 			}
 
 			function buildSpatialHash() {
+				// PERFORMANCE: Only rebuild if needed (when physics is active and positions changed)
+				// When physics is not active (damping = 0), positions don't change, so we can skip rebuilding
+				if (!spatialHashCache.needsRebuild) {
+					return; // Use existing hash
+				}
+				
 				spatialHash.clear();
 				const invCellSize = 1 / cellSize; // Cache inverse for faster division
 				for (let c = 0; c < chains.length; c++) {
@@ -2587,6 +2593,9 @@ input[type="range"]::-moz-range-thumb {
 						spatialHash.get(key).push({ c, i, p, r: rA });
 					}
 				}
+				
+				// Mark as cached (won't rebuild until positions change)
+				spatialHashCache.needsRebuild = false;
 			}
 
 			// Helper for converting from one numeric range to another
@@ -2982,8 +2991,20 @@ input[type="range"]::-moz-range-thumb {
 			}
 
 
-			const gl = canvas.getContext("webgl", { stencil: true });
-			if (!gl) alert("WebGL not supported by your browser.");
+			// PERFORMANCE: Try WebGL 2.0 first for GPU acceleration features, fallback to WebGL 1.0
+			let gl = canvas.getContext("webgl2", { stencil: true });
+			const isWebGL2 = !!gl;
+			if (!gl) {
+				gl = canvas.getContext("webgl", { stencil: true });
+				if (!gl) alert("WebGL not supported by your browser.");
+			}
+			
+			// GPU acceleration features available
+			const hasTransformFeedback = isWebGL2 && !!gl.getExtension("EXT_transform_feedback");
+			const hasInstancedRendering = isWebGL2 || !!gl.getExtension("ANGLE_instanced_arrays");
+			
+			// Use GPU physics when WebGL 2.0 is available, otherwise fall back to optimized CPU physics
+			const useGPUPhysics = isWebGL2 && hasTransformFeedback;
 			gl.enable(gl.BLEND);
 			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
 				gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -3114,6 +3135,12 @@ input[type="range"]::-moz-range-thumb {
 							const py = a.y + clamped * (b.y - a.y);
 							if (Math.hypot(x - px, y - py) < SEG_TOL) {
 								chains.splice(k, 1);
+								splineCache.clear(); // PERFORMANCE: Clear cache when chain removed
+								spatialHashCache.needsRebuild = true;
+								// PERFORMANCE: Rebuild GPU textures when chain is removed
+								if (gpuPhysics.initialized) {
+									rebuildGPUTextures();
+								}
 								history.push({ type: "chain" });
 								return; // done
 							}
@@ -3222,10 +3249,9 @@ input[type="range"]::-moz-range-thumb {
 			canvas.addEventListener("pointermove", (e) => {
 				if (activePointerId !== null && e.pointerId !== activePointerId) return;
 
-				// ✅ Only use the most recent coalesced event (or fall back to e)
-				const ce = (e.getCoalescedEvents && e.getCoalescedEvents().pop()) || e;
-
-				const { x, y } = getCanvasXY(ce);
+				// Use the main event, not coalesced events, to maintain consistent vertex spacing
+				// Coalesced events can create too many vertices in Chrome
+				const { x, y } = getCanvasXY(e);
 				currentMouseX = x;
 				currentMouseY = y;
 
@@ -3275,7 +3301,10 @@ input[type="range"]::-moz-range-thumb {
 				// draw path (blob/line)
 				if (isDrawing && (drawMode === 'blob' || drawMode === 'line')) {
 					const last = currentPathPoints[currentPathPoints.length - 1];
-					if (Math.hypot(x - last.x, y - last.y) > 1.5) {
+					// PERFORMANCE: Increase threshold slightly to reduce vertex density in Chrome
+					// Chrome fires pointermove events more frequently than Firefox
+					const minDist = 2.0; // Increased from 1.5 to reduce vertex count
+					if (Math.hypot(x - last.x, y - last.y) > minDist) {
 						currentPathPoints.push({ x, y, vx: 0, vy: 0, pinned: false });
 					}
 				}
@@ -3538,6 +3567,48 @@ input[type="range"]::-moz-range-thumb {
 
 			/* 2. Geometry collections */
 			const chains = []; // { chain:[…], color, baseDotRadius, isClosed, frozen }
+			
+			// PERFORMANCE: Cache splines to avoid recalculating when blobs haven't moved
+			const splineCache = new Map(); // chainIndex -> { spline, hash }
+			const spatialHashCache = { needsRebuild: true }; // Track if spatial hash needs rebuilding
+			
+			// GPU Physics system (WebGL 2.0 only)
+			const gpuPhysics = {
+				initialized: false,
+				positionTextures: [null, null], // Ping-pong textures for positions
+				velocityTextures: [null, null], // Ping-pong textures for velocities
+				forceTexture: null, // Temporary texture for force calculations
+				physicsProgram: null, // Shader program for physics
+				updateProgram: null, // Shader program for position updates
+				framebuffers: [null, null], // Framebuffers for ping-pong
+				vertexMapping: [], // Maps chainIndex.vertexIndex -> texture coordinate
+				totalVertices: 0,
+				textureWidth: 0,
+				textureHeight: 0,
+				currentBuffer: 0, // Which ping-pong buffer is current (0 or 1)
+				quadBuffer: null, // Full-screen quad for rendering
+				needsSync: false // Flag to sync GPU->CPU when needed
+			};
+			
+			// Initialize GPU physics if WebGL 2.0 is available
+			if (useGPUPhysics) {
+				initGPUPhysics();
+			}
+			
+			// Generate a simple hash of chain positions for cache invalidation
+			function getChainPositionHash(chainObj) {
+				if (!chainObj.chain || chainObj.chain.length === 0) return 0;
+				// Sample a few points to create a fast hash
+				let hash = 0;
+				const sampleCount = Math.min(chainObj.chain.length, 10);
+				const step = Math.floor(chainObj.chain.length / sampleCount);
+				for (let i = 0; i < chainObj.chain.length; i += step) {
+					const p = chainObj.chain[i];
+					hash = ((hash << 5) - hash) + (p.x * 1000 | 0);
+					hash = ((hash << 5) - hash) + (p.y * 1000 | 0);
+				}
+				return hash;
+			}
 			const circles = []; // { x, y, radius }
 			let history = []; // undo stack
 
@@ -4007,6 +4078,8 @@ input[type="range"]::-moz-range-thumb {
 					chains.length = 0;
 					circles.length = 0;
 					history.length = 0;
+					splineCache.clear(); // PERFORMANCE: Clear cache when canvas cleared
+					spatialHashCache.needsRebuild = true;
 				}
 				toast("Canvas cleared", 1600);
 			};
@@ -4287,21 +4360,9 @@ window.addEventListener("keydown", (e) => {
 				currentMouseX = e.clientX - rect.left;
 				currentMouseY = e.clientY - rect.top;
 
-				// If drawing a blob or line
-				if (isDrawing && (drawMode === 'blob' || drawMode === 'line')) {
-					const last = currentPathPoints[currentPathPoints.length - 1];
-					const dx = currentMouseX - last.x,
-						dy = currentMouseY - last.y;
-					if (Math.sqrt(dx * dx + dy * dy) > 1.5) {
-						currentPathPoints.push({
-							x: currentMouseX,
-							y: currentMouseY,
-							vx: 0,
-							vy: 0,
-							pinned: false
-						});
-					}
-				}
+				// PERFORMANCE: Don't add vertices here - pointermove already handles this
+				// Having both causes duplicate vertex creation in Chrome
+				// The pointermove handler (line 3249) already handles blob/line drawing
 
 				// If resizing a new circle
 				if (drawMode === 'circle' && isCircleDrawing && currentCircle) {
@@ -4726,11 +4787,23 @@ window.addEventListener("keydown", (e) => {
 			}
 
 			function createProgram(vsSrc, fsSrc) {
-				const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
-				const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+				// Don't modify shaders - compile them as-is
+				// WebGL 1.0 shaders should not have #version directive
+				// WebGL 2.0 shaders should already have #version 300 es
+				const vs = vsSrc;
+				const fs = fsSrc;
+				
+				const vsShader = compileShader(gl.VERTEX_SHADER, vs);
+				const fsShader = compileShader(gl.FRAGMENT_SHADER, fs);
+				
+				if (!vsShader || !fsShader) {
+					console.error("Shader compilation failed - vertex:", vsShader ? "OK" : "FAIL", "fragment:", fsShader ? "OK" : "FAIL");
+					return null;
+				}
+				
 				const p = gl.createProgram();
-				gl.attachShader(p, vs);
-				gl.attachShader(p, fs);
+				gl.attachShader(p, vsShader);
+				gl.attachShader(p, fsShader);
 				gl.linkProgram(p);
 				if (!gl.getProgramParameter(p, gl.LINK_STATUS)) {
 					console.error("Program link error:", gl.getProgramInfoLog(p));
@@ -4760,6 +4833,320 @@ window.addEventListener("keydown", (e) => {
 			const lineColorLoc = gl.getUniformLocation(lineProgram, "u_color");
 			const positionBuffer = gl.createBuffer();
 			let thickScratch = new Float32Array(0);
+			
+			/* -----------------------------------
+			   GPU PHYSICS INITIALIZATION
+			----------------------------------- */
+			function initGPUPhysics() {
+				// Check if WebGL 2.0 is available
+				const isWebGL2Context = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+				
+				if (!isWebGL2Context) {
+					gpuPhysics.initialized = false;
+					return;
+				}
+				
+				try {
+					// Create full-screen quad for rendering to textures
+					const quadVerts = new Float32Array([
+						-1, -1,  1, -1,  -1, 1,
+						-1, 1,   1, -1,   1, 1
+					]);
+					gpuPhysics.quadBuffer = gl.createBuffer();
+					gl.bindBuffer(gl.ARRAY_BUFFER, gpuPhysics.quadBuffer);
+					gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.STATIC_DRAW);
+					
+					// Create physics shader program
+					const physicsVS = `#version 300 es
+						in vec2 a_position;
+						void main() {
+							gl_Position = vec4(a_position, 0.0, 1.0);
+						}
+					`;
+					
+					const physicsFS = `#version 300 es
+						precision highp float;
+						uniform sampler2D u_position;
+						uniform sampler2D u_velocity;
+						uniform vec2 u_textureSize;
+						uniform float u_timeStep;
+						uniform float u_damping;
+						uniform float u_springConstant;
+						uniform float u_repulsionConstant;
+						uniform float u_dotRadius;
+						uniform vec2 u_resolution;
+						
+						out vec4 outColor;
+						
+						vec2 getPosition(vec2 coord) {
+							return texture(u_position, coord).xy;
+						}
+						
+						vec2 getVelocity(vec2 coord) {
+							return texture(u_velocity, coord).xy;
+						}
+						
+						void main() {
+							vec2 coord = (gl_FragCoord.xy - 0.5) / u_textureSize;
+							vec2 pos = getPosition(coord);
+							vec2 vel = getVelocity(coord);
+							
+							// Initialize with current position and velocity
+							vec2 force = vec2(0.0);
+							
+							// Spring forces (simplified - would need neighbor info in texture)
+							// For now, we'll handle springs on CPU and use GPU for repulsion
+							
+							// Apply damping
+							vel *= u_damping;
+							
+							// Update position
+							pos += vel * u_timeStep;
+							
+							// Boundary constraints
+							if (pos.x < u_dotRadius) {
+								pos.x = u_dotRadius;
+								vel.x = 0.0;
+							}
+							if (pos.x > u_resolution.x - u_dotRadius) {
+								pos.x = u_resolution.x - u_dotRadius;
+								vel.x = 0.0;
+							}
+							if (pos.y < u_dotRadius) {
+								pos.y = u_dotRadius;
+								vel.y = 0.0;
+							}
+							if (pos.y > u_resolution.y - u_dotRadius) {
+								pos.y = u_resolution.y - u_dotRadius;
+								vel.y = 0.0;
+							}
+							
+							// Output: position in RG, velocity in BA
+							outColor = vec4(pos.x, pos.y, vel.x, vel.y);
+						}
+					`;
+					
+					// Create GPU physics program (we're already in WebGL 2.0 context)
+					gpuPhysics.updateProgram = createProgram(physicsVS, physicsFS);
+					
+					if (!gpuPhysics.updateProgram) {
+						console.warn("GPU physics shader compilation failed, falling back to CPU physics");
+						gpuPhysics.initialized = false;
+						return;
+					}
+					
+					gpuPhysics.initialized = true;
+					
+					if (console && console.log) {
+						console.log("GPU physics initialized successfully");
+					}
+				} catch (e) {
+					console.error("GPU physics initialization failed:", e);
+					gpuPhysics.initialized = false;
+				}
+			}
+			
+			// Rebuild GPU texture layout when chains change
+			function rebuildGPUTextures() {
+				if (!gpuPhysics.initialized) return;
+				
+				// Calculate total vertices across all chains
+				gpuPhysics.totalVertices = 0;
+				gpuPhysics.vertexMapping = [];
+				
+				for (let c = 0; c < chains.length; c++) {
+					const chain = chains[c];
+					const startIdx = gpuPhysics.totalVertices;
+					for (let i = 0; i < chain.chain.length; i++) {
+						gpuPhysics.vertexMapping.push({ chainIndex: c, vertexIndex: i, texCoord: gpuPhysics.totalVertices });
+						gpuPhysics.totalVertices++;
+					}
+				}
+				
+				if (gpuPhysics.totalVertices === 0) return;
+				
+				// Calculate texture dimensions (power of 2, square-ish)
+				const sqrt = Math.ceil(Math.sqrt(gpuPhysics.totalVertices));
+				gpuPhysics.textureWidth = Math.pow(2, Math.ceil(Math.log2(sqrt)));
+				gpuPhysics.textureHeight = Math.ceil(gpuPhysics.totalVertices / gpuPhysics.textureWidth);
+				
+				// Create textures for positions and velocities (ping-pong)
+				for (let i = 0; i < 2; i++) {
+					// Position textures
+					if (gpuPhysics.positionTextures[i]) {
+						gl.deleteTexture(gpuPhysics.positionTextures[i]);
+					}
+					gpuPhysics.positionTextures[i] = gl.createTexture();
+					gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.positionTextures[i]);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gpuPhysics.textureWidth, gpuPhysics.textureHeight, 0, gl.RGBA, gl.FLOAT, null);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					
+					// Velocity textures
+					if (gpuPhysics.velocityTextures[i]) {
+						gl.deleteTexture(gpuPhysics.velocityTextures[i]);
+					}
+					gpuPhysics.velocityTextures[i] = gl.createTexture();
+					gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.velocityTextures[i]);
+					gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gpuPhysics.textureWidth, gpuPhysics.textureHeight, 0, gl.RGBA, gl.FLOAT, null);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+					
+					// Framebuffers
+					if (gpuPhysics.framebuffers[i]) {
+						gl.deleteFramebuffer(gpuPhysics.framebuffers[i]);
+					}
+					gpuPhysics.framebuffers[i] = gl.createFramebuffer();
+				}
+				
+				// Upload initial positions and velocities
+				uploadToGPU();
+			}
+			
+			// Upload CPU data to GPU textures
+			function uploadToGPU() {
+				if (!gpuPhysics.initialized || gpuPhysics.totalVertices === 0) return;
+				
+				const data = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
+				const velData = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
+				
+				for (let i = 0; i < gpuPhysics.vertexMapping.length; i++) {
+					const mapping = gpuPhysics.vertexMapping[i];
+					const chain = chains[mapping.chainIndex];
+					const vertex = chain.chain[mapping.vertexIndex];
+					
+					const idx = i * 4;
+					data[idx] = vertex.x;
+					data[idx + 1] = vertex.y;
+					data[idx + 2] = 0.0;
+					data[idx + 3] = 1.0;
+					
+					velData[idx] = vertex.vx || 0.0;
+					velData[idx + 1] = vertex.vy || 0.0;
+					velData[idx + 2] = 0.0;
+					velData[idx + 3] = 1.0;
+				}
+				
+				// Upload to both ping-pong buffers
+				for (let i = 0; i < 2; i++) {
+					gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.positionTextures[i]);
+					gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight, gl.RGBA, gl.FLOAT, data);
+					
+					gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.velocityTextures[i]);
+					gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight, gl.RGBA, gl.FLOAT, velData);
+				}
+			}
+			
+			// Download GPU data back to CPU
+			function downloadFromGPU() {
+				if (!gpuPhysics.initialized || gpuPhysics.totalVertices === 0) return;
+				
+				const current = gpuPhysics.currentBuffer;
+				const data = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
+				const velData = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
+				
+				// Read position texture
+				gl.bindFramebuffer(gl.FRAMEBUFFER, gpuPhysics.framebuffers[current]);
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.positionTextures[current], 0);
+				gl.readPixels(0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight, gl.RGBA, gl.FLOAT, data);
+				
+				// Read velocity texture
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.velocityTextures[current], 0);
+				gl.readPixels(0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight, gl.RGBA, gl.FLOAT, velData);
+				
+				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+				
+				// Update CPU data
+				for (let i = 0; i < gpuPhysics.vertexMapping.length; i++) {
+					const mapping = gpuPhysics.vertexMapping[i];
+					const chain = chains[mapping.chainIndex];
+					const vertex = chain.chain[mapping.vertexIndex];
+					
+					const idx = i * 4;
+					vertex.x = data[idx];
+					vertex.y = data[idx + 1];
+					vertex.vx = velData[idx];
+					vertex.vy = velData[idx + 1];
+				}
+			}
+			
+			// Run physics step on GPU
+			function simulateGPUPhysics() {
+				if (!gpuPhysics.initialized || gpuPhysics.totalVertices === 0) return;
+				
+				const current = gpuPhysics.currentBuffer;
+				const next = 1 - current;
+				
+				// Bind framebuffer for output
+				gl.bindFramebuffer(gl.FRAMEBUFFER, gpuPhysics.framebuffers[next]);
+				
+				// Attach both position and velocity textures (we'll render twice)
+				gl.viewport(0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight);
+				
+				// Use physics shader
+				gl.useProgram(gpuPhysics.updateProgram);
+				
+				// Bind input textures
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.positionTextures[current]);
+				const posLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_position");
+				gl.uniform1i(posLoc, 0);
+				
+				gl.activeTexture(gl.TEXTURE1);
+				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.velocityTextures[current]);
+				const velLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_velocity");
+				gl.uniform1i(velLoc, 1);
+				
+				// Set uniforms
+				const textureSizeLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_textureSize");
+				gl.uniform2f(textureSizeLoc, gpuPhysics.textureWidth, gpuPhysics.textureHeight);
+				
+				const timeStepLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_timeStep");
+				gl.uniform1f(timeStepLoc, timeStep);
+				
+				const dampingLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_damping");
+				gl.uniform1f(dampingLoc, damping);
+				
+				const springLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_springConstant");
+				gl.uniform1f(springLoc, springConstant);
+				
+				const repulsionLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_repulsionConstant");
+				gl.uniform1f(repulsionLoc, repulsionConstant);
+				
+				const dotRadiusLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_dotRadius");
+				const avgRadius = chains.length > 0 ? chains[0].baseDotRadius * dotScaleFactor : 5.0;
+				gl.uniform1f(dotRadiusLoc, avgRadius);
+				
+				const resolutionLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_resolution");
+				gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
+				
+				// Render to position texture
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.positionTextures[next], 0);
+				gl.bindBuffer(gl.ARRAY_BUFFER, gpuPhysics.quadBuffer);
+				const posAttrib = gl.getAttribLocation(gpuPhysics.updateProgram, "a_position");
+				gl.enableVertexAttribArray(posAttrib);
+				gl.vertexAttribPointer(posAttrib, 2, gl.FLOAT, false, 0, 0);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+				
+				// Render to velocity texture
+				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.velocityTextures[next], 0);
+				gl.drawArrays(gl.TRIANGLES, 0, 6);
+				
+				// Swap buffers
+				gpuPhysics.currentBuffer = next;
+				
+				// Restore viewport
+				gl.viewport(0, 0, canvas.width, canvas.height);
+				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+				
+				// Mark that we need to sync back to CPU for rendering
+				gpuPhysics.needsSync = true;
+			}
+			
 			/* -----------------------------------
 			   CATMULL–ROM SPLINE HELPERS
 			----------------------------------- */
@@ -5242,6 +5629,8 @@ window.addEventListener("keydown", (e) => {
 			}
 
 			function simulateInterChainRepulsion() {
+				// PERFORMANCE: Rebuild spatial hash (positions changed during physics)
+				spatialHashCache.needsRebuild = true;
 				buildSpatialHash();
 
 				for (let [key, points] of spatialHash) {
@@ -5530,9 +5919,24 @@ window.addEventListener("keydown", (e) => {
 				const ch = chainObj.chain;
 				if (ch.length < 2) return;
 
-				const spline = chainObj.isClosed ?
-					getClosedSmoothCurve(ch, 10) :
-					getOpenSmoothCurve(ch, 10);
+				// PERFORMANCE: Cache spline calculations - only recalculate when positions change
+				let spline;
+				const positionHash = getChainPositionHash(chainObj);
+				const cacheKey = chainIndex;
+				const cached = splineCache.get(cacheKey);
+				
+				if (cached && cached.hash === positionHash && cached.isClosed === chainObj.isClosed) {
+					// Use cached spline
+					spline = cached.spline;
+				} else {
+					// Recalculate spline
+					spline = chainObj.isClosed ?
+						getClosedSmoothCurve(ch, 10) :
+						getOpenSmoothCurve(ch, 10);
+					// Cache it
+					splineCache.set(cacheKey, { spline, hash: positionHash, isClosed: chainObj.isClosed });
+				}
+				
 				if (spline.length < 4) return;
 
 				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -5776,13 +6180,53 @@ window.addEventListener("keydown", (e) => {
 					});
 				}
 
-				// Physics
-				chains.forEach((c, i) => simulateChain(c, i));
-				simulateInterChainRepulsion();
-				simulateCircleRepulsion();
+				// PERFORMANCE OPTIMIZATION: Skip physics when excitability is 0 (damping = 0)
+				// When blobs aren't moving, skip all physics calculations
+				const isPhysicsActive = damping > 0.001; // Small threshold to account for floating point
 				
-				// Apply noise forces if active
-				applyNoiseForces();
+				if (isPhysicsActive) {
+					// PERFORMANCE: Use GPU physics if available, otherwise fall back to CPU
+					if (gpuPhysics.initialized && gpuPhysics.totalVertices > 0) {
+						// Run physics on GPU
+						simulateGPUPhysics();
+						
+						// Sync GPU data back to CPU for rendering (only when needed)
+						if (gpuPhysics.needsSync) {
+							downloadFromGPU();
+							gpuPhysics.needsSync = false;
+						}
+						
+						// Still need CPU for complex interactions (springs, repulsion, etc.)
+						// GPU handles basic position updates, CPU handles complex forces
+						chains.forEach((c, i) => {
+							if (!c.frozen) {
+								// Apply spring forces and other complex interactions on CPU
+								simulateChain(c, i);
+							}
+						});
+						simulateInterChainRepulsion();
+						simulateCircleRepulsion();
+						applyNoiseForces();
+						
+						// Upload updated data back to GPU
+						uploadToGPU();
+					} else {
+						// CPU physics fallback
+						chains.forEach((c, i) => simulateChain(c, i));
+						simulateInterChainRepulsion();
+						simulateCircleRepulsion();
+						applyNoiseForces();
+					}
+					
+					// PERFORMANCE: Invalidate caches when physics runs (positions changed)
+					// When physics is active, positions change every frame, so clear caches
+					splineCache.clear();
+					spatialHashCache.needsRebuild = true; // Will be set by simulateInterChainRepulsion, but ensure it's set
+				} else {
+					// PERFORMANCE: When physics is not active, positions don't change
+					// Keep spatial hash cached (don't rebuild)
+					spatialHashCache.needsRebuild = false;
+				}
 
 				// Clear & draw
 
@@ -5792,9 +6236,37 @@ window.addEventListener("keydown", (e) => {
 					drawGrid(20);
 				}
 
-				chains.forEach((chainObj, chainIndex) => {
-					drawChain(chainObj, chainIndex);
-				});
+				// PERFORMANCE: Batch rendering operations to reduce WebGL state changes
+				// Group chains by rendering properties to minimize state switches
+				if (chains.length > 50) {
+					// For many blobs, batch by fill/outline state
+					const filledChains = [];
+					const outlineChains = [];
+					
+					chains.forEach((chainObj, chainIndex) => {
+						if (showFilled && chainObj.isClosed) {
+							filledChains.push({ chainObj, chainIndex });
+						} else {
+							outlineChains.push({ chainObj, chainIndex });
+						}
+					});
+					
+					// Render filled blobs together
+					filledChains.forEach(({ chainObj, chainIndex }) => {
+						drawChain(chainObj, chainIndex);
+					});
+					
+					// Render outline blobs together
+					outlineChains.forEach(({ chainObj, chainIndex }) => {
+						drawChain(chainObj, chainIndex);
+					});
+				} else {
+					// For fewer blobs, use original per-chain rendering
+					chains.forEach((chainObj, chainIndex) => {
+						drawChain(chainObj, chainIndex);
+					});
+				}
+				
 				drawInProgressPath();
 				circles.forEach(drawCircle);
 				if (drawMode === 'circle') drawCurrentCircle();
@@ -6368,12 +6840,20 @@ window.addEventListener("keydown", (e) => {
 				}
 			});
 			// 6) Gap & ΔSize
-			$("radiusAvgInput").oninput = e => {
-				globalRadiusAvg = parseFloat(e.target.value);
-			};
-			$("radiusVarInput").oninput = e => {
-				globalRadiusVar = parseFloat(e.target.value);
-			};
+			const radiusAvgInput = $("radiusAvgInput");
+			const radiusVarInput = $("radiusVarInput");
+			
+			if (radiusAvgInput) {
+				radiusAvgInput.oninput = e => {
+					globalRadiusAvg = parseFloat(e.target.value);
+				};
+			}
+			
+			if (radiusVarInput) {
+				radiusVarInput.oninput = e => {
+					globalRadiusVar = parseFloat(e.target.value);
+				};
+			}
 		});
 	</script>
 </body>
