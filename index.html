@@ -3004,7 +3004,7 @@ input[type="range"]::-moz-range-thumb {
 			const hasInstancedRendering = isWebGL2 || !!gl.getExtension("ANGLE_instanced_arrays");
 			
 			// Use GPU physics when WebGL 2.0 is available, otherwise fall back to optimized CPU physics
-			const useGPUPhysics = isWebGL2;
+			const useGPUPhysics = isWebGL2 && hasTransformFeedback;
 			gl.enable(gl.BLEND);
 			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
 				gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
