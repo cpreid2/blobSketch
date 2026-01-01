@@ -3,7 +3,13 @@
 
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>blobSketch version 1.4</title>
+	
+	<!-- Prevent FOUC (Flash of Unstyled Content) -->
+	<style>
+		html { visibility: hidden; opacity: 0; }
+	</style>
 
 	<style>
 	/* ---------- Desktop defaults: Retro Beige Console ---------- */
@@ -947,7 +953,7 @@ body.fullscreen-mode .toolbar,
 body.fullscreen-mode .bottom-panel {
   position: fixed;
   z-index: 9999;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -955,7 +961,7 @@ body.fullscreen-mode .bottom-panel {
   padding: 16px;
   cursor: move;
   user-select: none;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, opacity 0.3s ease, transform 0.3s ease;
 }
 
 /* Dialogs should appear above panels in fullscreen mode */
@@ -972,6 +978,7 @@ body.fullscreen-mode .toolbar {
   max-height: calc(100vh - 100px);
   overflow-y: auto;
   overflow-x: hidden;
+  padding-top: 36px; /* Extra space at top for minimize button */
 }
 
 body.fullscreen-mode .toolbar:hover {
@@ -987,10 +994,10 @@ body.fullscreen-mode .bottom-panel {
   width: auto;
   min-width: 500px;
   max-width: 800px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px;
   bottom: 20px;
   padding: 20px;
+  padding-top: 36px; /* Extra space at top for minimize button */
 }
 
 body.fullscreen-mode .bottom-panel:hover {
@@ -1025,6 +1032,74 @@ body.fullscreen-mode .toolbar::before {
 body.fullscreen-mode .toolbar.dragging::before,
 body.fullscreen-mode .bottom-panel.dragging::before {
   cursor: grabbing;
+}
+
+/* Panel Hide/Dock Functionality - Only in fullscreen mode */
+.panel-hide-btn {
+  display: none; /* Hidden by default */
+}
+
+body.fullscreen-mode .panel-hide-btn {
+  display: flex; /* Show only in fullscreen mode */
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+body.fullscreen-mode .panel-hide-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body.fullscreen-mode .toolbar.panel-hidden,
+body.fullscreen-mode .bottom-panel.panel-hidden {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  padding: 8px !important;
+  overflow: hidden;
+  opacity: 0.5;
+  transition: all 0.3s ease;
+}
+
+body.fullscreen-mode .toolbar.panel-hidden .toolbar-section,
+body.fullscreen-mode .toolbar.panel-hidden .toolbar-section *,
+body.fullscreen-mode .bottom-panel.panel-hidden #sliders,
+body.fullscreen-mode .bottom-panel.panel-hidden #sliders * {
+  display: none !important;
+}
+
+body.fullscreen-mode .toolbar.panel-hidden::before,
+body.fullscreen-mode .bottom-panel.panel-hidden::before {
+  display: none;
+}
+
+body.fullscreen-mode .panel-hide-btn.panel-restore {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+body.fullscreen-mode .panel-hide-btn.panel-restore:hover {
+  background: rgba(0, 0, 0, 0.25);
 }
 
 /* Hide title bar menu in fullscreen (optional - or keep it minimal) */
@@ -2299,6 +2374,14 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 			}
 		}
 	</style>
+	
+	<!-- Show content once page is loaded -->
+	<script>
+		window.addEventListener('DOMContentLoaded', function() {
+			document.documentElement.style.visibility = 'visible';
+			document.documentElement.style.opacity = '1';
+		});
+	</script>
 </head>
 
 <body>
@@ -2354,6 +2437,7 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 		<div class="content">
 			<!-- Toolbar: grouped into Draw Tools, Edit Tools, Canvas Tools, and now Shape Settings -->
 			<div class="toolbar">
+				<button class="panel-hide-btn" id="hideToolbar" title="Hide Tools Panel">−</button>
 				<!-- DRAW TOOLS -->
 				<div class="toolbar-section">
 					<h4>Draw Tools</h4>
@@ -2427,6 +2511,7 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 
 		<!-- Bottom Panel: Sliders -->
 		<div class="bottom-panel">
+			<button class="panel-hide-btn" id="hideBottomPanel" title="Hide Sliders Panel">−</button>
 			<!-- Sliders Panel -->
 			<div id="sliders">
 				<div>
@@ -3990,6 +4075,7 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 				iconEl.classList.toggle("icon-active", isActive);
 			}
 
+
 			// A helper to apply the “active” styling to edit-tool icons
 			function setIconActive(iconEl, isActive, activeTitle, inactiveTitle) {
 				iconEl.title = isActive ? activeTitle : inactiveTitle;
@@ -4412,6 +4498,9 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 
 					// Initialize panel dragging
 					initPanelDragging();
+					
+					// Initialize panel hide/show
+					initPanelHideShow();
 
 					toast("Fullscreen Mode ON", 1500);
 				} else {
@@ -4420,6 +4509,28 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 					fullscreenIcon.classList.remove("active");
 					fullscreenIcon.textContent = "⛶";
 					fullscreenIcon.title = "Full Screen Mode";
+
+					// Restore panels if they were hidden
+					const toolbar = document.querySelector(".toolbar");
+					const bottomPanel = document.querySelector(".bottom-panel");
+					const hideToolbarBtn = document.getElementById("hideToolbar");
+					const hideBottomPanelBtn = document.getElementById("hideBottomPanel");
+					
+					if (toolbar && toolbar.classList.contains("panel-hidden")) {
+						toolbar.classList.remove("panel-hidden");
+						if (hideToolbarBtn) {
+							hideToolbarBtn.textContent = "−";
+							hideToolbarBtn.classList.remove("panel-restore");
+						}
+					}
+					
+					if (bottomPanel && bottomPanel.classList.contains("panel-hidden")) {
+						bottomPanel.classList.remove("panel-hidden");
+						if (hideBottomPanelBtn) {
+							hideBottomPanelBtn.textContent = "−";
+							hideBottomPanelBtn.classList.remove("panel-restore");
+						}
+					}
 
 					// Restore original canvas size
 					canvas.width = originalCanvasWidth;
@@ -4454,6 +4565,7 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 			window.addEventListener("resize", () => {
 				if (isFullscreen) {
 					resizeCanvasToFullscreen();
+					constrainPanelsToViewport();
 				}
 			});
 
@@ -4474,35 +4586,51 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 					let xOffset = 0;
 					let yOffset = 0;
 
-					// Load saved position from localStorage
+					// Reset to original position (don't load from localStorage)
 					const panelId = panel.classList.contains("toolbar") ? "toolbar" : "bottom-panel";
-					const savedPos = localStorage.getItem(`fullscreen-${panelId}-pos`);
-					if (savedPos) {
-						const pos = JSON.parse(savedPos);
-						panel.style.left = pos.x + "px";
-						panel.style.top = pos.y + "px";
+					if (panel === toolbar) {
+						// Toolbar original position: left: 20px, top: 60px
+						panel.style.left = "20px";
+						panel.style.top = "60px";
+						panel.style.right = "auto";
+						panel.style.bottom = "auto";
 						panel.style.transform = "none";
-						if (panel === bottomPanel) {
-							panel.style.bottom = "auto";
-						}
-						xOffset = pos.x;
-						yOffset = pos.y;
+					} else if (panel === bottomPanel) {
+						// Bottom panel original position: bottom-right with 20px padding
+						panel.style.left = "auto";
+						panel.style.top = "auto";
+						panel.style.right = "20px";
+						panel.style.bottom = "20px";
+						panel.style.transform = "none";
 					}
+					// xOffset and yOffset will be calculated in dragStart when dragging begins
 
 					function dragStart(e) {
+						// Don't allow dragging if panel is hidden
+						if (panel.classList.contains("panel-hidden")) {
+							return;
+						}
+						
 						if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON" || 
 						    e.target.closest(".icon") || e.target.closest("label") ||
-						    e.target.closest(".submenu") || e.target.closest(".help-icon-container")) {
+						    e.target.closest(".submenu") || e.target.closest(".help-icon-container") ||
+						    e.target.closest(".panel-hide-btn")) {
 							return;
 						}
 
+						// Calculate offset from mouse position to panel's top-left corner
+						const rect = panel.getBoundingClientRect();
 						if (e.type === "touchstart") {
-							initialX = e.touches[0].clientX - xOffset;
-							initialY = e.touches[0].clientY - yOffset;
+							initialX = e.touches[0].clientX - rect.left;
+							initialY = e.touches[0].clientY - rect.top;
 						} else {
-							initialX = e.clientX - xOffset;
-							initialY = e.clientY - yOffset;
+							initialX = e.clientX - rect.left;
+							initialY = e.clientY - rect.top;
 						}
+
+						// Get current panel position
+						xOffset = rect.left;
+						yOffset = rect.top;
 
 						if (e.target === panel || panel.contains(e.target)) {
 							isDragging = true;
@@ -4536,10 +4664,9 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 
 						panel.style.left = xOffset + "px";
 						panel.style.top = yOffset + "px";
+						panel.style.right = "auto";
+						panel.style.bottom = "auto";
 						panel.style.transform = "none";
-						if (panel === bottomPanel) {
-							panel.style.bottom = "auto";
-						}
 					}
 
 					function dragEnd() {
@@ -4566,6 +4693,125 @@ body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
 
 				if (toolbar) makeDraggable(toolbar);
 				if (bottomPanel) makeDraggable(bottomPanel);
+			}
+
+			// Panel hide/show functionality
+			function initPanelHideShow() {
+				const toolbar = document.querySelector(".toolbar");
+				const bottomPanel = document.querySelector(".bottom-panel");
+				const hideToolbarBtn = document.getElementById("hideToolbar");
+				const hideBottomPanelBtn = document.getElementById("hideBottomPanel");
+				
+				// Store original positions for restoration
+				const originalPositions = new Map();
+
+				function togglePanel(panel, hideBtn) {
+					if (!panel || !hideBtn) return;
+					
+					const isHidden = panel.classList.contains("panel-hidden");
+					
+					if (isHidden) {
+						// Show panel - restore to original position
+						panel.classList.remove("panel-hidden");
+						hideBtn.textContent = "−";
+						hideBtn.title = hideBtn === hideToolbarBtn ? "Hide Tools Panel" : "Hide Sliders Panel";
+						hideBtn.classList.remove("panel-restore");
+						
+						// Restore original position if we saved it
+						if (originalPositions.has(panel)) {
+							const pos = originalPositions.get(panel);
+							panel.style.left = pos.left;
+							panel.style.top = pos.top;
+							panel.style.right = pos.right;
+							panel.style.bottom = pos.bottom;
+							panel.style.transform = pos.transform;
+							originalPositions.delete(panel);
+						}
+					} else {
+						// Hide panel (dock it to fixed anchor point)
+						// Save current position first
+						const rect = panel.getBoundingClientRect();
+						originalPositions.set(panel, {
+							left: panel.style.left,
+							top: panel.style.top,
+							right: panel.style.right,
+							bottom: panel.style.bottom,
+							transform: panel.style.transform
+						});
+						
+						// Move to fixed anchor point
+						if (panel === toolbar) {
+							// Dock to top-left
+							panel.style.left = "20px";
+							panel.style.top = "60px";
+							panel.style.right = "auto";
+							panel.style.bottom = "auto";
+							panel.style.transform = "none";
+						} else if (panel === bottomPanel) {
+							// Dock to bottom-right
+							panel.style.left = "auto";
+							panel.style.top = "auto";
+							panel.style.right = "20px";
+							panel.style.bottom = "20px";
+							panel.style.transform = "none";
+						}
+						
+						// Add hidden class after a brief delay to allow position change
+						setTimeout(() => {
+							panel.classList.add("panel-hidden");
+							hideBtn.textContent = "+";
+							hideBtn.title = hideBtn === hideToolbarBtn ? "Show Tools Panel" : "Show Sliders Panel";
+							hideBtn.classList.add("panel-restore");
+						}, 10);
+					}
+				}
+
+				if (hideToolbarBtn) {
+					hideToolbarBtn.addEventListener("click", (e) => {
+						e.stopPropagation();
+						togglePanel(toolbar, hideToolbarBtn);
+					});
+				}
+
+				if (hideBottomPanelBtn) {
+					hideBottomPanelBtn.addEventListener("click", (e) => {
+						e.stopPropagation();
+						togglePanel(bottomPanel, hideBottomPanelBtn);
+					});
+				}
+			}
+
+			// Constrain panels to viewport on window resize
+			function constrainPanelsToViewport() {
+				if (!isFullscreen) return;
+				
+				const toolbar = document.querySelector(".toolbar");
+				const bottomPanel = document.querySelector(".bottom-panel");
+				
+				[toolbar, bottomPanel].forEach(panel => {
+					if (!panel) return;
+					
+					const rect = panel.getBoundingClientRect();
+					const maxX = window.innerWidth - rect.width;
+					const maxY = window.innerHeight - rect.height;
+					
+					// Get current position
+					let currentX = rect.left;
+					let currentY = rect.top;
+					
+					// Constrain position
+					currentX = Math.max(0, Math.min(currentX, maxX));
+					currentY = Math.max(0, Math.min(currentY, maxY));
+					
+					// Only update if position changed
+					if (currentX !== rect.left || currentY !== rect.top) {
+						panel.style.left = currentX + "px";
+						panel.style.top = currentY + "px";
+						panel.style.right = "auto";
+						panel.style.bottom = "auto";
+						panel.style.transform = "none";
+					}
+				});
 			}
 
 			// Initialize dragging when entering fullscreen (will be called by toggleFullscreen)
