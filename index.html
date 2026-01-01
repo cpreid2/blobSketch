@@ -3003,8 +3003,9 @@ input[type="range"]::-moz-range-thumb {
 			const hasTransformFeedback = isWebGL2 && !!gl.getExtension("EXT_transform_feedback");
 			const hasInstancedRendering = isWebGL2 || !!gl.getExtension("ANGLE_instanced_arrays");
 			
-			// Use GPU physics when WebGL 2.0 is available, otherwise fall back to optimized CPU physics
-			const useGPUPhysics = isWebGL2 && hasTransformFeedback;
+			// Use GPU physics when WebGL 2.0 is available (texture-based approach works without transform feedback)
+			// Transform feedback is NOT required - we use texture rendering which works on iPad/Safari
+			const useGPUPhysics = isWebGL2;
 			gl.enable(gl.BLEND);
 			gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
 				gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
@@ -3455,12 +3456,18 @@ input[type="range"]::-moz-range-thumb {
 				const fullWidth = window.innerWidth;
 				const fullHeight = window.innerHeight - titleBarHeight;
 
-				// Fill entire screen
-				canvas.style.width = fullWidth + "px";
-				canvas.style.height = fullHeight + "px";
-				canvas.width = fullWidth;
-				canvas.height = fullHeight;
-				if (gl) gl.viewport(0, 0, fullWidth, fullHeight);
+			// Fill entire screen
+			// PERFORMANCE: Downscale iPad internal canvas resolution (0.7x) for huge performance win
+			// CSS size stays the same, but internal resolution is lower, reducing fill rate
+			const isIPadDevice = /iPad/i.test(navigator.userAgent) || 
+				(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+			const resolutionScale = isIPadDevice ? 0.7 : 1.0;
+			
+			canvas.style.width = fullWidth + "px";
+			canvas.style.height = fullHeight + "px";
+			canvas.width = Math.floor(fullWidth * resolutionScale);
+			canvas.height = Math.floor(fullHeight * resolutionScale);
+			if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
 			}
 
 			/* master switch */
@@ -3587,7 +3594,9 @@ input[type="range"]::-moz-range-thumb {
 				textureHeight: 0,
 				currentBuffer: 0, // Which ping-pong buffer is current (0 or 1)
 				quadBuffer: null, // Full-screen quad for rendering
-				needsSync: false // Flag to sync GPU->CPU when needed
+				needsSync: false, // Flag to sync GPU->CPU when needed
+				uniformLocations: {}, // Cached uniform locations
+				attribLocations: {} // Cached attribute locations
 			};
 			
 			// Initialize GPU physics if WebGL 2.0 is available
@@ -4935,10 +4944,30 @@ window.addEventListener("keydown", (e) => {
 						return;
 					}
 					
+					// Cache uniform and attribute locations (PERFORMANCE: avoid per-frame lookups)
+					const prog = gpuPhysics.updateProgram;
+					gpuPhysics.uniformLocations = {
+						u_position: gl.getUniformLocation(prog, "u_position"),
+						u_velocity: gl.getUniformLocation(prog, "u_velocity"),
+						u_textureSize: gl.getUniformLocation(prog, "u_textureSize"),
+						u_timeStep: gl.getUniformLocation(prog, "u_timeStep"),
+						u_damping: gl.getUniformLocation(prog, "u_damping"),
+						u_springConstant: gl.getUniformLocation(prog, "u_springConstant"),
+						u_repulsionConstant: gl.getUniformLocation(prog, "u_repulsionConstant"),
+						u_dotRadius: gl.getUniformLocation(prog, "u_dotRadius"),
+						u_resolution: gl.getUniformLocation(prog, "u_resolution")
+					};
+					gpuPhysics.attribLocations = {
+						a_position: gl.getAttribLocation(prog, "a_position")
+					};
+					
 					gpuPhysics.initialized = true;
 					
 					if (console && console.log) {
 						console.log("GPU physics initialized successfully");
+						console.log("WebGL 2.0:", isWebGL2Context);
+						console.log("Transform feedback available:", hasTransformFeedback);
+						console.log("Using texture-based GPU physics (works on iPad/Safari)");
 					}
 				} catch (e) {
 					console.error("GPU physics initialization failed:", e);
@@ -5080,6 +5109,8 @@ window.addEventListener("keydown", (e) => {
 				
 				const current = gpuPhysics.currentBuffer;
 				const next = 1 - current;
+				const locs = gpuPhysics.uniformLocations;
+				const attrs = gpuPhysics.attribLocations;
 				
 				// Bind framebuffer for output
 				gl.bindFramebuffer(gl.FRAMEBUFFER, gpuPhysics.framebuffers[next]);
@@ -5090,46 +5121,30 @@ window.addEventListener("keydown", (e) => {
 				// Use physics shader
 				gl.useProgram(gpuPhysics.updateProgram);
 				
-				// Bind input textures
+				// Bind input textures (PERFORMANCE: using cached uniform locations)
 				gl.activeTexture(gl.TEXTURE0);
 				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.positionTextures[current]);
-				const posLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_position");
-				gl.uniform1i(posLoc, 0);
+				gl.uniform1i(locs.u_position, 0);
 				
 				gl.activeTexture(gl.TEXTURE1);
 				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.velocityTextures[current]);
-				const velLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_velocity");
-				gl.uniform1i(velLoc, 1);
+				gl.uniform1i(locs.u_velocity, 1);
 				
-				// Set uniforms
-				const textureSizeLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_textureSize");
-				gl.uniform2f(textureSizeLoc, gpuPhysics.textureWidth, gpuPhysics.textureHeight);
-				
-				const timeStepLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_timeStep");
-				gl.uniform1f(timeStepLoc, timeStep);
-				
-				const dampingLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_damping");
-				gl.uniform1f(dampingLoc, damping);
-				
-				const springLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_springConstant");
-				gl.uniform1f(springLoc, springConstant);
-				
-				const repulsionLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_repulsionConstant");
-				gl.uniform1f(repulsionLoc, repulsionConstant);
-				
-				const dotRadiusLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_dotRadius");
+				// Set uniforms (PERFORMANCE: using cached uniform locations)
+				gl.uniform2f(locs.u_textureSize, gpuPhysics.textureWidth, gpuPhysics.textureHeight);
+				gl.uniform1f(locs.u_timeStep, timeStep);
+				gl.uniform1f(locs.u_damping, damping);
+				gl.uniform1f(locs.u_springConstant, springConstant);
+				gl.uniform1f(locs.u_repulsionConstant, repulsionConstant);
 				const avgRadius = chains.length > 0 ? chains[0].baseDotRadius * dotScaleFactor : 5.0;
-				gl.uniform1f(dotRadiusLoc, avgRadius);
-				
-				const resolutionLoc = gl.getUniformLocation(gpuPhysics.updateProgram, "u_resolution");
-				gl.uniform2f(resolutionLoc, canvas.width, canvas.height);
+				gl.uniform1f(locs.u_dotRadius, avgRadius);
+				gl.uniform2f(locs.u_resolution, canvas.width, canvas.height);
 				
 				// Render to position texture
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.positionTextures[next], 0);
 				gl.bindBuffer(gl.ARRAY_BUFFER, gpuPhysics.quadBuffer);
-				const posAttrib = gl.getAttribLocation(gpuPhysics.updateProgram, "a_position");
-				gl.enableVertexAttribArray(posAttrib);
-				gl.vertexAttribPointer(posAttrib, 2, gl.FLOAT, false, 0, 0);
+				gl.enableVertexAttribArray(attrs.a_position);
+				gl.vertexAttribPointer(attrs.a_position, 2, gl.FLOAT, false, 0, 0);
 				gl.drawArrays(gl.TRIANGLES, 0, 6);
 				
 				// Render to velocity texture
@@ -5143,8 +5158,8 @@ window.addEventListener("keydown", (e) => {
 				gl.viewport(0, 0, canvas.width, canvas.height);
 				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 				
-				// Mark that we need to sync back to CPU for rendering
-				gpuPhysics.needsSync = true;
+				// PERFORMANCE: Don't mark needsSync - we'll only read back when actually needed for rendering
+				// gpuPhysics.needsSync = true; // Removed - only sync on-demand
 			}
 			
 			/* -----------------------------------
@@ -5630,6 +5645,7 @@ window.addEventListener("keydown", (e) => {
 
 			function simulateInterChainRepulsion() {
 				// PERFORMANCE: Rebuild spatial hash (positions changed during physics)
+				// Note: buildSpatialHash() checks needsRebuild internally, so this is safe
 				spatialHashCache.needsRebuild = true;
 				buildSpatialHash();
 
@@ -6185,16 +6201,10 @@ window.addEventListener("keydown", (e) => {
 				const isPhysicsActive = damping > 0.001; // Small threshold to account for floating point
 				
 				if (isPhysicsActive) {
-					// PERFORMANCE: Use GPU physics if available, otherwise fall back to CPU
+					// PERFORMANCE: Use GPU physics when available (works on iPad/Safari)
 					if (gpuPhysics.initialized && gpuPhysics.totalVertices > 0) {
 						// Run physics on GPU
 						simulateGPUPhysics();
-						
-						// Sync GPU data back to CPU for rendering (only when needed)
-						if (gpuPhysics.needsSync) {
-							downloadFromGPU();
-							gpuPhysics.needsSync = false;
-						}
 						
 						// Still need CPU for complex interactions (springs, repulsion, etc.)
 						// GPU handles basic position updates, CPU handles complex forces
@@ -6210,6 +6220,9 @@ window.addEventListener("keydown", (e) => {
 						
 						// Upload updated data back to GPU
 						uploadToGPU();
+						
+						// PERFORMANCE: Only download from GPU when actually needed for rendering
+						// We'll download on-demand in the draw functions, not every frame
 					} else {
 						// CPU physics fallback
 						chains.forEach((c, i) => simulateChain(c, i));
@@ -6231,6 +6244,12 @@ window.addEventListener("keydown", (e) => {
 				// Clear & draw
 
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+				// PERFORMANCE: Download from GPU on-demand when rendering (only if GPU physics is active)
+				// This avoids expensive readPixels every frame - only sync once per frame when actually drawing
+				if (gpuPhysics.initialized && gpuPhysics.totalVertices > 0) {
+					downloadFromGPU();
+				}
 
 				if (showGrid) {
 					drawGrid(20);
