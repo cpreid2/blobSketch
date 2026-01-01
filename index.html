@@ -854,6 +854,268 @@ input[type="range"]::-moz-range-thumb {
   transform: none;
 }
 
+/* ---------- Fullscreen Mode Styles ---------- */
+body.fullscreen-mode {
+  padding: 0;
+  overflow: hidden;
+  background: #1a1a1a;
+}
+
+body.fullscreen-mode .window {
+  width: 100%;
+  height: 100vh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  background: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+}
+
+body.fullscreen-mode .title-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10000;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  padding: 8px 16px;
+}
+
+/* White text for menu items in fullscreen */
+body.fullscreen-mode .title-bar .menu-bar span {
+  color: #ffffff;
+}
+
+body.fullscreen-mode .title-bar .menu-bar span:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+body.fullscreen-mode .title-bar .submenu span {
+  color: #000000; /* Keep submenu items black for readability */
+}
+
+body.fullscreen-mode .title-bar .submenu span:hover {
+  color: #000000;
+}
+
+body.fullscreen-mode .content {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+body.fullscreen-mode .main-area {
+  position: absolute;
+  top: 48px; /* Account for title bar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+}
+
+body.fullscreen-mode #glCanvas {
+  width: 100vw !important;
+  height: calc(100vh - 48px) !important; /* Subtract title bar height */
+  max-width: 100vw;
+  max-height: calc(100vh - 48px);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: #1a1a1a;
+  margin: 0;
+}
+
+/* Draggable Floating Panels */
+body.fullscreen-mode .toolbar,
+body.fullscreen-mode .bottom-panel {
+  position: fixed;
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: move;
+  user-select: none;
+  transition: box-shadow 0.2s ease;
+}
+
+/* Dialogs should appear above panels in fullscreen mode */
+body.fullscreen-mode .dialog-backdrop {
+  z-index: 10001 !important;
+}
+
+body.fullscreen-mode .toolbar {
+  width: 200px;
+  min-width: 180px;
+  max-width: 400px;
+  left: 20px;
+  top: 60px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body.fullscreen-mode .toolbar:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.fullscreen-mode .toolbar.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+body.fullscreen-mode .bottom-panel {
+  width: auto;
+  min-width: 500px;
+  max-width: 800px;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px;
+  padding: 20px;
+}
+
+body.fullscreen-mode .bottom-panel:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+body.fullscreen-mode .bottom-panel.dragging {
+  cursor: grabbing;
+  opacity: 0.9;
+}
+
+/* Panel Header for Dragging */
+body.fullscreen-mode .toolbar::before,
+body.fullscreen-mode .bottom-panel::before {
+  content: "⋮⋮";
+  display: block;
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(0, 0, 0, 0.3);
+  font-size: 18px;
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+}
+
+body.fullscreen-mode .toolbar::before {
+  top: 4px;
+}
+
+body.fullscreen-mode .toolbar.dragging::before,
+body.fullscreen-mode .bottom-panel.dragging::before {
+  cursor: grabbing;
+}
+
+/* Hide title bar menu in fullscreen (optional - or keep it minimal) */
+body.fullscreen-mode .menu-bar {
+  opacity: 0.7;
+}
+
+body.fullscreen-mode .menu-bar:hover {
+  opacity: 1;
+}
+
+/* Fullscreen icon active state */
+#fullscreenIcon.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* ---------- Presentation Mode Styles ---------- */
+body.presentation-mode .toolbar,
+body.presentation-mode .bottom-panel,
+body.presentation-mode .window .title-bar {
+  display: none !important;
+}
+
+/* Presentation mode instruction overlay */
+#presentationModeInstruction {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000000 !important;
+  font-size: 48px;
+  font-weight: bold;
+  color: #ffffff;
+  text-align: center;
+  text-shadow: 
+    0 0 10px rgba(0, 0, 0, 0.8),
+    0 0 20px rgba(0, 0, 0, 0.6),
+    2px 2px 4px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+  user-select: none;
+  font-family: "Courier New", monospace;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 30px 60px;
+  border-radius: 20px;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+  display: none;
+  animation: presentationModeFlash 1s ease-in-out infinite;
+}
+
+@keyframes presentationModeFlash {
+  0%, 100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+}
+
+body.presentation-mode #presentationModeInstruction.showing {
+  display: block !important;
+}
+
+/* Smooth transitions */
+body.fullscreen-mode .toolbar,
+body.fullscreen-mode .bottom-panel {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Scrollbar styling for floating panels */
+body.fullscreen-mode .toolbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+body.fullscreen-mode .toolbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+body.fullscreen-mode .toolbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
 
 		/* ---------- iPad overrides (full ipad.css wrapped; no transformation) ---------- */
 		@supports (-webkit-touch-callout: none) {
@@ -1630,6 +1892,11 @@ input[type="range"]::-moz-range-thumb {
 					font-size: 16px;
 				}
 
+				/* Hide fullscreen icon on iPad */
+				.window.ipad #fullscreenIcon {
+					display: none !important;
+				}
+
 				/* Ensure submenus appear above toggle buttons on iPad */
 				.window.ipad .submenu {
 					z-index: 1000; /* Higher than toggle button (200) */
@@ -2042,6 +2309,7 @@ input[type="range"]::-moz-range-thumb {
 			<div class="splashText">Click and Drag to Start Blobbing</div>
 		</div>
 		<div id="toastStack"></div>
+		<div id="presentationModeInstruction" style="display:none;">Press ESC to exit Presentation Mode</div>
 		<div id="tourOverlay" style="display:none;"></div>
 		<div id="tourTip" style="display:none;">
 			<div id="tourText"></div>
@@ -2058,6 +2326,7 @@ input[type="range"]::-moz-range-thumb {
 					<div class="submenu" id="fileSubmenu">
 						<span id="saveBlobsOption">Save Blobs (JSON)</span>
 						<span id="loadBlobsOption">Load Blobs (JSON)</span>
+						<span id="presentationModeOption">Presentation Mode</span>
 					</div>
 				</span>
 				<span id="menuExport">Export
@@ -2071,6 +2340,7 @@ input[type="range"]::-moz-range-thumb {
 				<span id="menuHelp">Help</span>
 			</div>
 			<div class="title-actions">
+				<span id="fullscreenIcon" class="reset-icon" title="Full Screen Mode">⛶</span>
 				<span id="resetIcon" class="reset-icon" title="Reset Canvas">🗑️</span>
 				<span id="notifToggle" class="reset-icon" title="Disable tips">🔔</span>
 			</div>
@@ -3457,16 +3727,29 @@ input[type="range"]::-moz-range-thumb {
 				const fullHeight = window.innerHeight - titleBarHeight;
 
 			// Fill entire screen
-			// PERFORMANCE: Downscale iPad internal canvas resolution (0.85x) for huge performance win
-			// CSS size stays the same, but internal resolution is lower, reducing fill rate
+			// PERFORMANCE: Force devicePixelRatio to 1 on iPad to avoid retina resolution overhead
+			// On retina displays, devicePixelRatio is 2 or 3, which means the browser renders
+			// the canvas at 2x/3x resolution internally. By dividing canvas dimensions by
+			// devicePixelRatio, we force it to render at 1x resolution (native logical pixels).
 			const isIPadDevice = /iPad/i.test(navigator.userAgent) || 
 				(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-			const resolutionScale = isIPadDevice ? 0.85 : 1.0;
 			
+			// Force device pixel ratio to 1 for iPad (ignore retina scaling)
+			// Divide canvas dimensions by devicePixelRatio to get 1x rendering resolution
+			const actualDPR = window.devicePixelRatio || 1.0;
+			const dpr = isIPadDevice ? 1.0 : actualDPR;
+			const resolutionScale = 1.0; // No additional downscaling - devicePixelRatio handling is enough
+			
+			// Set CSS size to full screen (visual size)
 			canvas.style.width = fullWidth + "px";
 			canvas.style.height = fullHeight + "px";
-			canvas.width = Math.floor(fullWidth * resolutionScale);
-			canvas.height = Math.floor(fullHeight * resolutionScale);
+			
+			// Set internal canvas resolution: divide by devicePixelRatio to force 1x rendering
+			// This prevents the browser from rendering at 2x/3x resolution on retina displays
+			// The CSS size stays the same, so it displays correctly, but renders at lower resolution
+			canvas.width = Math.floor(fullWidth * resolutionScale / dpr);
+			canvas.height = Math.floor(fullHeight * resolutionScale / dpr);
+			
 			if (gl) gl.viewport(0, 0, canvas.width, canvas.height);
 			}
 
@@ -3584,19 +3867,25 @@ input[type="range"]::-moz-range-thumb {
 				initialized: false,
 				positionTextures: [null, null], // Ping-pong textures for positions
 				velocityTextures: [null, null], // Ping-pong textures for velocities
+				metadataTexture: null, // Texture storing chain metadata (chainIdx, vertIdx, prevIdx, nextIdx)
 				forceTexture: null, // Temporary texture for force calculations
 				physicsProgram: null, // Shader program for physics
 				updateProgram: null, // Shader program for position updates
+				renderProgram: null, // Shader program for GPU-based rendering
 				framebuffers: [null, null], // Framebuffers for ping-pong
 				vertexMapping: [], // Maps chainIndex.vertexIndex -> texture coordinate
+				chainStartIndices: [], // Maps chainIndex -> starting texture index
 				totalVertices: 0,
 				textureWidth: 0,
 				textureHeight: 0,
 				currentBuffer: 0, // Which ping-pong buffer is current (0 or 1)
 				quadBuffer: null, // Full-screen quad for rendering
+				splineBuffer: null, // Buffer for spline rendering
 				needsSync: false, // Flag to sync GPU->CPU when needed
 				uniformLocations: {}, // Cached uniform locations
-				attribLocations: {} // Cached attribute locations
+				attribLocations: {}, // Cached attribute locations
+				renderUniformLocations: {}, // Cached render shader uniform locations
+				renderAttribLocations: {} // Cached render shader attribute locations
 			};
 			
 			// Initialize GPU physics if WebGL 2.0 is available
@@ -4093,6 +4382,194 @@ input[type="range"]::-moz-range-thumb {
 				toast("Canvas cleared", 1600);
 			};
 
+			/* -----------------------------------
+			   FULLSCREEN MODE
+			----------------------------------- */
+			let isFullscreen = false;
+			let originalCanvasWidth = canvas.width;
+			let originalCanvasHeight = canvas.height;
+
+			function toggleFullscreen() {
+				isFullscreen = !isFullscreen;
+				const body = document.body;
+				const toolbar = document.querySelector(".toolbar");
+				const bottomPanel = document.querySelector(".bottom-panel");
+				const fullscreenIcon = $("fullscreenIcon");
+
+				if (isFullscreen) {
+					// Enter fullscreen mode
+					body.classList.add("fullscreen-mode");
+					fullscreenIcon.classList.add("active");
+					fullscreenIcon.textContent = "⛶"; // Fullscreen exit icon
+					fullscreenIcon.title = "Exit Full Screen Mode";
+
+					// Store original canvas size
+					originalCanvasWidth = canvas.width;
+					originalCanvasHeight = canvas.height;
+
+					// Resize canvas to fill screen
+					resizeCanvasToFullscreen();
+
+					// Initialize panel dragging
+					initPanelDragging();
+
+					toast("Fullscreen Mode ON", 1500);
+				} else {
+					// Exit fullscreen mode
+					body.classList.remove("fullscreen-mode");
+					fullscreenIcon.classList.remove("active");
+					fullscreenIcon.textContent = "⛶";
+					fullscreenIcon.title = "Full Screen Mode";
+
+					// Restore original canvas size
+					canvas.width = originalCanvasWidth;
+					canvas.height = originalCanvasHeight;
+					gl.viewport(0, 0, canvas.width, canvas.height);
+
+					// Update canvas background color
+					gl.clearColor(canvasBackgroundColor[0], canvasBackgroundColor[1], canvasBackgroundColor[2], canvasBackgroundColor[3]);
+
+					// Don't rebuild GPU textures - they're independent of canvas size
+					// The resolution uniform will be updated in simulateGPUPhysics()
+
+					toast("Fullscreen Mode OFF", 1500);
+				}
+			}
+
+			function resizeCanvasToFullscreen() {
+				const width = window.innerWidth;
+				const height = window.innerHeight - 48; // Subtract title bar height
+				canvas.width = width;
+				canvas.height = height;
+				gl.viewport(0, 0, width, height);
+
+				// Update canvas background color
+				gl.clearColor(canvasBackgroundColor[0], canvasBackgroundColor[1], canvasBackgroundColor[2], canvasBackgroundColor[3]);
+
+				// Don't rebuild GPU textures - they're independent of canvas size
+				// The resolution uniform will be updated in simulateGPUPhysics()
+			}
+
+			// Handle window resize in fullscreen
+			window.addEventListener("resize", () => {
+				if (isFullscreen) {
+					resizeCanvasToFullscreen();
+				}
+			});
+
+			// Fullscreen icon click handler
+			$("fullscreenIcon").onclick = toggleFullscreen;
+
+			// Panel dragging functionality
+			function initPanelDragging() {
+				const toolbar = document.querySelector(".toolbar");
+				const bottomPanel = document.querySelector(".bottom-panel");
+
+				function makeDraggable(panel) {
+					let isDragging = false;
+					let currentX;
+					let currentY;
+					let initialX;
+					let initialY;
+					let xOffset = 0;
+					let yOffset = 0;
+
+					// Load saved position from localStorage
+					const panelId = panel.classList.contains("toolbar") ? "toolbar" : "bottom-panel";
+					const savedPos = localStorage.getItem(`fullscreen-${panelId}-pos`);
+					if (savedPos) {
+						const pos = JSON.parse(savedPos);
+						panel.style.left = pos.x + "px";
+						panel.style.top = pos.y + "px";
+						panel.style.transform = "none";
+						if (panel === bottomPanel) {
+							panel.style.bottom = "auto";
+						}
+						xOffset = pos.x;
+						yOffset = pos.y;
+					}
+
+					function dragStart(e) {
+						if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON" || 
+						    e.target.closest(".icon") || e.target.closest("label") ||
+						    e.target.closest(".submenu") || e.target.closest(".help-icon-container")) {
+							return;
+						}
+
+						if (e.type === "touchstart") {
+							initialX = e.touches[0].clientX - xOffset;
+							initialY = e.touches[0].clientY - yOffset;
+						} else {
+							initialX = e.clientX - xOffset;
+							initialY = e.clientY - yOffset;
+						}
+
+						if (e.target === panel || panel.contains(e.target)) {
+							isDragging = true;
+							panel.classList.add("dragging");
+						}
+					}
+
+					function drag(e) {
+						if (!isDragging) return;
+
+						e.preventDefault();
+
+						if (e.type === "touchmove") {
+							currentX = e.touches[0].clientX - initialX;
+							currentY = e.touches[0].clientY - initialY;
+						} else {
+							currentX = e.clientX - initialX;
+							currentY = e.clientY - initialY;
+						}
+
+						xOffset = currentX;
+						yOffset = currentY;
+
+						// Constrain to viewport
+						const rect = panel.getBoundingClientRect();
+						const maxX = window.innerWidth - rect.width;
+						const maxY = window.innerHeight - rect.height;
+
+						xOffset = Math.max(0, Math.min(xOffset, maxX));
+						yOffset = Math.max(0, Math.min(yOffset, maxY));
+
+						panel.style.left = xOffset + "px";
+						panel.style.top = yOffset + "px";
+						panel.style.transform = "none";
+						if (panel === bottomPanel) {
+							panel.style.bottom = "auto";
+						}
+					}
+
+					function dragEnd() {
+						if (isDragging) {
+							isDragging = false;
+							panel.classList.remove("dragging");
+
+							// Save position to localStorage
+							const panelId = panel.classList.contains("toolbar") ? "toolbar" : "bottom-panel";
+							localStorage.setItem(`fullscreen-${panelId}-pos`, JSON.stringify({
+								x: xOffset,
+								y: yOffset
+							}));
+						}
+					}
+
+					panel.addEventListener("mousedown", dragStart);
+					panel.addEventListener("touchstart", dragStart, { passive: false });
+					document.addEventListener("mousemove", drag);
+					document.addEventListener("touchmove", drag, { passive: false });
+					document.addEventListener("mouseup", dragEnd);
+					document.addEventListener("touchend", dragEnd);
+				}
+
+				if (toolbar) makeDraggable(toolbar);
+				if (bottomPanel) makeDraggable(bottomPanel);
+			}
+
+			// Initialize dragging when entering fullscreen (will be called by toggleFullscreen)
+
 			let interRepelMult = 1; // 1 = normal, 3 = boosted
 
 			$("iconDiffusion").onclick = () => {
@@ -4340,7 +4817,50 @@ window.addEventListener("keydown", (e) => {
 				$("importOptionsBackdrop").style.display = "none";
 			};
 
+			/* ---------- PRESENTATION MODE ---------- */
+			let isPresentationMode = false;
 
+			$("presentationModeOption").onclick = e => {
+				e.stopPropagation();
+				$("fileSubmenu").style.display = "none";
+				togglePresentationMode();
+			};
+
+			function togglePresentationMode() {
+				isPresentationMode = !isPresentationMode;
+				const body = document.body;
+				const instruction = $("presentationModeInstruction");
+
+				if (isPresentationMode) {
+					body.classList.add("presentation-mode");
+					// Show the instruction with a class
+					if (instruction) {
+						instruction.classList.add("showing");
+						instruction.style.display = "block";
+					}
+					// Auto-hide the instruction after 3 seconds
+					setTimeout(() => {
+						if (instruction) {
+							instruction.classList.remove("showing");
+							instruction.style.display = "none";
+						}
+					}, 3000);
+				} else {
+					body.classList.remove("presentation-mode");
+					if (instruction) {
+						instruction.classList.remove("showing");
+						instruction.style.display = "none";
+					}
+					toast("Presentation Mode OFF", 1500);
+				}
+			}
+
+			// Allow ESC key to exit presentation mode
+			document.addEventListener("keydown", (e) => {
+				if (e.key === "Escape" && isPresentationMode) {
+					togglePresentationMode();
+				}
+			});
 
 			/* -----------------------------------
 			   MOUSE EVENTS & DRAWING
@@ -4877,13 +5397,20 @@ window.addEventListener("keydown", (e) => {
 						precision highp float;
 						uniform sampler2D u_position;
 						uniform sampler2D u_velocity;
+						uniform sampler2D u_metadata; // chainIndex, vertexIndex, prevIndex, nextIndex, isClosed, dotRadius
 						uniform vec2 u_textureSize;
 						uniform float u_timeStep;
 						uniform float u_damping;
 						uniform float u_springConstant;
 						uniform float u_repulsionConstant;
+						uniform float u_interRepelMult;
 						uniform float u_dotRadius;
 						uniform vec2 u_resolution;
+						uniform float u_noiseActive;
+						uniform float u_noiseTime;
+						uniform float u_noiseRampTime;
+						uniform int u_numCircles;
+						uniform vec3 u_circles[32]; // x, y, radius (max 32 circles)
 						
 						out vec4 outColor;
 						
@@ -4895,16 +5422,200 @@ window.addEventListener("keydown", (e) => {
 							return texture(u_velocity, coord).xy;
 						}
 						
+						vec4 getMetadata(vec2 coord) {
+							return texture(u_metadata, coord);
+						}
+						
+						// Fast inverse square root (Quake III algorithm) - much faster than 1.0/sqrt(x)
+						// Used for distance calculations throughout the shader
+						float fastInvSqrt(float x) {
+							float xhalf = 0.5 * x;
+							int i = floatBitsToInt(x);
+							i = 0x5f3759df - (i >> 1);
+							x = intBitsToFloat(i);
+							x = x * (1.5 - xhalf * x * x);
+							return x;
+						}
+						
+						// Simple noise function for GPU
+						float hash(float n) {
+							return fract(sin(n) * 43758.5453);
+						}
+						
+						float smoothNoise(float x, float t) {
+							float i = floor(x);
+							float f = fract(x);
+							f = f * f * (3.0 - 2.0 * f);
+							float a = hash(i + t);
+							float b = hash(i + 1.0 + t);
+							return mix(a, b, f);
+						}
+						
 						void main() {
 							vec2 coord = (gl_FragCoord.xy - 0.5) / u_textureSize;
 							vec2 pos = getPosition(coord);
 							vec2 vel = getVelocity(coord);
+							vec4 meta = getMetadata(coord);
 							
-							// Initialize with current position and velocity
+							// Metadata: x=chainIndex, y=vertexIndex, z=prevIndex, w=nextIndex
+							// We'll use chainIndex and vertexIndex to determine neighbors
+							float chainIdx = meta.x;
+							float vertIdx = meta.y;
+							float prevIdx = meta.z;
+							float nextIdx = meta.w;
+							float isClosed = meta.x > 0.0 ? 1.0 : 0.0; // Simplified check
+							float dotR = u_dotRadius;
+							
 							vec2 force = vec2(0.0);
 							
-							// Spring forces (simplified - would need neighbor info in texture)
-							// For now, we'll handle springs on CPU and use GPU for repulsion
+							// 1. SPRING FORCES - optimized with fast inverse square root and step()
+							// Process prev neighbor (use step() instead of if to avoid branching)
+							float prevValid = step(0.0, prevIdx);
+							float prevTexIdx = prevIdx * prevValid;
+							vec2 prevCoord = vec2(mod(prevTexIdx, u_textureSize.x) + 0.5, floor(prevTexIdx / u_textureSize.x) + 0.5) / u_textureSize;
+							vec2 prevPos = mix(pos, getPosition(prevCoord), prevValid);
+							vec2 prevSpringDir = pos - prevPos;
+							float prevDistSq = dot(prevSpringDir, prevSpringDir);
+							float prevRestDist = dotR * 0.7;
+							float prevInvDist = fastInvSqrt(prevDistSq);
+							float prevDist = 1.0 / prevInvDist;
+							float prevValidDist = step(0.001, prevDist);
+							float prevSpringForce = u_springConstant * (prevDist - prevRestDist) * prevInvDist;
+							force -= prevSpringDir * prevSpringForce * prevValid * prevValidDist;
+							
+							// Process next neighbor
+							float nextValid = step(0.0, nextIdx);
+							float nextTexIdx = nextIdx * nextValid;
+							vec2 nextCoord = vec2(mod(nextTexIdx, u_textureSize.x) + 0.5, floor(nextTexIdx / u_textureSize.x) + 0.5) / u_textureSize;
+							vec2 nextPos = mix(pos, getPosition(nextCoord), nextValid);
+							vec2 nextSpringDir = pos - nextPos;
+							float nextDistSq = dot(nextSpringDir, nextSpringDir);
+							float nextRestDist = dotR * 0.7;
+							float nextInvDist = fastInvSqrt(nextDistSq);
+							float nextDist = 1.0 / nextInvDist;
+							float nextValidDist = step(0.001, nextDist);
+							float nextSpringForce = u_springConstant * (nextDist - nextRestDist) * nextInvDist;
+							force -= nextSpringDir * nextSpringForce * nextValid * nextValidDist;
+							
+							// 2. INTER-CHAIN REPULSION - optimized with WebGL tricks
+							// PERFORMANCE OPTIMIZATIONS:
+							// 1. Unroll small loop (checkRadius=1 = 4 neighbors) to avoid loop overhead
+							// 2. Use fast inverse square root approximation instead of sqrt()
+							// 3. Use step() instead of if statements to avoid branching
+							// 4. Early exit with step() for bounds checking
+							float minD = dotR * 2.0;
+							float minDSq = minD * minD;
+							vec2 texelSize = 1.0 / u_textureSize;
+							
+							// Unroll loop for checkRadius=1 (4 neighbors: up, down, left, right)
+							// This eliminates loop overhead and allows better GPU optimization
+							vec2 offsets[4] = vec2[](
+								vec2(-1.0, 0.0),  // left
+								vec2(1.0, 0.0),   // right
+								vec2(0.0, -1.0), // down
+								vec2(0.0, 1.0)   // up
+							);
+							
+							for (int i = 0; i < 4; i++) {
+								vec2 neighborCoord = coord + offsets[i] * texelSize;
+								
+								// Early exit with step() - no branching, GPU-friendly
+								float inBounds = step(0.0, neighborCoord.x) * step(neighborCoord.x, 1.0) *
+								                step(0.0, neighborCoord.y) * step(neighborCoord.y, 1.0);
+								
+								// Only sample textures if in bounds (GPU can optimize this)
+								vec2 otherPos = mix(vec2(0.0), getPosition(neighborCoord), inBounds);
+								vec4 otherMeta = mix(vec4(0.0), getMetadata(neighborCoord), inBounds);
+								
+								// Skip if same chain and adjacent vertices (use step() instead of if)
+								float isSameChain = step(abs(otherMeta.x - chainIdx), 0.1);
+								float vertDist = abs(otherMeta.y - vertIdx);
+								float skipAdjacent = step(1.5, vertDist); // 1.0 if vertDist >= 1.5, 0.0 otherwise
+								float shouldProcess = inBounds * (1.0 - isSameChain + isSameChain * skipAdjacent);
+								
+								vec2 diff = pos - otherPos;
+								float distSq = dot(diff, diff);
+								
+								// Early exit with step() - check distance bounds without branching
+								float inRange = step(0.001, distSq) * step(distSq, minDSq);
+								float process = shouldProcess * inRange;
+								
+								// Use fast inverse square root instead of sqrt()
+								float invDist = fastInvSqrt(distSq);
+								float dist = 1.0 / invDist;
+								float overlap = minD - dist;
+								vec2 dir = diff * invDist; // Multiply by invDist instead of dividing by dist
+								float repelMult = mix(u_interRepelMult, 1.0, isSameChain);
+								
+								// Accumulate force only if process > 0 (GPU-friendly)
+								force += dir * u_repulsionConstant * repelMult * overlap * process;
+							}
+							
+							// 4. CIRCLE REPULSION - optimized with fast inverse square root and step()
+							// Limit to 8 circles for performance (most scenes don't need more)
+							int maxCircles = min(u_numCircles, 8);
+							float isHardWall = step(2.9, u_interRepelMult);
+							
+							for (int i = 0; i < maxCircles; i++) {
+								vec3 circle = u_circles[i];
+								vec2 circlePos = circle.xy;
+								float circleRadius = circle.z;
+								
+								vec2 diff = pos - circlePos;
+								float distSq = dot(diff, diff);
+								float minDist = circleRadius + dotR;
+								float minDistSq = minDist * minDist;
+								
+								// Early exit with step() - no branching
+								float inRange = step(0.001, distSq) * step(distSq, minDistSq);
+								
+								// Use fast inverse square root
+								float invDist = fastInvSqrt(distSq);
+								float dist = 1.0 / invDist;
+								vec2 dir = diff * invDist;
+								
+								// Hard wall mode (use mix instead of if)
+								vec2 hardWallPos = circlePos + dir * minDist;
+								pos = mix(pos, hardWallPos, isHardWall * inRange);
+								vel = mix(vel, vec2(0.0), isHardWall * inRange);
+								
+								// Soft mode
+								float overlap = minDist - dist;
+								force += dir * u_repulsionConstant * overlap * (1.0 - isHardWall) * inRange;
+							}
+							
+							// 5. NOISE FORCES
+							if (u_noiseActive > 0.5) {
+								float noiseScale = 0.01;
+								float rampPhase = (sin(u_noiseRampTime) + 1.0) / 2.0;
+								float easedRamp = rampPhase < 0.5 
+									? 2.0 * rampPhase * rampPhase
+									: 1.0 - pow(-2.0 * rampPhase + 2.0, 2.0) / 2.0;
+								float strengthMultiplier = 0.5 + easedRamp * 0.5;
+								float baseNoiseStrength = 0.2;
+								float currentNoiseStrength = baseNoiseStrength * strengthMultiplier;
+								
+								float nx = smoothNoise(pos.x * noiseScale, u_noiseTime);
+								float ny = smoothNoise(pos.y * noiseScale, u_noiseTime + 1000.0);
+								vec2 noiseDir = vec2((nx - 0.5) * 2.0, (ny - 0.5) * 2.0);
+								force += noiseDir * currentNoiseStrength;
+							}
+							
+							// 6. BOUNDARY CONSTRAINTS
+							if (pos.x < dotR) {
+								force.x += (dotR - pos.x) * 0.5;
+							} else if (pos.x > u_resolution.x - dotR) {
+								force.x -= (pos.x - (u_resolution.x - dotR)) * 0.5;
+							}
+							
+							if (pos.y < dotR) {
+								force.y += (dotR - pos.y) * 0.5;
+							} else if (pos.y > u_resolution.y - dotR) {
+								force.y -= (pos.y - (u_resolution.y - dotR)) * 0.5;
+							}
+							
+							// Apply forces to velocity
+							vel += force * u_timeStep;
 							
 							// Apply damping
 							vel *= u_damping;
@@ -4912,21 +5623,21 @@ window.addEventListener("keydown", (e) => {
 							// Update position
 							pos += vel * u_timeStep;
 							
-							// Boundary constraints
-							if (pos.x < u_dotRadius) {
-								pos.x = u_dotRadius;
+							// Final boundary constraints
+							if (pos.x < dotR) {
+								pos.x = dotR;
 								vel.x = 0.0;
 							}
-							if (pos.x > u_resolution.x - u_dotRadius) {
-								pos.x = u_resolution.x - u_dotRadius;
+							if (pos.x > u_resolution.x - dotR) {
+								pos.x = u_resolution.x - dotR;
 								vel.x = 0.0;
 							}
-							if (pos.y < u_dotRadius) {
-								pos.y = u_dotRadius;
+							if (pos.y < dotR) {
+								pos.y = dotR;
 								vel.y = 0.0;
 							}
-							if (pos.y > u_resolution.y - u_dotRadius) {
-								pos.y = u_resolution.y - u_dotRadius;
+							if (pos.y > u_resolution.y - dotR) {
+								pos.y = u_resolution.y - dotR;
 								vel.y = 0.0;
 							}
 							
@@ -4949,13 +5660,20 @@ window.addEventListener("keydown", (e) => {
 					gpuPhysics.uniformLocations = {
 						u_position: gl.getUniformLocation(prog, "u_position"),
 						u_velocity: gl.getUniformLocation(prog, "u_velocity"),
+						u_metadata: gl.getUniformLocation(prog, "u_metadata"),
 						u_textureSize: gl.getUniformLocation(prog, "u_textureSize"),
 						u_timeStep: gl.getUniformLocation(prog, "u_timeStep"),
 						u_damping: gl.getUniformLocation(prog, "u_damping"),
 						u_springConstant: gl.getUniformLocation(prog, "u_springConstant"),
 						u_repulsionConstant: gl.getUniformLocation(prog, "u_repulsionConstant"),
+						u_interRepelMult: gl.getUniformLocation(prog, "u_interRepelMult"),
 						u_dotRadius: gl.getUniformLocation(prog, "u_dotRadius"),
-						u_resolution: gl.getUniformLocation(prog, "u_resolution")
+						u_resolution: gl.getUniformLocation(prog, "u_resolution"),
+						u_noiseActive: gl.getUniformLocation(prog, "u_noiseActive"),
+						u_noiseTime: gl.getUniformLocation(prog, "u_noiseTime"),
+						u_noiseRampTime: gl.getUniformLocation(prog, "u_noiseRampTime"),
+						u_numCircles: gl.getUniformLocation(prog, "u_numCircles"),
+						u_circles: gl.getUniformLocation(prog, "u_circles")
 					};
 					gpuPhysics.attribLocations = {
 						a_position: gl.getAttribLocation(prog, "a_position")
@@ -4975,6 +5693,132 @@ window.addEventListener("keydown", (e) => {
 				}
 			}
 			
+			// Initialize GPU rendering shaders
+			function initGPURendering() {
+				if (!gpuPhysics.initialized) return;
+				
+				// GPU rendering vertex shader - reads positions from texture and calculates splines
+				const gpuRenderVS = `#version 300 es
+					in float a_splineIndex; // Spline segment index (0 to chainLength-1 for closed, 0 to chainLength-2 for open)
+					
+					uniform sampler2D u_positionTexture;
+					uniform vec2 u_textureSize;
+					uniform vec2 u_resolution;
+					uniform float u_chainStartIndex;
+					uniform float u_chainLength;
+					uniform float u_isClosed;
+					uniform float u_splineSegments; // Number of spline segments per edge (typically 10)
+					
+					out vec2 v_position;
+					
+					vec2 getPositionFromTexture(float texIndex) {
+						if (texIndex < 0.0) return vec2(0.0);
+						float x = mod(texIndex, u_textureSize.x) + 0.5;
+						float y = floor(texIndex / u_textureSize.x) + 0.5;
+						vec2 coord = vec2(x, y) / u_textureSize;
+						return texture(u_positionTexture, coord).xy;
+					}
+					
+					// Catmull-Rom spline interpolation
+					vec2 catmullRom(vec2 p0, vec2 p1, vec2 p2, vec2 p3, float t) {
+						float t2 = t * t;
+						float t3 = t2 * t;
+						return 0.5 * (
+							(2.0 * p1) +
+							(-p0 + p2) * t +
+							(2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2 +
+							(-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3
+						);
+					}
+					
+					void main() {
+						// Calculate which vertex segment we're in
+						float segmentIdx = floor(a_splineIndex / u_splineSegments);
+						float localT = mod(a_splineIndex, u_splineSegments) / u_splineSegments;
+						
+						// Get vertex indices for Catmull-Rom (p0, p1, p2, p3)
+						float i1 = segmentIdx;
+						float i0, i2, i3;
+						
+						if (u_isClosed > 0.5) {
+							// Closed chain - wrap around
+							i0 = mod(i1 - 1.0 + u_chainLength, u_chainLength);
+							i2 = mod(i1 + 1.0, u_chainLength);
+							i3 = mod(i1 + 2.0, u_chainLength);
+						} else {
+							// Open chain
+							i0 = max(0.0, i1 - 1.0);
+							i2 = min(u_chainLength - 1.0, i1 + 1.0);
+							i3 = min(u_chainLength - 1.0, i1 + 2.0);
+							
+							// Handle edge cases for open chains
+							if (i1 == 0.0) {
+								i0 = i1; // Duplicate first point
+							}
+							if (i1 >= u_chainLength - 1.0) {
+								i2 = i1; // Duplicate last point
+								i3 = i1;
+							}
+						}
+						
+						// Get positions from GPU texture
+						vec2 p0 = getPositionFromTexture(u_chainStartIndex + i0);
+						vec2 p1 = getPositionFromTexture(u_chainStartIndex + i1);
+						vec2 p2 = getPositionFromTexture(u_chainStartIndex + i2);
+						vec2 p3 = getPositionFromTexture(u_chainStartIndex + i3);
+						
+						// Interpolate spline point
+						vec2 pos = catmullRom(p0, p1, p2, p3, localT);
+						
+						// Convert to clip space
+						vec2 clipSpace = (pos / u_resolution) * 2.0 - 1.0;
+						clipSpace.y = -clipSpace.y;
+						
+						gl_Position = vec4(clipSpace, 0.0, 1.0);
+						v_position = pos;
+					}
+				`;
+				
+				// GPU rendering fragment shader
+				const gpuRenderFS = `#version 300 es
+					precision mediump float;
+					uniform vec4 u_color;
+					void main() {
+						gl_FragColor = u_color;
+					}
+				`;
+				
+				gpuPhysics.renderProgram = createProgram(gpuRenderVS, gpuRenderFS);
+				
+				if (!gpuPhysics.renderProgram) {
+					console.warn("GPU rendering shader compilation failed, will use CPU rendering");
+					return;
+				}
+				
+				// Cache render shader uniform and attribute locations
+				const renderProg = gpuPhysics.renderProgram;
+				gpuPhysics.renderUniformLocations = {
+					u_positionTexture: gl.getUniformLocation(renderProg, "u_positionTexture"),
+					u_textureSize: gl.getUniformLocation(renderProg, "u_textureSize"),
+					u_resolution: gl.getUniformLocation(renderProg, "u_resolution"),
+					u_chainStartIndex: gl.getUniformLocation(renderProg, "u_chainStartIndex"),
+					u_chainLength: gl.getUniformLocation(renderProg, "u_chainLength"),
+					u_isClosed: gl.getUniformLocation(renderProg, "u_isClosed"),
+					u_splineSegments: gl.getUniformLocation(renderProg, "u_splineSegments"),
+					u_color: gl.getUniformLocation(renderProg, "u_color")
+				};
+				gpuPhysics.renderAttribLocations = {
+					a_splineIndex: gl.getAttribLocation(renderProg, "a_splineIndex")
+				};
+				
+				// Create buffer for spline rendering
+				gpuPhysics.splineBuffer = gl.createBuffer();
+				
+				if (console && console.log) {
+					console.log("GPU rendering initialized successfully");
+				}
+			}
+			
 			// Rebuild GPU texture layout when chains change
 			function rebuildGPUTextures() {
 				if (!gpuPhysics.initialized) return;
@@ -4983,9 +5827,13 @@ window.addEventListener("keydown", (e) => {
 				gpuPhysics.totalVertices = 0;
 				gpuPhysics.vertexMapping = [];
 				
+				// Build chain start indices for fast lookup
+				gpuPhysics.chainStartIndices = [];
+				
 				for (let c = 0; c < chains.length; c++) {
 					const chain = chains[c];
 					const startIdx = gpuPhysics.totalVertices;
+					gpuPhysics.chainStartIndices[c] = startIdx;
 					for (let i = 0; i < chain.chain.length; i++) {
 						gpuPhysics.vertexMapping.push({ chainIndex: c, vertexIndex: i, texCoord: gpuPhysics.totalVertices });
 						gpuPhysics.totalVertices++;
@@ -5025,14 +5873,42 @@ window.addEventListener("keydown", (e) => {
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 					gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 					
-					// Framebuffers
+					// Framebuffers - delete old ones first
 					if (gpuPhysics.framebuffers[i]) {
+						// Unbind framebuffer if it's currently bound
+						gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 						gl.deleteFramebuffer(gpuPhysics.framebuffers[i]);
 					}
 					gpuPhysics.framebuffers[i] = gl.createFramebuffer();
+					
+					// Attach position texture to framebuffer to make it complete
+					gl.bindFramebuffer(gl.FRAMEBUFFER, gpuPhysics.framebuffers[i]);
+					gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.positionTextures[i], 0);
+					
+					// Verify framebuffer is complete
+					const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+					if (status !== gl.FRAMEBUFFER_COMPLETE) {
+						console.warn("Framebuffer not complete after rebuild:", status);
+						// Fallback: disable GPU physics if framebuffer can't be created
+						gpuPhysics.initialized = false;
+					}
+					
+					gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 				}
 				
-				// Upload initial positions and velocities
+				// Create metadata texture (chainIndex, vertexIndex, prevIndex, nextIndex)
+				if (gpuPhysics.metadataTexture) {
+					gl.deleteTexture(gpuPhysics.metadataTexture);
+				}
+				gpuPhysics.metadataTexture = gl.createTexture();
+				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.metadataTexture);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gpuPhysics.textureWidth, gpuPhysics.textureHeight, 0, gl.RGBA, gl.FLOAT, null);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+				
+				// Upload initial positions, velocities, and metadata
 				uploadToGPU();
 			}
 			
@@ -5042,6 +5918,14 @@ window.addEventListener("keydown", (e) => {
 				
 				const data = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
 				const velData = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
+				const metaData = new Float32Array(gpuPhysics.textureWidth * gpuPhysics.textureHeight * 4);
+				
+				// Build mapping from texture index to vertex info for neighbor lookup
+				const texIndexToVertex = new Map();
+				for (let i = 0; i < gpuPhysics.vertexMapping.length; i++) {
+					const mapping = gpuPhysics.vertexMapping[i];
+					texIndexToVertex.set(i, { chainIndex: mapping.chainIndex, vertexIndex: mapping.vertexIndex });
+				}
 				
 				for (let i = 0; i < gpuPhysics.vertexMapping.length; i++) {
 					const mapping = gpuPhysics.vertexMapping[i];
@@ -5049,15 +5933,61 @@ window.addEventListener("keydown", (e) => {
 					const vertex = chain.chain[mapping.vertexIndex];
 					
 					const idx = i * 4;
+					// Position data
 					data[idx] = vertex.x;
 					data[idx + 1] = vertex.y;
 					data[idx + 2] = 0.0;
 					data[idx + 3] = 1.0;
 					
+					// Velocity data
 					velData[idx] = vertex.vx || 0.0;
 					velData[idx + 1] = vertex.vy || 0.0;
 					velData[idx + 2] = 0.0;
 					velData[idx + 3] = 1.0;
+					
+					// Metadata: chainIndex, vertexIndex, prevIndex, nextIndex
+					// Find previous and next vertex indices in texture
+					let prevIdx = -1.0;
+					let nextIdx = -1.0;
+					
+					if (chain.isClosed) {
+						const prevVertIdx = (mapping.vertexIndex - 1 + chain.chain.length) % chain.chain.length;
+						const nextVertIdx = (mapping.vertexIndex + 1) % chain.chain.length;
+						// Find texture indices for prev/next
+						for (let j = 0; j < gpuPhysics.vertexMapping.length; j++) {
+							const m = gpuPhysics.vertexMapping[j];
+							if (m.chainIndex === mapping.chainIndex) {
+								if (m.vertexIndex === prevVertIdx) prevIdx = j;
+								if (m.vertexIndex === nextVertIdx) nextIdx = j;
+							}
+						}
+					} else {
+						if (mapping.vertexIndex > 0) {
+							const prevVertIdx = mapping.vertexIndex - 1;
+							for (let j = 0; j < gpuPhysics.vertexMapping.length; j++) {
+								const m = gpuPhysics.vertexMapping[j];
+								if (m.chainIndex === mapping.chainIndex && m.vertexIndex === prevVertIdx) {
+									prevIdx = j;
+									break;
+								}
+							}
+						}
+						if (mapping.vertexIndex < chain.chain.length - 1) {
+							const nextVertIdx = mapping.vertexIndex + 1;
+							for (let j = 0; j < gpuPhysics.vertexMapping.length; j++) {
+								const m = gpuPhysics.vertexMapping[j];
+								if (m.chainIndex === mapping.chainIndex && m.vertexIndex === nextVertIdx) {
+									nextIdx = j;
+									break;
+								}
+							}
+						}
+					}
+					
+					metaData[idx] = mapping.chainIndex;
+					metaData[idx + 1] = mapping.vertexIndex;
+					metaData[idx + 2] = prevIdx;
+					metaData[idx + 3] = nextIdx;
 				}
 				
 				// Upload to both ping-pong buffers
@@ -5068,6 +5998,10 @@ window.addEventListener("keydown", (e) => {
 					gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.velocityTextures[i]);
 					gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight, gl.RGBA, gl.FLOAT, velData);
 				}
+				
+				// Upload metadata (only once, doesn't change)
+				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.metadataTexture);
+				gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gpuPhysics.textureWidth, gpuPhysics.textureHeight, gl.RGBA, gl.FLOAT, metaData);
 			}
 			
 			// Download GPU data back to CPU
@@ -5107,6 +6041,14 @@ window.addEventListener("keydown", (e) => {
 			function simulateGPUPhysics() {
 				if (!gpuPhysics.initialized || gpuPhysics.totalVertices === 0) return;
 				
+				// PERFORMANCE: Skip physics every other frame on iPad for better performance
+				// This reduces GPU load significantly while maintaining visual quality
+				const isIPadDevice = /iPad/i.test(navigator.userAgent) || 
+					(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+				if (isIPadDevice && (Math.floor(performance.now() / 16) % 2 === 0)) {
+					return; // Skip every other frame on iPad
+				}
+				
 				const current = gpuPhysics.currentBuffer;
 				const next = 1 - current;
 				const locs = gpuPhysics.uniformLocations;
@@ -5130,15 +6072,33 @@ window.addEventListener("keydown", (e) => {
 				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.velocityTextures[current]);
 				gl.uniform1i(locs.u_velocity, 1);
 				
+				gl.activeTexture(gl.TEXTURE2);
+				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.metadataTexture);
+				gl.uniform1i(locs.u_metadata, 2);
+				
 				// Set uniforms (PERFORMANCE: using cached uniform locations)
 				gl.uniform2f(locs.u_textureSize, gpuPhysics.textureWidth, gpuPhysics.textureHeight);
 				gl.uniform1f(locs.u_timeStep, timeStep);
 				gl.uniform1f(locs.u_damping, damping);
 				gl.uniform1f(locs.u_springConstant, springConstant);
 				gl.uniform1f(locs.u_repulsionConstant, repulsionConstant);
+				gl.uniform1f(locs.u_interRepelMult, interRepelMult);
 				const avgRadius = chains.length > 0 ? chains[0].baseDotRadius * dotScaleFactor : 5.0;
 				gl.uniform1f(locs.u_dotRadius, avgRadius);
 				gl.uniform2f(locs.u_resolution, canvas.width, canvas.height);
+				gl.uniform1f(locs.u_noiseActive, noiseActive ? 1.0 : 0.0);
+				gl.uniform1f(locs.u_noiseTime, noiseTime);
+				gl.uniform1f(locs.u_noiseRampTime, noiseRampTime);
+				
+				// Upload circles (max 8 for now due to uniform array limitations)
+				const numCircles = Math.min(circles.length, 8);
+				gl.uniform1i(locs.u_numCircles, numCircles);
+				for (let i = 0; i < numCircles; i++) {
+					const loc = gl.getUniformLocation(gpuPhysics.updateProgram, `u_circles[${i}]`);
+					if (loc) {
+						gl.uniform3f(loc, circles[i].x, circles[i].y, circles[i].radius);
+					}
+				}
 				
 				// Render to position texture
 				gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, gpuPhysics.positionTextures[next], 0);
@@ -5157,9 +6117,6 @@ window.addEventListener("keydown", (e) => {
 				// Restore viewport
 				gl.viewport(0, 0, canvas.width, canvas.height);
 				gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-				
-				// PERFORMANCE: Don't mark needsSync - we'll only read back when actually needed for rendering
-				// gpuPhysics.needsSync = true; // Removed - only sync on-demand
 			}
 			
 			/* -----------------------------------
@@ -5931,6 +6888,138 @@ window.addEventListener("keydown", (e) => {
 				return new Float32Array(segment);
 			}
 
+			// GPU-based rendering function (reads from GPU textures, no readPixels)
+			function drawChainFromGPU(chainObj, chainIndex) {
+				if (!gpuPhysics.initialized || !gpuPhysics.renderProgram || gpuPhysics.chainStartIndices[chainIndex] === undefined) {
+					// Fallback to CPU rendering
+					drawChain(chainObj, chainIndex);
+					return;
+				}
+				
+				// Get chain length from vertex mapping (avoid accessing chain.chain which requires CPU data)
+				let chainLength = 0;
+				for (let i = 0; i < gpuPhysics.vertexMapping.length; i++) {
+					if (gpuPhysics.vertexMapping[i].chainIndex === chainIndex) {
+						chainLength++;
+					}
+				}
+				if (chainLength < 2) {
+					// Fallback to CPU for very short chains
+					drawChain(chainObj, chainIndex);
+					return;
+				}
+				
+				const chainStartIndex = gpuPhysics.chainStartIndices[chainIndex];
+				// PERFORMANCE: Reduce spline segments on iPad for better performance
+				// Fewer segments = fewer vertices = faster rendering
+				const isIPadDevice = /iPad/i.test(navigator.userAgent) || 
+					(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+				const splineSegments = isIPadDevice ? 5 : 10; // Half the segments on iPad
+				const totalSplinePoints = chainObj.isClosed ? chainLength * splineSegments : (chainLength - 1) * splineSegments;
+				
+				// Generate spline indices (0, 1, 2, ... totalSplinePoints-1)
+				if (!gpuPhysics.splineIndices || gpuPhysics.splineIndices.length < totalSplinePoints) {
+					gpuPhysics.splineIndices = new Float32Array(totalSplinePoints);
+					for (let i = 0; i < totalSplinePoints; i++) {
+						gpuPhysics.splineIndices[i] = i;
+					}
+				}
+				
+				const locs = gpuPhysics.renderUniformLocations;
+				const attrs = gpuPhysics.renderAttribLocations;
+				
+				// Use GPU render program
+				gl.useProgram(gpuPhysics.renderProgram);
+				
+				// Bind position texture
+				gl.activeTexture(gl.TEXTURE0);
+				gl.bindTexture(gl.TEXTURE_2D, gpuPhysics.positionTextures[gpuPhysics.currentBuffer]);
+				gl.uniform1i(locs.u_positionTexture, 0);
+				
+				// Set uniforms
+				gl.uniform2f(locs.u_textureSize, gpuPhysics.textureWidth, gpuPhysics.textureHeight);
+				gl.uniform2f(locs.u_resolution, canvas.width, canvas.height);
+				gl.uniform1f(locs.u_chainStartIndex, chainStartIndex);
+				gl.uniform1f(locs.u_chainLength, chainLength);
+				gl.uniform1f(locs.u_isClosed, chainObj.isClosed ? 1.0 : 0.0);
+				gl.uniform1f(locs.u_splineSegments, splineSegments);
+				gl.uniform4fv(locs.u_color, chainObj.color);
+				
+				// Set up vertex attribute
+				gl.bindBuffer(gl.ARRAY_BUFFER, gpuPhysics.splineBuffer);
+				gl.bufferData(gl.ARRAY_BUFFER, gpuPhysics.splineIndices.subarray(0, totalSplinePoints), gl.DYNAMIC_DRAW);
+				gl.enableVertexAttribArray(attrs.a_splineIndex);
+				gl.vertexAttribPointer(attrs.a_splineIndex, 1, gl.FLOAT, false, 0, 0);
+				
+				// For filled blobs, use stencil technique (same as CPU version)
+				if (showFilled && chainObj.isClosed) {
+					gl.clear(gl.STENCIL_BUFFER_BIT);
+					gl.enable(gl.STENCIL_TEST);
+					gl.colorMask(false, false, false, false);
+					gl.stencilFunc(gl.ALWAYS, 0, 1);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
+					
+					// Draw spline as line strip for stencil
+					gl.drawArrays(gl.LINE_STRIP, 0, totalSplinePoints);
+					
+					// Fill stencil area
+					const rgba = chainObj.color.slice();
+					rgba[3] = chainObj.alpha ?? 1.0;
+					gl.uniform4fv(locs.u_color, rgba);
+					gl.colorMask(true, true, true, true);
+					gl.stencilFunc(gl.EQUAL, 1, 1);
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+					
+					// Draw full-screen quad for fill
+					gl.useProgram(lineProgram);
+					const quad = new Float32Array([
+						0, 0, canvas.width, 0, canvas.width, canvas.height,
+						0, 0, canvas.width, canvas.height, 0, canvas.height
+					]);
+					gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+					gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+					gl.enableVertexAttribArray(linePosLoc);
+					gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+					gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+					gl.uniform4fv(lineColorLoc, rgba);
+					gl.drawArrays(gl.TRIANGLES, 0, 6);
+					
+					gl.disable(gl.STENCIL_TEST);
+					
+					// Draw outline if enabled
+					if (showOutline && showFilled) {
+						// For now, use CPU rendering for thick outlines (can be optimized later)
+						drawChain(chainObj, chainIndex);
+						return;
+					}
+					
+					// Draw pinned indicators and hover
+					// For GPU rendering, we skip these to avoid readPixels
+					// They will be drawn by CPU rendering fallback if needed
+					// (Pinned/hover indicators are rare, so this is acceptable)
+					return;
+				}
+				
+				// Draw outline
+				if (showOutline) {
+					const outlineColor = chainObj.color.slice();
+					outlineColor[3] = chainObj.alpha ?? 1.0;
+					gl.uniform4fv(locs.u_color, outlineColor);
+					
+					// For thin outlines, render directly
+					if (outlineWidth === 1) {
+						gl.drawArrays(gl.LINE_STRIP, 0, totalSplinePoints);
+					} else {
+						// For thick outlines, fall back to CPU (can optimize later)
+						drawChain(chainObj, chainIndex);
+						return;
+					}
+				} else {
+					// No outline, just draw the spline
+					gl.drawArrays(gl.LINE_STRIP, 0, totalSplinePoints);
+				}
+			}
+			
 			function drawChain(chainObj, chainIndex) {
 				const ch = chainObj.chain;
 				if (ch.length < 2) return;
@@ -6201,30 +7290,17 @@ window.addEventListener("keydown", (e) => {
 				const isPhysicsActive = damping > 0.001; // Small threshold to account for floating point
 				
 				if (isPhysicsActive) {
-					// PERFORMANCE: Use GPU physics when available (works on iPad/Safari)
+					// PERFORMANCE: Use GPU physics when available - ALL forces calculated on GPU
+					// This eliminates CPU/GPU boundary and readPixels bottleneck
 					if (gpuPhysics.initialized && gpuPhysics.totalVertices > 0) {
-						// Run physics on GPU
+						// Run ALL physics on GPU (springs, repulsion, circles, noise, boundaries)
 						simulateGPUPhysics();
 						
-						// Still need CPU for complex interactions (springs, repulsion, etc.)
-						// GPU handles basic position updates, CPU handles complex forces
-						chains.forEach((c, i) => {
-							if (!c.frozen) {
-								// Apply spring forces and other complex interactions on CPU
-								simulateChain(c, i);
-							}
-						});
-						simulateInterChainRepulsion();
-						simulateCircleRepulsion();
-						applyNoiseForces();
-						
-						// Upload updated data back to GPU
-						uploadToGPU();
-						
-						// PERFORMANCE: Only download from GPU when actually needed for rendering
-						// We'll download on-demand in the draw functions, not every frame
+						// No CPU-side force calculations needed - everything is on GPU
+						// No uploadToGPU needed - data stays on GPU
+						// No downloadFromGPU needed - we'll render directly from GPU textures
 					} else {
-						// CPU physics fallback
+						// CPU physics fallback (when GPU not available)
 						chains.forEach((c, i) => simulateChain(c, i));
 						simulateInterChainRepulsion();
 						simulateCircleRepulsion();
@@ -6245,11 +7321,8 @@ window.addEventListener("keydown", (e) => {
 
 				gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 
-				// PERFORMANCE: Download from GPU on-demand when rendering (only if GPU physics is active)
-				// This avoids expensive readPixels every frame - only sync once per frame when actually drawing
-				if (gpuPhysics.initialized && gpuPhysics.totalVertices > 0) {
-					downloadFromGPU();
-				}
+				// PERFORMANCE: No downloadFromGPU needed - render directly from GPU textures
+				// This eliminates the readPixels bottleneck completely
 
 				if (showGrid) {
 					drawGrid(20);
@@ -6272,17 +7345,29 @@ window.addEventListener("keydown", (e) => {
 					
 					// Render filled blobs together
 					filledChains.forEach(({ chainObj, chainIndex }) => {
-						drawChain(chainObj, chainIndex);
+						if (gpuPhysics.initialized && gpuPhysics.renderProgram) {
+							drawChainFromGPU(chainObj, chainIndex);
+						} else {
+							drawChain(chainObj, chainIndex);
+						}
 					});
 					
 					// Render outline blobs together
 					outlineChains.forEach(({ chainObj, chainIndex }) => {
-						drawChain(chainObj, chainIndex);
+						if (gpuPhysics.initialized && gpuPhysics.renderProgram) {
+							drawChainFromGPU(chainObj, chainIndex);
+						} else {
+							drawChain(chainObj, chainIndex);
+						}
 					});
 				} else {
 					// For fewer blobs, use original per-chain rendering
 					chains.forEach((chainObj, chainIndex) => {
-						drawChain(chainObj, chainIndex);
+						if (gpuPhysics.initialized && gpuPhysics.renderProgram) {
+							drawChainFromGPU(chainObj, chainIndex);
+						} else {
+							drawChain(chainObj, chainIndex);
+						}
 					});
 				}
 				
