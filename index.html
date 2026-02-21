@@ -3415,7 +3415,7 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				<div style="display: flex; flex-direction: column; gap: 16px; margin-top: 20px;">
 					<div style="position: relative; border: 2px solid #4b463f; border-radius: 6px; background: #fff; padding: 16px; box-shadow: inset 2px 2px 4px rgba(0,0,0,0.1);">
 						<canvas id="gradientCurveCanvas" width="560" height="300" 
-							style="width: 100%; height: 300px; cursor: crosshair; display: block; background: #fff; border-radius: 4px; border: 1px solid #4b463f;"></canvas>
+							style="width: 100%; height: 300px; cursor: crosshair; display: block; background: #fff; border-radius: 4px; border: 1px solid #4b463f; touch-action: none;"></canvas>
 						<div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #666;">
 							<span>Start (0%)</span>
 							<span>End (100%)</span>
@@ -8886,16 +8886,42 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				return closest;
 			}
 
-			// Curve editor mouse handlers
-			curveCanvas.addEventListener("mousedown", (e) => {
+			// Curve editor — use pointer events for touch/stylus support
+			let curveCanvasActivePointerId = null;
+			let curveDeleteTimer = null;
+			let curveDeleteTargetIndex = null;
+
+			// Primary pointer test: accept pen/touch, left mouse only
+			function isPrimaryPointerCurve(evt) {
+				return (evt.isPrimary !== false) && (evt.pointerType !== "mouse" || evt.button === 0);
+			}
+
+			curveCanvas.addEventListener("pointerdown", (e) => {
+				if (!isPrimaryPointerCurve(e)) return;
+				e.preventDefault();
+				curveCanvasActivePointerId = e.pointerId;
+				curveCanvas.setPointerCapture(curveCanvasActivePointerId);
+
 				const { x, y } = getCurveCanvasXY(e);
 				const padding = 20;
 				const drawWidth = curveCanvas.width - padding * 2;
 				const drawHeight = curveCanvas.height - padding * 2;
-				
+
 				// Check if clicking on existing point
 				const pointIndex = findClosestCurvePoint(x, y);
 				if (pointIndex !== null) {
+					// Start long-press timer for deletion (touch-friendly alternative to right-click)
+					if (pointIndex !== 0 && pointIndex !== curvePoints.length - 1 && curvePoints.length > 2) {
+						curveDeleteTargetIndex = pointIndex;
+						curveDeleteTimer = setTimeout(() => {
+							if (curveDeleteTargetIndex !== null) {
+								curvePoints.splice(curveDeleteTargetIndex, 1);
+								drawCurveEditor();
+								curveDeleteTargetIndex = null;
+								draggingCurvePoint = null;
+							}
+						}, 500); // 500ms long-press to delete
+					}
 					draggingCurvePoint = pointIndex;
 				} else {
 					// Check if clicking in the drawing area
@@ -8928,9 +8954,18 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 						drawCurveEditor();
 					}
 				}
-			});
+			}, { passive: false });
 
-			curveCanvas.addEventListener("mousemove", (e) => {
+			curveCanvas.addEventListener("pointermove", (e) => {
+				if (curveCanvasActivePointerId !== null && e.pointerId !== curveCanvasActivePointerId) return;
+
+				// Cancel delete timer if pointer moves (user is dragging, not long-pressing)
+				if (curveDeleteTimer) {
+					clearTimeout(curveDeleteTimer);
+					curveDeleteTimer = null;
+					curveDeleteTargetIndex = null;
+				}
+
 				if (draggingCurvePoint !== null) {
 					const { x, y } = getCurveCanvasXY(e);
 					const padding = 20;
@@ -8963,15 +8998,31 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					
 					drawCurveEditor();
 				}
-			});
+			}, { passive: false });
 
-			curveCanvas.addEventListener("mouseup", () => {
+			curveCanvas.addEventListener("pointerup", (e) => {
+				if (curveCanvasActivePointerId !== null && e.pointerId !== curveCanvasActivePointerId) return;
+				try { curveCanvas.releasePointerCapture(curveCanvasActivePointerId); } catch {}
+				curveCanvasActivePointerId = null;
 				draggingCurvePoint = null;
-			});
+				if (curveDeleteTimer) {
+					clearTimeout(curveDeleteTimer);
+					curveDeleteTimer = null;
+					curveDeleteTargetIndex = null;
+				}
+			}, { passive: true });
 
-			curveCanvas.addEventListener("mouseleave", () => {
+			curveCanvas.addEventListener("pointercancel", (e) => {
+				if (curveCanvasActivePointerId !== null && e.pointerId !== curveCanvasActivePointerId) return;
+				try { curveCanvas.releasePointerCapture(curveCanvasActivePointerId); } catch {}
+				curveCanvasActivePointerId = null;
 				draggingCurvePoint = null;
-			});
+				if (curveDeleteTimer) {
+					clearTimeout(curveDeleteTimer);
+					curveDeleteTimer = null;
+					curveDeleteTargetIndex = null;
+				}
+			}, { passive: true });
 
 			// Right-click to delete point
 			curveCanvas.addEventListener("contextmenu", (e) => {
