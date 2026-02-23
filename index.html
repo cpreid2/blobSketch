@@ -12,51 +12,126 @@
 	</style>
 
 	<style>
-	/* ---------- Desktop defaults: Retro Beige Console ---------- */
+	/* ---------- Desktop defaults: 3D Game Console ---------- */
 
 /* 1. Base / Reset */
 body {
   margin: 0;
-  padding: 14px;
+  padding: 14px 14px 100px;
   font-family: "Courier New", monospace;
-  background-color: #6e6b60;        /* console background */
+  background:
+    radial-gradient(ellipse at 50% 15%, #403830 0%, #2a2420 55%, #181412 100%);
   color: #000;
   display: flex;
-  justify-content: center;          /* center .window horizontally */
-  align-items: flex-start;          /* keep it near the top vertically */
-  min-height: 100vh;                /* so flex centering works */
-	  overflow: hidden;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  overflow: hidden;
+  perspective: 1600px;
+  perspective-origin: 50% 25%;
 }
 
 
-/* 2. Outer console shell (window) */
+/* 2. Outer console shell — 3D plastic body */
 .window {
-  width: 760px;
-  margin: 0;                        /* was: 0 auto */
-  background: #e2dbc8;
-  border-radius: 22px;
-  padding: 8px;
-  border: 3px solid #6b6558;
-  box-shadow:
-    8px 10px 0 #000,
-    inset -3px -3px 6px rgba(0,0,0,0.5);
+  width: 780px;
+  margin: 0;
   position: relative;
+  background:
+    linear-gradient(178deg,
+      #f0ead8 0%,
+      #e8e0cc 15%,
+      #e2dbc8 40%,
+      #d5ceb8 70%,
+      #cac2aa 100%);
+  border-radius: 26px 26px 22px 22px;
+  padding: 8px 8px 10px;
+  border: 3px solid;
+  border-color: #ece5d3 #a8a090 #706850 #bab29a;
+  box-shadow:
+    1px 1px 0 0 #ccc4ac,
+    2px 2px 0 0 #c5bda5,
+    3px 3px 0 0 #beb69e,
+    4px 4px 0 0 #b7af97,
+    5px 5px 0 0 #b0a890,
+    6px 6px 0 0 #a9a189,
+    7px 7px 0 0 #a29a82,
+    8px 8px 0 0 #9b937b,
+    9px 9px 0 0 #948c74,
+    10px 10px 0 0 #8d856d,
+    11px 11px 0 0 #867e66,
+    12px 12px 0 0 #7f775f,
+    4px 16px 40px rgba(0,0,0,0.5),
+    8px 24px 70px rgba(0,0,0,0.3),
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -2px 5px rgba(0,0,0,0.15);
+}
+
+/* Console front face bevel overlay */
+.window::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 26px 26px 22px 22px;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0.15) 0%,
+      rgba(255,255,255,0.03) 30%,
+      transparent 50%,
+      rgba(0,0,0,0.04) 80%,
+      rgba(0,0,0,0.1) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle plastic grain texture overlay */
+.window::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 26px 26px 22px 22px;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.015) 1px,
+      rgba(0,0,0,0.015) 2px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 1px,
+      rgba(0,0,0,0.01) 1px,
+      rgba(0,0,0,0.01) 2px
+    );
+  pointer-events: none;
+  z-index: 0;
 }
 
 
-/* 3. Title-bar & Menu (kept, but styled to match console rim) */
+/* 3. Title-bar — molded ridge on console top */
 .title-bar {
-  background: #d3cbb7;
-  border-bottom: 3px solid #4b463f;
-  padding: 4px 8px;
+  background:
+    linear-gradient(180deg,
+      #e0d8c4 0%,
+      #d3cbb7 30%,
+      #c8c0aa 100%);
+  border-bottom: 3px solid #5a5444;
+  padding: 5px 10px;
   display: flex;
   gap: 12px;
   align-items: center;
   position: relative;
   z-index: 2000;
-  border-radius: 10px 10px 4px 4px;
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.3);
+  border-radius: 14px 14px 4px 4px;
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,0.5),
+    inset 0 -2px 4px rgba(0,0,0,0.2),
+    0 2px 4px rgba(0,0,0,0.15);
+  border-top: 2px solid #ece5d3;
 }
+
 
 .menu-bar {
   display: flex;
@@ -67,26 +142,35 @@ body {
   font-weight: bold;
   cursor: pointer;
   position: relative;
+  color: #3a352e;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.45),
+    0 -1px 0 rgba(0,0,0,0.08);
+  letter-spacing: 0.3px;
 }
 
 .menu-bar span:hover {
   text-decoration: underline;
 }
 
-/* dropdowns still work; just recolor to match beige */
+/* dropdowns — 3D raised panel */
 .submenu {
   display: none;
   position: absolute;
   top: 22px;
   left: 0;
-  background-color: #f3ecda;
-  border: 2px solid #4b463f;
+  background:
+    linear-gradient(180deg, #f8f2e4 0%, #ede6d2 100%);
+  border: 2px solid;
+  border-color: #d8d0bc #7a7264 #5a5444 #9a9280;
   padding: 4px;
   flex-direction: column;
   gap: 4px;
   z-index: 999;
   border-radius: 6px;
-  box-shadow: 3px 3px 0 #000;
+  box-shadow:
+    3px 4px 8px rgba(0,0,0,0.4),
+    inset 0 1px 1px rgba(255,255,255,0.5);
 }
 
 .submenu span {
@@ -96,7 +180,9 @@ body {
 }
 
 .submenu span:hover {
-  background-color: #e0d8c8;
+  background:
+    linear-gradient(180deg, #e8e0cc 0%, #d8d0bc 100%);
+  border-radius: 3px;
 }
 
 #exportSubmenu {
@@ -124,50 +210,89 @@ body {
   font-size: 18px;
   cursor: pointer;
   user-select: none;
-  border-radius: 4px;
-  background: #f7f2e4;
-  border: 2px solid #000;
-  box-shadow: 2px 2px 0 #000;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, #faf6ec 0%, #e8e0cc 100%);
+  border: 2px solid;
+  border-color: #d0c8b4 #8a8270 #6a6250 #a8a090;
+  box-shadow:
+    1px 2px 3px rgba(0,0,0,0.35),
+    inset 0 1px 1px rgba(255,255,255,0.7);
+  transition: all 0.1s ease;
 }
 
 .reset-icon:hover {
-  background-color: #e0d8c8;
+  background:
+    linear-gradient(180deg, #f0e8d4 0%, #ddd5c0 100%);
+}
+
+.reset-icon:active {
+  background:
+    linear-gradient(180deg, #d5ceb8 0%, #e0d8c4 100%);
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.3);
+  border-color: #6a6250 #a8a090 #d0c8b4 #8a8270;
 }
 
 /* 4. Workspace Layout */
 .content {
   display: flex;
-  gap: 21px;
-  margin-top: 12px;
-	  margin-left: 10px;
-	  margin-right: 8px;
+  gap: 18px;
+  margin-top: 14px;
+  margin-left: 10px;
+  margin-right: 8px;
+  position: relative;
 }
 
-/* 4-A Left console panel / toolbar shell */
+/* Molding seam groove — horizontal parting line */
+.content::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: rgba(0,0,0,0.12);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+
+/* 4-A Left console panel — recessed 3D bay */
 .toolbar {
   width: 180px;
   border-right: none;
-  background: #ddd6c5;
+  background:
+    linear-gradient(180deg, #cac3b0 0%, #d8d1c0 40%, #cec7b4 100%);
   padding: 10px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-radius: 12px;
-  border: 3px solid #4b463f;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.4);
+  border-radius: 14px;
+  border: 3px solid;
+  border-color: #6a6250 #a09880 #c0b8a0 #7a7260;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,0.4),
+    inset 0 -1px 2px rgba(255,255,255,0.3),
+    inset 3px 0 6px rgba(0,0,0,0.15),
+    inset -2px 0 4px rgba(0,0,0,0.08),
+    0 1px 0 rgba(255,255,255,0.3);
 }
 
-/* 4-B Panel sections (Draw, Edit, Shape, Canvas) */
+/* 4-B Panel sections — raised sub-panels */
 .toolbar-section {
-  border-radius: 6px;
-  background: #f3ecda;
-  border: 1px solid #4b463f;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, #f5eeda 0%, #e8e0cc 100%);
+  border: 2px solid;
+  border-color: #e8e0cc #9a9280 #7a7260 #c0b8a0;
   padding: 8px;
   margin: 0;
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.5);
-  display: flex;                    /* NEW */
-  flex-direction: column;           /* NEW */
+  box-shadow:
+    1px 2px 3px rgba(0,0,0,0.25),
+    inset 0 1px 1px rgba(255,255,255,0.5);
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -178,11 +303,18 @@ body {
   font-size: 13px;
   font-weight: bold;
   text-align: left;
-  background: #3c3c3c;
-  color: #fff;
-  border-radius: 3px;
+  background:
+    linear-gradient(180deg, #4a4a4a 0%, #2c2c2c 100%);
+  color: #e8e0cc;
+  border-radius: 4px;
   padding: 3px 6px;
-  border: none;
+  border: 1px solid;
+  border-color: #5a5a5a #1a1a1a #0a0a0a #3a3a3a;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.15),
+    0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  letter-spacing: 0.5px;
 }
 
 .toolbar-section .icon-group {
@@ -196,12 +328,14 @@ body {
 
 /* Edit tools neon outline when active group is engaged - removed red highlight */
 
-/* 4-C Icon buttons – 3D beige console style */
+/* 4-C Icon buttons — physical 3D console buttons */
 .icon {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #000;
-  background: #fffdfa;
+  width: 34px;
+  height: 34px;
+  border: 2px solid;
+  border-color: #e8e0d0 #8a8270 #5a5444 #a8a090;
+  background:
+    linear-gradient(145deg, #fdfaf4 0%, #f0e8d4 40%, #e0d8c4 100%);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -210,9 +344,14 @@ body {
   user-select: none;
   font-weight: normal;
   position: relative;
-  border-radius: 6px;
-  box-shadow: 3px 3px 0 #000;
+  border-radius: 8px;
+  box-shadow:
+    2px 3px 5px rgba(0,0,0,0.4),
+    0 1px 2px rgba(0,0,0,0.2),
+    inset 0 1px 2px rgba(255,255,255,0.8),
+    inset 0 -1px 1px rgba(0,0,0,0.1);
   overflow: visible;
+  transition: all 0.08s ease;
 }
 
 .icon img {
@@ -223,7 +362,7 @@ body {
 
 /* Active icon: keep ON badge but allow rim tweak if desired */
 #iconFill.icon-active {
-  background-color: #d3d3d3;
+  background: linear-gradient(145deg, #d8d8d8 0%, #c0c0c0 100%);
   font-weight: bold;
 }
 
@@ -233,21 +372,26 @@ body {
   position: absolute;
   top: -8px;
   right: -8px;
-  background-color: #ff0;
+  background: radial-gradient(circle at 40% 35%, #ffff40, #e6d400);
   color: #000;
   font-size: 10px;
   font-weight: bold;
-  border: 1px solid #000;
+  border: 1px solid #8a8000;
   padding: 2px 4px;
   border-radius: 4px;
-  box-shadow: 2px 2px 0px #000;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.4), 0 0 6px rgba(255,230,0,0.4);
   z-index: 1555;
 }
 
-/* Pressed / active state 3D effect */
+/* Pressed / active state — button depresses into console */
 .icon:active {
-  box-shadow: inset 3px 3px 0 #000;
-  background: #e0d8c8;
+  box-shadow:
+    inset 2px 3px 5px rgba(0,0,0,0.4),
+    inset 0 1px 2px rgba(0,0,0,0.2);
+  background:
+    linear-gradient(145deg, #ddd5c0 0%, #e8e0cc 100%);
+  border-color: #5a5444 #a8a090 #e8e0d0 #8a8270;
+  transform: translateY(1px);
 }
 
 /* Keyboard focus */
@@ -291,6 +435,8 @@ body {
   font-size: 12px;
   text-align: center;
   display: block;
+  color: #2a2520;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
 }
 
 .shape-settings input[type="color"],
@@ -298,6 +444,12 @@ body {
   margin-top: 2px;
   width: 40px;
   min-width: 0;
+  border: 2px solid;
+  border-color: #6a6250 #a8a090 #c0b8a0 #7a7260;
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.25),
+    0 1px 0 rgba(255,255,255,0.3);
 }
 
 .window.ipad input[type="color"] {
@@ -305,29 +457,45 @@ body {
   padding: 0;
 }
 
-/* 5. Main Drawing Area – CRT-style screen */
+/* 5. Main Drawing Area — deep screen bay */
 .main-area {
   flex: 1;
   padding: 10px;
   display: flex;
   flex-direction: column;
-  align-items: center;              /* horizontal center */
-  justify-content: center;          /* vertical center */
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
-
-/* Screen bezel */
+/* Screen bezel — deep inset frame */
 .main-area::before {
   content: "";
-  display: block;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, #2a2520 0%, #3a352e 40%, #2a2520 100%);
+  box-shadow:
+    inset 0 3px 10px rgba(0,0,0,0.6),
+    inset 0 -2px 6px rgba(255,255,255,0.08),
+    inset 4px 0 8px rgba(0,0,0,0.3),
+    inset -4px 0 8px rgba(0,0,0,0.3);
+  border: 3px solid;
+  border-color: #1a1815 #4a4438 #5a5448 #2a2820;
+  z-index: 0;
+  pointer-events: none;
 }
 
-/* Screen wrapper look using the canvas itself + padding */
+/* Screen wrapper — CRT-style recessed display */
 #glCanvas {
   width: 500px;
   height: 500px;
-  border-radius: 6px;
-  border: 3px solid #000;
+  border-radius: 8px;
+  border: 3px solid #111;
   display: block;
   margin: 0 auto 8px;
   -webkit-user-select: none;
@@ -335,33 +503,52 @@ body {
   user-select: none;
   -webkit-user-drag: none;
   touch-action: none;
+  position: relative;
+  z-index: 1;
   box-shadow:
-    0 0 0 6px #4b463f
+    0 0 0 4px #2a2520,
+    0 0 0 7px #4a4438,
+    0 0 0 9px #1a1815,
+    inset 0 0 20px rgba(0,0,0,0.3),
+    0 0 15px rgba(0,0,0,0.4),
+    0 0 30px rgba(0,0,0,0.2),
+    0 0 40px rgba(80,120,200,0.08),
+    0 0 60px rgba(80,120,200,0.05);
 }
 
 
-/* 6. Bottom Slider Panel – console lower bay */
+/* 6. Bottom Slider Panel — 3D lower control bay */
 .bottom-panel {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  border-top: 4px solid #6b6558;
-  padding: 4px;
-  background: #d6cfbe;
+  border-top: none;
+  padding: 6px 8px;
+  background:
+    linear-gradient(180deg, #cac3b0 0%, #d5ceb8 30%, #cac3b0 100%);
   text-align: center;
-  border-radius: 12px;
-  margin-top: 18px;
-  box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+  border-radius: 14px;
+  margin-top: 16px;
+  border: 3px solid;
+  border-color: #6a6250 #a09880 #c0b8a0 #7a7260;
+  box-shadow:
+    inset 0 3px 8px rgba(0,0,0,0.35),
+    inset 0 -1px 2px rgba(255,255,255,0.3),
+    inset 3px 0 5px rgba(0,0,0,0.1),
+    inset -2px 0 4px rgba(0,0,0,0.08),
+    0 1px 0 rgba(255,255,255,0.3);
 }
 
-/* Drum Pad Styles */
+/* Drum Pad Styles — 3D rubber pads */
 .drum-pad {
   width: 120px;
   height: 120px;
-  border-radius: 12px;
-  border: 3px solid #000;
-  background: #f7f2e4;
+  border-radius: 14px;
+  border: 2px solid;
+  border-color: #e8e0d0 #7a7264 #5a5444 #a0988a;
+  background:
+    linear-gradient(145deg, #faf6ec 0%, #e8e0cc 50%, #d8d0bc 100%);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -370,18 +557,29 @@ body {
   font-size: 18px;
   user-select: none;
   position: relative;
-  box-shadow: 4px 4px 0 #000;
-  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow:
+    3px 4px 8px rgba(0,0,0,0.35),
+    1px 2px 3px rgba(0,0,0,0.2),
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -1px 2px rgba(0,0,0,0.1);
+  transition: all 0.1s ease;
 }
 
 .drum-pad:hover {
-  transform: translateY(-2px);
-  box-shadow: 6px 6px 0 #000;
+  transform: translateY(-1px);
+  box-shadow:
+    4px 5px 10px rgba(0,0,0,0.4),
+    2px 3px 4px rgba(0,0,0,0.2),
+    inset 0 2px 3px rgba(255,255,255,0.6),
+    inset 0 -1px 2px rgba(0,0,0,0.1);
 }
 
 .drum-pad:active {
   transform: translateY(2px);
-  box-shadow: 2px 2px 0 #000;
+  box-shadow:
+    inset 2px 3px 6px rgba(0,0,0,0.35),
+    inset 0 1px 2px rgba(0,0,0,0.2);
+  border-color: #5a5444 #a0988a #e8e0d0 #7a7264;
 }
 
 .drum-pad.active {
@@ -407,15 +605,17 @@ body {
   margin: 8px 0;
 }
 
-/* labels */
+/* labels — embossed console labels */
 #sliders label {
   width: 250px;
   text-align: center;
   margin-right: 8px;
-	color: #1a1a1a;
-font-weight: 700;
-letter-spacing: 0.7px;
--webkit-text-stroke: 0.4px #000;
+  color: #2a2520;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.4),
+    0 -1px 0 rgba(0,0,0,0.1);
 }
 
 #sliders label span {
@@ -424,36 +624,52 @@ letter-spacing: 0.7px;
   vertical-align: middle;
 }
 
-/* range track + thumb: 3D hardware slider */
+/* range track + thumb: physical fader grooves */
 input[type="range"] {
   -webkit-appearance: none;
   width: 300px;
-  background: #efe7d4;
-  border: 3px solid #000;
-  height: 16px;
-  border-radius: 4px;
+  height: 12px;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, #b8b0a0 0%, #d0c8b8 50%, #c0b8a8 100%);
+  border: 2px solid;
+  border-color: #6a6250 #a8a090 #c0b8a0 #7a7260;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.35),
+    inset 0 -1px 1px rgba(255,255,255,0.3),
+    0 1px 0 rgba(255,255,255,0.2);
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 22px;
+  width: 20px;
   height: 28px;
-  background: #b0a999;
-  border: 3px solid #000;
+  background:
+    linear-gradient(180deg, #7a7268 0%, #5a5448 50%, #4a4238 100%);
+  border: 2px solid;
+  border-color: #8a8278 #3a3630 #2a2620 #5a5448;
   border-radius: 4px;
   cursor: pointer;
-  margin-top: -8px;
-  box-shadow: 3px 3px 0 #000;
+  margin-top: -10px;
+  box-shadow:
+    1px 2px 4px rgba(0,0,0,0.45),
+    inset 0 1px 1px rgba(255,255,255,0.2),
+    inset 0 -1px 1px rgba(0,0,0,0.2);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
+  width: 18px;
   height: 26px;
-  background: #b0a999;
-  border: 3px solid #000;
+  background:
+    linear-gradient(180deg, #7a7268 0%, #5a5448 50%, #4a4238 100%);
+  border: 2px solid;
+  border-color: #8a8278 #3a3630 #2a2620 #5a5448;
   border-radius: 4px;
   cursor: pointer;
-  box-shadow: 3px 3px 0 #000;
+  box-shadow:
+    1px 2px 4px rgba(0,0,0,0.45),
+    inset 0 1px 1px rgba(255,255,255,0.2),
+    inset 0 -1px 1px rgba(0,0,0,0.2);
 }
 
 /* 7. Dialogs & Modals (desktop look, keep behavior) */
@@ -471,24 +687,42 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .dialog-content {
-  background-color: #f3ecda;
-  border: 3px solid #4b463f;
+  background:
+    linear-gradient(180deg, #f5eeda 0%, #e8e0cc 100%);
+  border: 3px solid;
+  border-color: #d0c8b8 #6a6250 #4a4238 #8a8270;
   padding: 16px;
   min-width: 200px;
   text-align: center;
-  box-shadow: 4px 4px 0px #000;
+  box-shadow:
+    4px 6px 16px rgba(0,0,0,0.45),
+    1px 2px 4px rgba(0,0,0,0.25),
+    inset 0 1px 2px rgba(255,255,255,0.5);
   font-family: "Courier New", monospace;
-  border-radius: 8px;
+  border-radius: 10px;
 }
 
 .dialog-content button {
   margin-top: 12px;
   font-family: inherit;
   cursor: pointer;
-  border-radius: 4px;
-  border: 2px solid #000;
-  background: #f7f2e4;
-  box-shadow: 2px 2px 0 #000;
+  border-radius: 6px;
+  border: 2px solid;
+  border-color: #d0c8b4 #7a7264 #5a5444 #a0988a;
+  background:
+    linear-gradient(180deg, #faf6ec 0%, #e0d8c4 100%);
+  box-shadow:
+    1px 2px 3px rgba(0,0,0,0.3),
+    inset 0 1px 1px rgba(255,255,255,0.5);
+  transition: all 0.1s ease;
+}
+
+.dialog-content button:active {
+  background:
+    linear-gradient(180deg, #d5ceb8 0%, #e0d8c4 100%);
+  box-shadow:
+    inset 1px 2px 3px rgba(0,0,0,0.3);
+  border-color: #5a5444 #a0988a #d0c8b4 #7a7264;
 }
 
 /* Appearance Dialog Styles */
@@ -563,10 +797,13 @@ input[type="range"]::-moz-range-thumb {
 }
 
 #appearancePreviewCanvas {
-  border: 2px solid #4b463f;
+  border: 2px solid;
+  border-color: #6a6250 #a8a090 #c0b8a0 #7a7260;
   border-radius: 4px;
   background: #fff;
-  box-shadow: 2px 2px 0 #000;
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.2),
+    1px 2px 4px rgba(0,0,0,0.2);
 }
 
 .appearance-dialog-buttons {
@@ -611,12 +848,18 @@ input[type="range"]::-moz-range-thumb {
   font-family: "Courier New", monospace;
   font-size: 18px;
   font-weight: bold;
-  color: #000;
-  background-color: #d3cbb7;
-  padding: 8px 12px;
-  border: 2px solid #000;
-  box-shadow: 4px 4px 0px #000;
+  color: #1a1612;
+  background:
+    linear-gradient(180deg, #e8e0cc 0%, #d3cbb7 100%);
+  padding: 8px 14px;
+  border: 2px solid;
+  border-color: #d8d0bc #7a7264 #5a5444 #a0988a;
+  box-shadow:
+    2px 3px 6px rgba(0,0,0,0.4),
+    inset 0 1px 1px rgba(255,255,255,0.5);
+  border-radius: 6px;
   user-select: none;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.4);
 }
 
 /* 9. Help Icon & Tooltip */
@@ -637,15 +880,19 @@ input[type="range"]::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: #d3cbb7;
-  border: 1px solid #000;
-  color: #000;
+  background:
+    radial-gradient(circle at 40% 35%, #e8e0d0, #c0b8a4);
+  border: 1px solid #6a6250;
+  color: #2a2520;
   font-size: 12px;
   font-weight: bold;
   text-align: center;
   line-height: 20px;
   cursor: help;
   user-select: none;
+  box-shadow:
+    1px 1px 2px rgba(0,0,0,0.3),
+    inset 0 1px 1px rgba(255,255,255,0.5);
 }
 
 .help-tooltip {
@@ -654,12 +901,17 @@ input[type="range"]::-moz-range-thumb {
   bottom: 20px;
   left: 0;
   min-width: 120px;
-  background-color: #f3ecda;
-  color: #000;
-  border: 1px solid #000;
-  padding: 4px;
+  background:
+    linear-gradient(180deg, #f8f2e4 0%, #ede6d2 100%);
+  color: #1a1612;
+  border: 2px solid;
+  border-color: #d0c8b8 #7a7264 #5a5444 #a0988a;
+  padding: 4px 6px;
   font-size: 12px;
-  box-shadow: 4px 4px 0 #000;
+  box-shadow:
+    2px 3px 8px rgba(0,0,0,0.4),
+    inset 0 1px 1px rgba(255,255,255,0.5);
+  border-radius: 4px;
   z-index: 999999;
 }
 
@@ -744,14 +996,18 @@ canvas {
 
 .toast {
   font: 14px "Courier New", monospace;
-  background: #000;
-  color: #fff;
+  background:
+    linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+  color: #e8e0cc;
   padding: 6px 10px;
   border-radius: 6px;
   opacity: 0;
   transform: translateY(-8px);
   transition: opacity .2s, transform .2s;
-  box-shadow: 2px 2px 0 #000;
+  border: 1px solid #4a4a4a;
+  box-shadow:
+    2px 3px 8px rgba(0,0,0,0.5),
+    inset 0 1px 1px rgba(255,255,255,0.1);
 }
 
 .toast.show {
@@ -773,12 +1029,16 @@ canvas {
   z-index: 3001;
   max-width: 320px;
   font: 13px "Courier New", monospace;
-  background: #f3ecda;
-  color: #000;
-  border: 2px solid #000;
-  border-radius: 6px;
+  background:
+    linear-gradient(180deg, #f5eeda 0%, #e8e0cc 100%);
+  color: #1a1612;
+  border: 2px solid;
+  border-color: #d0c8b8 #7a7264 #5a5444 #a0988a;
+  border-radius: 8px;
   padding: 10px 12px;
-  box-shadow: 4px 4px 0 #000;
+  box-shadow:
+    3px 4px 10px rgba(0,0,0,0.4),
+    inset 0 1px 1px rgba(255,255,255,0.5);
 }
 
 #tourCtrls {
@@ -810,19 +1070,28 @@ canvas {
 .preset-card {
   aspect-ratio: 1/1;
   background: #fafafa;
-  border: 2px solid #000;
-  box-shadow: 3px 3px 0 #000;
+  border: 2px solid;
+  border-color: #d0c8b8 #7a7264 #5a5444 #a0988a;
+  box-shadow:
+    2px 3px 6px rgba(0,0,0,0.35),
+    inset 0 1px 1px rgba(255,255,255,0.4);
   position: relative;
   transition: transform .15s, box-shadow .15s;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 .preset-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 5px 5px 0 #000;
+  transform: translateY(-2px);
+  box-shadow:
+    3px 5px 10px rgba(0,0,0,0.4),
+    inset 0 1px 1px rgba(255,255,255,0.4);
 }
 
 .preset-card:active {
-  transform: translateY(0);
+  transform: translateY(1px);
+  box-shadow:
+    1px 1px 3px rgba(0,0,0,0.3);
 }
 
 .preset-card img,
@@ -858,6 +1127,22 @@ canvas {
   transform: none;
 }
 
+/* ---------- 3D Console Accent Details ---------- */
+
+/* Subtle parting line / mold seam around the console */
+.content {
+  position: relative;
+}
+
+/* (vent grille removed) */
+
+/* (brand emboss removed) */
+
+/* Smooth hover lift for entire console */
+.window {
+  transition: transform 0.3s ease;
+}
+
 /* ---------- Fullscreen Mode Styles ---------- */
 body.fullscreen-mode {
   padding: 0;
@@ -877,6 +1162,34 @@ body.fullscreen-mode .window {
   background: #1a1a1a;
   display: flex;
   flex-direction: column;
+  transform: none;
+}
+
+body.fullscreen-mode .window::before,
+body.fullscreen-mode .window::after {
+  display: none;
+}
+
+body.fullscreen-mode .main-area::before {
+  display: none;
+}
+
+body.fullscreen-mode .toolbar::after,
+body.fullscreen-mode .bottom-panel::after {
+  display: none;
+}
+
+body.fullscreen-mode .title-bar::after {
+  display: none;
+}
+
+body.fullscreen-mode .content::before {
+  display: none;
+}
+
+body.fullscreen-mode {
+  perspective: none;
+  background: #1a1a1a;
 }
 
 body.fullscreen-mode .title-bar {
@@ -1149,7 +1462,7 @@ body.fullscreen-mode .menu-bar:hover {
 /* Fullscreen icon active state */
 #fullscreenIcon.active {
   background-color: #3b82f6;
-  color: white;
+  color: #000;
   border-color: #3b82f6;
 }
 
@@ -1162,9 +1475,13 @@ body.fullscreen-mode .menu-bar:hover {
   transform: scale(0.92);
 }
 #sfxToggle.sfx-on {
-  background-color: #d4edda;
+  background:
+    linear-gradient(180deg, #d4edda 0%, #b8dcc2 100%);
   border-color: #28a745;
-  box-shadow: 2px 2px 0 #000, inset 0 0 6px rgba(40, 167, 69, 0.25);
+  box-shadow:
+    1px 2px 4px rgba(0,0,0,0.3),
+    inset 0 1px 2px rgba(255,255,255,0.5),
+    0 0 8px rgba(40, 167, 69, 0.25);
 }
 
 /* ---------- Dark Canvas – slider track & text overrides ---------- */
@@ -1726,6 +2043,7 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					margin: 0;
 					padding: 0;
 					background: var(--bg);
+					perspective: none;
 					color: var(--text);
 					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 				}
@@ -2399,6 +2717,29 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					inset: 0;
 					overflow: hidden;
 					display: block;
+					transform: none;
+				}
+
+				.window.ipad::before,
+				.window.ipad::after {
+					display: none;
+				}
+
+				.window.ipad .main-area::before {
+					display: none;
+				}
+
+				.window.ipad .toolbar::after,
+				.window.ipad .bottom-panel::after {
+					display: none;
+				}
+
+				.window.ipad .title-bar::after {
+					display: none;
+				}
+
+				.window.ipad .content::before {
+					display: none;
 				}
 
 				/* Title bar on iPad - compact floating style */
