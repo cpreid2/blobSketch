@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>blobSketch version 1.5</title>
+	<title>blobSketch version 1.6</title>
 
 	<!-- Prevent FOUC (Flash of Unstyled Content) -->
 	<style>
@@ -263,11 +263,11 @@ body {
   border-right: none;
   background:
     linear-gradient(180deg, #cac3b0 0%, #d8d1c0 40%, #cec7b4 100%);
-  padding: 10px;
+  padding: 9px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 9px;
   border-radius: 14px;
   border: 3px solid;
   border-color: #6a6250 #a09880 #c0b8a0 #7a7260;
@@ -286,7 +286,7 @@ body {
     linear-gradient(180deg, #f5eeda 0%, #e8e0cc 100%);
   border: 2px solid;
   border-color: #e8e0cc #9a9280 #7a7260 #c0b8a0;
-  padding: 8px;
+  padding: 7px;
   margin: 0;
   box-shadow:
     1px 2px 3px rgba(0,0,0,0.25),
@@ -299,7 +299,7 @@ body {
 
 
 .toolbar-section h4 {
-  margin: 0 0 4px;
+  margin: 0 0 3.5px;
   font-size: 13px;
   font-weight: bold;
   text-align: left;
@@ -307,7 +307,7 @@ body {
     linear-gradient(180deg, #4a4a4a 0%, #2c2c2c 100%);
   color: #e8e0cc;
   border-radius: 4px;
-  padding: 3px 6px;
+  padding: 2.5px 6px;
   border: 1px solid;
   border-color: #5a5a5a #1a1a1a #0a0a0a #3a3a3a;
   box-shadow:
@@ -320,7 +320,7 @@ body {
 .toolbar-section .icon-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 9px;
   justify-content: center;          /* NEW: center horizontally */
   align-items: center;              /* NEW: center vertically in the section */
   flex: 1;                          /* take remaining height so centering is obvious */
@@ -427,7 +427,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3.5px;
 }
 
 .shape-settings label {
@@ -3299,6 +3299,9 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 						<div class="icon" id="iconDelete" data-label="Delete (X)">
 							<img src="images/delete.png" alt="Delete">
 						</div>
+						<div class="icon" id="iconConnect" data-label="Link (C)">
+							<span style="font-size:18px; line-height:1; pointer-events:none;">🔗</span>
+						</div>
 					</div>
 				</div>
 
@@ -3467,6 +3470,65 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			</div>
 		</div>
 
+	<!-- ░ LINK / CONNECT TOOL DIALOG ░ -->
+	<div class="dialog-backdrop" id="connectDialogBackdrop">
+		<div class="dialog-content">
+			<h3>Link Tool</h3>
+			<p style="margin: 12px 0;">Choose mode:</p>
+			<div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
+				<button id="connectModeBtn" style="padding: 10px 20px; font-size: 14px; background: rgba(76, 175, 80, 0.3);">Connect</button>
+				<button id="disconnectModeBtn" style="padding: 10px 20px; font-size: 14px; background: rgba(220, 53, 69, 0.3);">Disconnect</button>
+			</div>
+			<div style="margin-top: 16px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+				<span style="font-size: 12px; opacity: 0.7;">Algorithm:</span>
+				<select id="connectAlgoToggle" style="padding: 6px 10px; font-size: 12px; min-width: 140px; background: linear-gradient(180deg,#fbf5e2 0%,#ece4cf 100%); color: #2a241a; border: 2px solid; border-color: #d0c8b8 #6a6250 #4a4238 #8a8270; border-radius: 4px; font-family: inherit; cursor: pointer;">
+					<option value="neuron">Neuron</option>
+					<option value="delaunay">Delaunay</option>
+					<option value="knn">KNN</option>
+					<option value="colonize">Colonize</option>
+				</select>
+			</div>
+			<p id="connectAlgoDesc" style="font-size: 11px; opacity: 0.5; margin: 6px 0 0;">Click a particle to set the soma, or lasso particles to auto-create the soma</p>
+			<div id="knnKRow" style="margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+				<span style="font-size: 12px; opacity: 0.7;">K neighbors:</span>
+				<input type="range" id="knnKSlider" min="2" max="5" step="1" value="3" style="width: 80px;">
+				<span id="knnKValue" style="font-size: 12px; min-width: 16px;">3</span>
+			</div>
+			<div id="colonizeReachRow" style="margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px;">
+				<span style="font-size: 12px; opacity: 0.7;">Reach:</span>
+				<input type="range" id="colonizeReachSlider" min="1.5" max="5" step="0.5" value="2.5" style="width: 80px;">
+				<span id="colonizeReachValue" style="font-size: 12px; min-width: 24px;">2.5x</span>
+			</div>
+			<div id="colonizeBranchRow" style="margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px;">
+				<span style="font-size: 12px; opacity: 0.7;">Branching:</span>
+				<input type="range" id="colonizeBranchSlider" min="1" max="3" step="1" value="1" style="width: 80px;">
+				<span id="colonizeBranchValue" style="font-size: 12px; min-width: 16px;">1</span>
+			</div>
+			<div id="neuronSomaRow" style="margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px;">
+				<span style="font-size: 12px; opacity: 0.7;">Soma density:</span>
+				<input type="range" id="neuronSomaSlider" min="0.4" max="1" step="0.05" value="0.75" style="width: 80px;">
+				<span id="neuronSomaValue" style="font-size: 12px; min-width: 30px;">0.75</span>
+			</div>
+			<div id="neuronDendriteRow" style="margin-top: 10px; display: none; align-items: center; justify-content: center; gap: 10px;">
+				<span style="font-size: 12px; opacity: 0.7;">Dendrite spread:</span>
+				<input type="range" id="neuronDendriteSlider" min="1.1" max="2.5" step="0.05" value="1.4" style="width: 80px;">
+				<span id="neuronDendriteValue" style="font-size: 12px; min-width: 30px;">1.4</span>
+			</div>
+			<div id="neuronBalanceRow" style="margin-top: 10px; display: none; flex-direction: column; align-items: stretch; gap: 4px; padding: 0 12px;">
+				<div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+					<span style="font-size: 12px; opacity: 0.7;">Balance:</span>
+					<input type="range" id="neuronBalanceSlider" min="0" max="1" step="0.05" value="0.4" style="width: 120px;">
+					<span id="neuronBalanceValue" style="font-size: 12px; min-width: 30px;">0.40</span>
+				</div>
+				<div style="display: flex; justify-content: space-between; font-size: 10px; opacity: 0.55;">
+					<span>Wire (bushy)</span>
+					<span>Path (star)</span>
+				</div>
+			</div>
+			<button id="connectDialogCancelBtn" style="margin-top: 12px; padding: 8px 16px; font-size: 12px;">Cancel</button>
+		</div>
+	</div>
+
 		<!-- ░ ATTRACTOR/REPULSOR TYPE DIALOG ░ -->
 		<div class="dialog-backdrop" id="attractorRepulsorBackdrop">
 			<div class="dialog-content">
@@ -3614,7 +3676,7 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 		<!-- Modals/Dialogs: About and Help -->
 		<div class="dialog-backdrop" id="aboutBackdrop">
 			<div class="dialog-content">
-				<p>blobSketch version 1.5</p>
+				<p>blobSketch version 1.6</p>
 				<p>by Colin Reid</p>
 				<button id="closeAbout">OK</button>
 			</div>
@@ -3664,8 +3726,8 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 							</div>
 
 							<div class="appearance-control-group" id="appearanceOutlineWidthGroup" style="margin-top: 12px;">
-								<label for="appearanceOutlineWidth" style="font-size: 12px; color: #666;">Width: <span id="appearanceOutlineWidthValue">4</span></label>
-								<input type="range" id="appearanceOutlineWidth" min="1" max="10" value="4" step="1">
+								<label for="appearanceOutlineWidth" style="font-size: 12px; color: #666;">Width: <span id="appearanceOutlineWidthValue">2</span></label>
+								<input type="range" id="appearanceOutlineWidth" min="1" max="10" value="2" step="1">
 							</div>
 						</div>
 
@@ -5773,6 +5835,11 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					freezeLassoPath = [{ x, y }];
 					return; // stop further handling
 				}
+				if (connectMode) {
+					connectLassoActive = true;
+					connectLassoPath = [{ x, y }];
+					return;
+				}
 				if (deleteMode) {
 					// Start lasso selection for delete mode
 					deleteLassoActive = true;
@@ -6029,6 +6096,14 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					}
 				}
 
+				// Connect lasso: add points to the lasso path
+				if (connectMode && connectLassoActive) {
+					const last = connectLassoPath[connectLassoPath.length - 1];
+					if (Math.hypot(x - last.x, y - last.y) > 3) {
+						connectLassoPath.push({ x, y });
+					}
+				}
+
 				// pin/drag hover highlight
 				if ((pinMode || dragMode) && (e.movementX || e.movementY)) {
 					pinHoverChainIndex = null;
@@ -6141,6 +6216,84 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					}
 					freezeLassoActive = false;
 					freezeLassoPath = [];
+				}
+
+				// ── Connect lasso finalization ──
+				if (connectMode && connectLassoActive) {
+					// Neuron / Colonize + Connect: tap a particle (no drag) → that vertex
+					// becomes the soma (Neuron) or seed (Colonize) and the algorithm grows
+					// through every particle on the canvas. Detected as a near-zero-movement
+					// click before any other branch claims it.
+					let tapHandled = false;
+					const tapEligible = connectLinkSubMode === "connect" &&
+						(connectAlgorithm === "neuron" || connectAlgorithm === "colonize");
+					if (tapEligible && connectLassoPath.length >= 1) {
+						const p0 = connectLassoPath[0];
+						const pN = connectLassoPath[connectLassoPath.length - 1];
+						const drag = Math.hypot(pN.x - p0.x, pN.y - p0.y);
+						if (drag < 8 && connectLassoPath.length < 4) {
+							let tappedIdx = -1;
+							let bestDist = Infinity;
+							for (let i = 0; i < chains.length; i++) {
+								const c = chains[i];
+								if (!c.isParticle || !c.chain || c.chain.length !== 1) continue;
+								const dot = c.chain[0];
+								const r = (c.baseDotRadius || 4) * dotScaleFactor;
+								const pickR = Math.max(r + 10, 18);
+								const d = Math.hypot(p0.x - dot.x, p0.y - dot.y);
+								if (d < pickR && d < bestDist) {
+									bestDist = d;
+									tappedIdx = i;
+								}
+							}
+							if (tappedIdx >= 0) {
+								const allParticleIdx = [];
+								for (let i = 0; i < chains.length; i++) {
+									const c = chains[i];
+									if (c.isParticle && c.chain && c.chain.length === 1) allParticleIdx.push(i);
+								}
+								if (allParticleIdx.length < 2) {
+									toast("Need at least 2 particles on the canvas", 1800);
+								} else if (connectAlgorithm === "neuron") {
+									performLassoConnect(null, p0, {
+										particleIndicesOverride: allParticleIdx,
+										somaChainIdx: tappedIdx,
+									});
+									toast("Neuron grown from your chosen soma", 1500);
+								} else {
+									// Colonize: lassoOrigin steers seed selection to the
+									// closest particle, which is exactly the tapped one.
+									const tapped = chains[tappedIdx].chain[0];
+									performLassoConnect(null, { x: tapped.x, y: tapped.y }, {
+										particleIndicesOverride: allParticleIdx,
+									});
+									toast("Tree grown from your chosen seed", 1500);
+								}
+								tapHandled = true;
+							}
+						}
+					}
+
+					if (tapHandled) {
+						// no-op — handled above
+					} else if (connectLassoPath.length >= 4) {
+						if (connectLinkSubMode === "disconnect") {
+							performLassoDisconnect(connectLassoPath);
+						} else {
+							const lassoOrigin = connectLassoPath[0];
+							performLassoConnect(connectLassoPath, lassoOrigin);
+						}
+					} else {
+						toast(connectLinkSubMode === "disconnect"
+							? "Draw a lasso around graph nodes to disconnect them"
+							: connectAlgorithm === "neuron"
+								? "Click a particle to set the soma, or lasso particles to auto-create the soma"
+								: connectAlgorithm === "colonize"
+									? "Click a particle to set the seed, or lasso particles to auto-pick the seed"
+									: "Draw a lasso around particles to link them", 1800);
+					}
+					connectLassoActive = false;
+					connectLassoPath = [];
 				}
 
 				if (longPressTimer) {
@@ -6354,6 +6507,10 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				for (let i = 0; i < chains.length; i++) {
 					const chainObj = chains[i];
 					if (!chainObj || !chainObj.chain) continue;
+					// Linked-particle graphs (neuron / KNN / Delaunay / colonize meshes) are
+					// not convertible to attractor/repulsor — their .chain is a vertex set,
+					// not an ordered path, so the conversion would produce nonsense geometry.
+					if (chainObj.isGraph) continue;
 					const ch = chainObj.chain;
 					if (ch.length < 2) continue;
 
@@ -6429,6 +6586,8 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				deleteLassoPath = [];
 				freezeLassoActive = false;
 				freezeLassoPath = [];
+				connectLassoActive = false;
+				connectLassoPath = [];
 			});
 
 			/* ── Single-click delete (original behavior) ── */
@@ -6532,9 +6691,88 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 					}
 				}
 
-				// Delete chains (blobs, lines, particles) if any vertex is inside the lasso
+				// Delete chains (blobs, lines, particles) — for graphs, remove individual vertices
 				for (let k = chains.length - 1; k >= 0; k--) {
 					const obj = chains[k];
+
+					if (obj.isGraph && obj.connections) {
+						const ch = obj.chain;
+						const inside = new Uint8Array(ch.length);
+						let insideCount = 0;
+						for (let vi = 0; vi < ch.length; vi++) {
+							if (pointInPolygon(ch[vi].x, ch[vi].y, lasso)) {
+								inside[vi] = 1;
+								insideCount++;
+							}
+						}
+						if (insideCount === 0) continue;
+
+						if (insideCount === ch.length) {
+							chains.splice(k, 1);
+							deletedAny = true;
+							continue;
+						}
+
+						let oldToNew = new Int32Array(ch.length).fill(-1);
+						let newIdx = 0;
+						for (let vi = 0; vi < ch.length; vi++) {
+							if (!inside[vi]) oldToNew[vi] = newIdx++;
+						}
+
+						let newConns = [];
+						for (const edge of obj.connections) {
+							const na = oldToNew[edge[0]], nb = oldToNew[edge[1]];
+							if (na >= 0 && nb >= 0) newConns.push([na, nb, edge[2]]);
+						}
+
+						const remaining = newIdx;
+						const degree = new Uint16Array(remaining);
+						for (const edge of newConns) {
+							degree[edge[0]]++;
+							degree[edge[1]]++;
+						}
+						const keepMap = new Int32Array(remaining).fill(-1);
+						let finalIdx = 0;
+						for (let i = 0; i < remaining; i++) {
+							if (degree[i] > 0) keepMap[i] = finalIdx++;
+						}
+
+						const finalConns = [];
+						for (const edge of newConns) {
+							const fa = keepMap[edge[0]], fb = keepMap[edge[1]];
+							if (fa >= 0 && fb >= 0) finalConns.push([fa, fb, edge[2]]);
+						}
+
+						const newChainArr = [];
+						let finalMap = new Int32Array(ch.length).fill(-1);
+						for (let vi = 0; vi < ch.length; vi++) {
+							const mid = oldToNew[vi];
+							if (mid >= 0 && keepMap[mid] >= 0) {
+								finalMap[vi] = keepMap[mid];
+								newChainArr[keepMap[mid]] = ch[vi];
+							}
+						}
+
+						let newTris = [];
+						if (obj.triangles) {
+							for (const tri of obj.triangles) {
+								const a = finalMap[tri[0]], b = finalMap[tri[1]], c = finalMap[tri[2]];
+								if (a >= 0 && b >= 0 && c >= 0) newTris.push([a, b, c]);
+							}
+						}
+
+						if (newChainArr.length < 2 || finalConns.length === 0) {
+							chains.splice(k, 1);
+						} else {
+							obj.chain = newChainArr;
+							obj.connections = finalConns;
+							obj.triangles = newTris;
+							obj.edgeThickness = null;
+						}
+						deletedAny = true;
+						continue;
+					}
+
 					const inside = obj.chain.some(p => pointInPolygon(p.x, p.y, lasso));
 					if (inside) {
 						chains.splice(k, 1);
@@ -6600,6 +6838,936 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				}
 				if (count > 0) {
 					toast(`Toggled freeze on ${count} object${count > 1 ? 's' : ''}`, 1500);
+				}
+			}
+
+			/* ── Lasso connect: merge particles into a graph with elastic edges ── */
+			// Bowyer-Watson Delaunay triangulation
+			function delaunayTriangulate(pts) {
+				const n = pts.length;
+				if (n < 2) return { edges: [], tris: [] };
+
+				// Super-triangle that encloses all points
+				let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+				for (let i = 0; i < n; i++) {
+					if (pts[i].x < minX) minX = pts[i].x;
+					if (pts[i].y < minY) minY = pts[i].y;
+					if (pts[i].x > maxX) maxX = pts[i].x;
+					if (pts[i].y > maxY) maxY = pts[i].y;
+				}
+				const dx = maxX - minX, dy = maxY - minY;
+				const dmax = Math.max(dx, dy, 1);
+				const midX = (minX + maxX) * 0.5, midY = (minY + maxY) * 0.5;
+
+				const p0 = { x: midX - 20 * dmax, y: midY - dmax };
+				const p1 = { x: midX, y: midY + 20 * dmax };
+				const p2 = { x: midX + 20 * dmax, y: midY - dmax };
+				const s0 = n, s1 = n + 1, s2 = n + 2;
+				const allPts = pts.slice();
+				allPts.push(p0, p1, p2);
+
+				let triangles = [{ a: s0, b: s1, c: s2 }];
+
+				function circumCircleContains(tri, px, py) {
+					const ax = allPts[tri.a].x, ay = allPts[tri.a].y;
+					const bx = allPts[tri.b].x, by = allPts[tri.b].y;
+					const cx = allPts[tri.c].x, cy = allPts[tri.c].y;
+					const D = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+					if (Math.abs(D) < 1e-10) return false;
+					const ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / D;
+					const uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / D;
+					const r2 = (ax - ux) * (ax - ux) + (ay - uy) * (ay - uy);
+					return (px - ux) * (px - ux) + (py - uy) * (py - uy) <= r2;
+				}
+
+				for (let i = 0; i < n; i++) {
+					const px = pts[i].x, py = pts[i].y;
+					const bad = [];
+					for (let t = 0; t < triangles.length; t++) {
+						if (circumCircleContains(triangles[t], px, py)) bad.push(t);
+					}
+
+					const edgeCount = new Map();
+					const edgeKey = (a, b) => Math.min(a, b) + "," + Math.max(a, b);
+					for (const t of bad) {
+						const tri = triangles[t];
+						const edges = [[tri.a, tri.b], [tri.b, tri.c], [tri.c, tri.a]];
+						for (const e of edges) {
+							const k = edgeKey(e[0], e[1]);
+							edgeCount.set(k, (edgeCount.get(k) || 0) + 1);
+						}
+					}
+					const boundary = [];
+					for (const t of bad) {
+						const tri = triangles[t];
+						const edges = [[tri.a, tri.b], [tri.b, tri.c], [tri.c, tri.a]];
+						for (const e of edges) {
+							if (edgeCount.get(edgeKey(e[0], e[1])) === 1) {
+								boundary.push(e);
+							}
+						}
+					}
+
+					bad.sort((a, b) => b - a);
+					for (const t of bad) triangles.splice(t, 1);
+
+					for (const e of boundary) {
+						triangles.push({ a: e[0], b: e[1], c: i });
+					}
+				}
+
+				triangles = triangles.filter(t => t.a < n && t.b < n && t.c < n);
+
+				const edgeSet = new Set();
+				const edges = [];
+				const tris = [];
+				for (const t of triangles) {
+					tris.push([t.a, t.b, t.c]);
+					const pairs = [[t.a, t.b], [t.b, t.c], [t.c, t.a]];
+					for (const [a, b] of pairs) {
+						const lo = Math.min(a, b), hi = Math.max(a, b);
+						const key = lo * 100000 + hi;
+						if (!edgeSet.has(key)) {
+							edgeSet.add(key);
+							edges.push([lo, hi]);
+						}
+					}
+				}
+				return { edges, tris };
+			}
+
+			function densifyGraphConnections(graphHits) {
+				let totalAdded = 0;
+
+				for (const hit of graphHits) {
+					const obj = chains[hit.chainIndex];
+					const ch = obj.chain;
+					const n = ch.length;
+
+					const existingSet = new Set();
+					for (const edge of obj.connections) {
+						const lo = Math.min(edge[0], edge[1]);
+						const hi = Math.max(edge[0], edge[1]);
+						existingSet.add(lo * 100000 + hi);
+					}
+
+					const K = Math.min(connectKnnK + 1, n - 1);
+					const newEdges = [];
+
+					for (const i of hit.insideVerts) {
+						const sorted = [];
+						for (let j = 0; j < n; j++) {
+							if (j === i) continue;
+							sorted.push({ j, d: Math.hypot(ch[i].x - ch[j].x, ch[i].y - ch[j].y) });
+						}
+						sorted.sort((a, b) => a.d - b.d);
+
+						for (let k = 0; k < K; k++) {
+							const j = sorted[k].j;
+							const lo = Math.min(i, j), hi = Math.max(i, j);
+							const key = lo * 100000 + hi;
+							if (!existingSet.has(key)) {
+								existingSet.add(key);
+								const d = sorted[k].d;
+								newEdges.push([i, j, d]);
+							}
+						}
+					}
+
+					if (newEdges.length > 0) {
+						obj.connections.push(...newEdges);
+						totalAdded += newEdges.length;
+
+						if (n >= 3) {
+							const delResult = delaunayTriangulate(ch);
+							let nnSum = 0;
+							for (let i = 0; i < n; i++) {
+								let minD = Infinity;
+								for (let j = 0; j < n; j++) {
+									if (i === j) continue;
+									const d = Math.hypot(ch[i].x - ch[j].x, ch[i].y - ch[j].y);
+									if (d < minD) minD = d;
+								}
+								nnSum += minD;
+							}
+							const avgNN = nnSum / n;
+							const maxFillEdge = avgNN * 2.5;
+							const fillTriangles = [];
+							for (const tri of delResult.tris) {
+								const d01 = Math.hypot(ch[tri[0]].x - ch[tri[1]].x, ch[tri[0]].y - ch[tri[1]].y);
+								const d12 = Math.hypot(ch[tri[1]].x - ch[tri[2]].x, ch[tri[1]].y - ch[tri[2]].y);
+								const d20 = Math.hypot(ch[tri[2]].x - ch[tri[0]].x, ch[tri[2]].y - ch[tri[0]].y);
+								if (d01 <= maxFillEdge && d12 <= maxFillEdge && d20 <= maxFillEdge) {
+									fillTriangles.push(tri);
+								}
+							}
+							obj.triangles = fillTriangles;
+						}
+					}
+				}
+
+				if (totalAdded > 0) {
+					history.push({ type: "chain" });
+					splineCache.clear();
+					toast(`Added ${totalAdded} new connection${totalAdded > 1 ? 's' : ''}`, 1500);
+					if (typeof SFX !== "undefined" && SFX.blobComplete) SFX.blobComplete();
+				} else {
+					toast("No new connections to add (already fully connected at this K)", 1800);
+				}
+			}
+
+			function performLassoConnect(lasso, lassoOrigin, opts) {
+				opts = opts || {};
+				const usingOverride = Array.isArray(opts.particleIndicesOverride);
+				if (!usingOverride && (!lasso || (lasso.length < 3 && connectAlgorithm !== "colonize"))) return;
+
+				// Check for existing graph objects with vertices inside the lasso
+				// (skipped when caller supplied an explicit particle list — e.g. tap-soma)
+				if (!usingOverride) {
+					const graphHits = [];
+					for (let i = 0; i < chains.length; i++) {
+						const obj = chains[i];
+						if (obj.isGraph && obj.connections) {
+							const insideVerts = [];
+							for (let v = 0; v < obj.chain.length; v++) {
+								if (pointInPolygon(obj.chain[v].x, obj.chain[v].y, lasso)) {
+									insideVerts.push(v);
+								}
+							}
+							if (insideVerts.length >= 2) {
+								graphHits.push({ chainIndex: i, insideVerts });
+							}
+						}
+					}
+
+					if (graphHits.length > 0) {
+						densifyGraphConnections(graphHits);
+						return;
+					}
+				}
+
+				const particleIndices = [];
+				if (usingOverride) {
+					for (const idx of opts.particleIndicesOverride) {
+						const obj = chains[idx];
+						if (obj && obj.chain && obj.chain.length === 1) particleIndices.push(idx);
+					}
+				} else {
+					for (let i = 0; i < chains.length; i++) {
+						const obj = chains[i];
+						if (obj.chain.length === 1) {
+							const d = obj.chain[0];
+							if (pointInPolygon(d.x, d.y, lasso)) {
+								particleIndices.push(i);
+							}
+						}
+					}
+				}
+
+				if (particleIndices.length < 2) {
+					toast("Need at least 2 particles to link", 1800);
+					return;
+				}
+
+				const vertices = [];
+				let firstColor = null;
+				let firstRadius = null;
+				for (const idx of particleIndices) {
+					const obj = chains[idx];
+					const d = obj.chain[0];
+					vertices.push({ x: d.x, y: d.y, vx: d.vx || 0, vy: d.vy || 0, pinned: d.pinned || false });
+					if (!firstColor) firstColor = obj.color;
+					if (!firstRadius) firstRadius = obj.baseDotRadius;
+				}
+
+				let n = vertices.length;
+				const edgeSet = new Set();
+				const addEdge = (a, b) => {
+					const lo = Math.min(a, b), hi = Math.max(a, b);
+					edgeSet.add(lo * 100000 + hi);
+				};
+
+				// Scratch carried from neuron algorithm for post-processing (fill tris, thickness)
+				let neuronSomaEdgeSet = null;
+				let neuronDendriteParent = null;
+				let neuronSomaTriangles = null;
+				let neuronRootsSet = null;
+
+				if (connectAlgorithm === "neuron") {
+					// ----- Cuntz MST: a tree minimizing  Σ L_e  +  bf · Σ D_v  -----
+					// (Cuntz et al. 2010, PLOS Comp Bio).  bf = 0 → minimum-wire Steiner-like
+					// bushy tree;  bf = 1 → minimum-conduction-path star.  Real basal dendrites
+					// cluster around bf ≈ 0.4, apical dendrites around bf ≈ 0.7.
+					if (n < 2) {
+						toast("Neuron mode needs at least 2 particles", 1800);
+						return;
+					}
+
+					// Per-vertex k-th nearest-neighbor distance (used to find the densest
+					// particle = soma) and average nearest-neighbor spacing (used to define
+					// the Reach budget).
+					const K_DENSE = Math.min(4, n - 1);
+					const dk = new Float64Array(n);
+					let nnSum = 0;
+					for (let i = 0; i < n; i++) {
+						const ds = [];
+						let minD = Infinity;
+						for (let j = 0; j < n; j++) {
+							if (i === j) continue;
+							const d = Math.hypot(vertices[i].x - vertices[j].x, vertices[i].y - vertices[j].y);
+							ds.push(d);
+							if (d < minD) minD = d;
+						}
+						ds.sort((a, b) => a - b);
+						dk[i] = ds[K_DENSE - 1] !== undefined ? ds[K_DENSE - 1] : ds[ds.length - 1];
+						nnSum += minD;
+					}
+					const avgNN = nnSum / n;
+
+					// Soma selection:
+					//   1. If caller forced a specific particle (tap-to-pick), use it.
+					//   2. Otherwise, the densest particle (smallest k-NN distance).
+					let somaIdx = 0;
+					if (opts.somaChainIdx !== undefined && opts.somaChainIdx !== null) {
+						const forced = particleIndices.indexOf(opts.somaChainIdx);
+						if (forced >= 0) {
+							somaIdx = forced;
+						} else {
+							let minDk = Infinity;
+							for (let i = 0; i < n; i++) {
+								if (dk[i] < minDk) { minDk = dk[i]; somaIdx = i; }
+							}
+						}
+					} else {
+						let minDk = Infinity;
+						for (let i = 0; i < n; i++) {
+							if (dk[i] < minDk) { minDk = dk[i]; somaIdx = i; }
+						}
+					}
+
+					const bf = neuronBalanceFactor;
+					const maxConnectDist = avgNN * colonizeMaxDistMult;
+
+					// Cuntz MST has no separately-rendered soma "ball" — Murray's-law thickness
+					// makes the trunk that emerges from the soma the thickest and naturally reads
+					// as a cell body.  These structures are kept (empty) so the downstream
+					// thickness/fill code paths still detect Neuron mode and skip the global
+					// Delaunay alpha-shape fill.
+					neuronSomaEdgeSet = new Set();
+					neuronSomaTriangles = [];
+					neuronDendriteParent = new Map();
+					neuronRootsSet = new Set([somaIdx]);
+
+					// Greedy Cuntz MST construction (Prim-style, O(n²)).
+					//   For each non-tree vertex v, track:
+					//     bestParent[v]  — current best in-tree parent candidate
+					//     bestEuclid[v]  — Euclidean length of v→bestParent[v]
+					//     bestCost[v]    — bestEuclid[v] + bf · D[bestParent[v]]
+					//   Each step: pick reachable v with min bestCost; commit the edge; update D[v];
+					//   then reconsider every remaining v with the newly-added vertex as parent.
+					const inTree = new Uint8Array(n);
+					const D = new Float64Array(n);
+					const bestParent = new Int32Array(n).fill(-1);
+					const bestEuclid = new Float64Array(n).fill(Infinity);
+					const bestCost = new Float64Array(n).fill(Infinity);
+
+					inTree[somaIdx] = 1;
+					D[somaIdx] = 0;
+					for (let v = 0; v < n; v++) {
+						if (v === somaIdx) continue;
+						const L = Math.hypot(vertices[v].x - vertices[somaIdx].x, vertices[v].y - vertices[somaIdx].y);
+						bestEuclid[v] = L;
+						bestParent[v] = somaIdx;
+						bestCost[v] = L; // + bf*D[somaIdx], which is 0
+					}
+
+					let added = 1;
+					while (added < n) {
+						let pickV = -1, pickCost = Infinity;
+						for (let v = 0; v < n; v++) {
+							if (inTree[v]) continue;
+							if (bestParent[v] === -1) continue;
+							if (bestEuclid[v] > maxConnectDist) continue;
+							if (bestCost[v] < pickCost) { pickCost = bestCost[v]; pickV = v; }
+						}
+						if (pickV === -1) break; // every remaining vertex is out of Reach
+
+						const par = bestParent[pickV];
+						const L = bestEuclid[pickV];
+						addEdge(par, pickV);
+						neuronDendriteParent.set(pickV, par);
+						D[pickV] = D[par] + L;
+						inTree[pickV] = 1;
+						added++;
+
+						// Relax: consider pickV as a new parent candidate for the rest.
+						const px = vertices[pickV].x, py = vertices[pickV].y;
+						const dPick = D[pickV];
+						for (let v = 0; v < n; v++) {
+							if (inTree[v]) continue;
+							const L2 = Math.hypot(vertices[v].x - px, vertices[v].y - py);
+							const cost2 = L2 + bf * dPick;
+							if (cost2 < bestCost[v]) {
+								bestCost[v] = cost2;
+								bestEuclid[v] = L2;
+								bestParent[v] = pickV;
+							}
+						}
+					}
+
+					// Prune any vertices that were never reachable within Reach budget.
+					const unreached = new Set();
+					for (let i = 0; i < n; i++) if (!inTree[i]) unreached.add(i);
+					if (unreached.size > 0) {
+						const oldToNew = new Map();
+						const kept = [];
+						for (let i = 0; i < n; i++) {
+							if (!unreached.has(i)) {
+								oldToNew.set(i, kept.length);
+								kept.push(vertices[i]);
+							}
+						}
+						const remappedEdges = new Set();
+						for (const key of edgeSet) {
+							const a = Math.floor(key / 100000);
+							const b = key % 100000;
+							if (oldToNew.has(a) && oldToNew.has(b)) {
+								const na = oldToNew.get(a), nb = oldToNew.get(b);
+								const lo = Math.min(na, nb), hi = Math.max(na, nb);
+								remappedEdges.add(lo * 100000 + hi);
+							}
+						}
+						edgeSet.clear();
+						for (const k of remappedEdges) edgeSet.add(k);
+
+						const remappedParent = new Map();
+						for (const [child, par] of neuronDendriteParent) {
+							if (oldToNew.has(child) && oldToNew.has(par)) {
+								remappedParent.set(oldToNew.get(child), oldToNew.get(par));
+							}
+						}
+						neuronDendriteParent = remappedParent;
+
+						const remappedRoots = new Set();
+						for (const r of neuronRootsSet) {
+							if (oldToNew.has(r)) remappedRoots.add(oldToNew.get(r));
+						}
+						neuronRootsSet = remappedRoots;
+
+						vertices.length = 0;
+						for (const v of kept) vertices.push(v);
+						const keptParticleIndices = [];
+						for (let i = 0; i < particleIndices.length; i++) {
+							if (!unreached.has(i)) keptParticleIndices.push(particleIndices[i]);
+						}
+						particleIndices.length = 0;
+						for (const pi of keptParticleIndices) particleIndices.push(pi);
+						n = vertices.length;
+						if (n < 2) {
+							toast("Not enough nearby particles to form a neuron", 1800);
+							return;
+						}
+					}
+				} else if (connectAlgorithm === "colonize") {
+					let seedIdx = 0;
+					if (lassoOrigin) {
+						let bestD = Infinity;
+						for (let i = 0; i < n; i++) {
+							const d = Math.hypot(vertices[i].x - lassoOrigin.x, vertices[i].y - lassoOrigin.y);
+							if (d < bestD) { bestD = d; seedIdx = i; }
+						}
+					}
+
+					let nnSum = 0;
+					for (let i = 0; i < n; i++) {
+						let minD = Infinity;
+						for (let j = 0; j < n; j++) {
+							if (i === j) continue;
+							const d = Math.hypot(vertices[i].x - vertices[j].x, vertices[i].y - vertices[j].y);
+							if (d < minD) minD = d;
+						}
+						nnSum += minD;
+					}
+					const avgNN = nnSum / n;
+					const maxConnectDist = avgNN * colonizeMaxDistMult;
+
+					const inTree = new Set([seedIdx]);
+					const attractors = new Set();
+					for (let i = 0; i < n; i++) {
+						if (i !== seedIdx) attractors.add(i);
+					}
+
+					let stalled = false;
+					while (attractors.size > 0 && !stalled) {
+						const votes = new Map();
+						for (const ai of attractors) {
+							let nearestTree = -1;
+							let nearestDist = Infinity;
+							for (const ti of inTree) {
+								const d = Math.hypot(vertices[ai].x - vertices[ti].x, vertices[ai].y - vertices[ti].y);
+								if (d < nearestDist) { nearestDist = d; nearestTree = ti; }
+							}
+							if (nearestTree !== -1 && nearestDist <= maxConnectDist) {
+								if (!votes.has(nearestTree)) votes.set(nearestTree, []);
+								votes.get(nearestTree).push({ idx: ai, dist: nearestDist });
+							}
+						}
+
+						if (votes.size === 0) { stalled = true; break; }
+
+						const newNodes = [];
+						for (const [treeNode, voters] of votes) {
+							voters.sort((a, b) => a.dist - b.dist);
+							const limit = Math.min(colonizeBranchFactor, voters.length);
+							for (let bi = 0; bi < limit; bi++) {
+								addEdge(treeNode, voters[bi].idx);
+								newNodes.push(voters[bi].idx);
+								attractors.delete(voters[bi].idx);
+							}
+						}
+
+						for (const ni of newNodes) inTree.add(ni);
+					}
+
+					if (attractors.size > 0) {
+						const kept = [];
+						const oldToNew = new Map();
+						for (let i = 0; i < n; i++) {
+							if (!attractors.has(i)) {
+								oldToNew.set(i, kept.length);
+								kept.push(vertices[i]);
+							}
+						}
+						const remappedEdges = new Set();
+						for (const key of edgeSet) {
+							const a = Math.floor(key / 100000);
+							const b = key % 100000;
+							if (oldToNew.has(a) && oldToNew.has(b)) {
+								const na = oldToNew.get(a), nb = oldToNew.get(b);
+								const lo = Math.min(na, nb), hi = Math.max(na, nb);
+								remappedEdges.add(lo * 100000 + hi);
+							}
+						}
+						edgeSet.clear();
+						for (const k of remappedEdges) edgeSet.add(k);
+						vertices.length = 0;
+						for (const v of kept) vertices.push(v);
+						const keptParticleIndices = [];
+						for (let i = 0; i < particleIndices.length; i++) {
+							if (!attractors.has(i)) keptParticleIndices.push(particleIndices[i]);
+						}
+						particleIndices.length = 0;
+						for (const pi of keptParticleIndices) particleIndices.push(pi);
+						n = vertices.length;
+						if (n < 2) {
+							toast("Not enough nearby particles to form a tree", 1800);
+							return;
+						}
+					}
+				} else if (connectAlgorithm === "delaunay" && n >= 3) {
+					const delResult = delaunayTriangulate(vertices);
+
+					let nnSum = 0;
+					for (let i = 0; i < n; i++) {
+						let minD = Infinity;
+						for (let j = 0; j < n; j++) {
+							if (i === j) continue;
+							const d = Math.hypot(vertices[i].x - vertices[j].x, vertices[i].y - vertices[j].y);
+							if (d < minD) minD = d;
+						}
+						nnSum += minD;
+					}
+					const avgNN = nnSum / n;
+					const maxEdgeLen = avgNN * 2.5;
+
+					for (const [a, b] of delResult.edges) {
+						const d = Math.hypot(vertices[a].x - vertices[b].x, vertices[a].y - vertices[b].y);
+						if (d <= maxEdgeLen) addEdge(a, b);
+					}
+				} else {
+					// MST + KNN approach
+					const dists = [];
+					for (let i = 0; i < n; i++) {
+						dists[i] = [];
+						for (let j = 0; j < n; j++) {
+							dists[i][j] = Math.hypot(vertices[i].x - vertices[j].x, vertices[i].y - vertices[j].y);
+						}
+					}
+
+					const inMST = new Uint8Array(n);
+					const minEdge = new Float64Array(n).fill(Infinity);
+					const minFrom = new Int32Array(n).fill(-1);
+					inMST[0] = 1;
+					for (let j = 1; j < n; j++) { minEdge[j] = dists[0][j]; minFrom[j] = 0; }
+					for (let step = 1; step < n; step++) {
+						let best = -1, bestDist = Infinity;
+						for (let j = 0; j < n; j++) {
+							if (!inMST[j] && minEdge[j] < bestDist) { bestDist = minEdge[j]; best = j; }
+						}
+						if (best === -1) break;
+						inMST[best] = 1;
+						addEdge(minFrom[best], best);
+						for (let j = 0; j < n; j++) {
+							if (!inMST[j] && dists[best][j] < minEdge[j]) {
+								minEdge[j] = dists[best][j]; minFrom[j] = best;
+							}
+						}
+					}
+
+					const K = Math.min(connectKnnK, n - 1);
+					for (let i = 0; i < n; i++) {
+						const sorted = [];
+						for (let j = 0; j < n; j++) { if (j !== i) sorted.push({ j, d: dists[i][j] }); }
+						sorted.sort((a, b) => a.d - b.d);
+						for (let k = 0; k < K; k++) addEdge(i, sorted[k].j);
+					}
+				}
+
+				// Build connections array with rest distances
+				const connections = [];
+				for (const key of edgeSet) {
+					const a = Math.floor(key / 100000);
+					const b = key % 100000;
+					const d = Math.hypot(vertices[a].x - vertices[b].x, vertices[a].y - vertices[b].y);
+					connections.push([a, b, d]);
+				}
+
+				let fillTriangles = [];
+				if (connectAlgorithm === "neuron" && neuronSomaTriangles) {
+					fillTriangles = neuronSomaTriangles;
+				} else if (n >= 3) {
+					const delResult = delaunayTriangulate(vertices);
+					let nnSum = 0;
+					for (let i = 0; i < n; i++) {
+						let minD = Infinity;
+						for (let j = 0; j < n; j++) {
+							if (i === j) continue;
+							const d = Math.hypot(vertices[i].x - vertices[j].x, vertices[i].y - vertices[j].y);
+							if (d < minD) minD = d;
+						}
+						nnSum += minD;
+					}
+					const avgNN = nnSum / n;
+					const maxFillEdge = avgNN * 2.5;
+					for (const tri of delResult.tris) {
+						const d01 = Math.hypot(vertices[tri[0]].x - vertices[tri[1]].x, vertices[tri[0]].y - vertices[tri[1]].y);
+						const d12 = Math.hypot(vertices[tri[1]].x - vertices[tri[2]].x, vertices[tri[1]].y - vertices[tri[2]].y);
+						const d20 = Math.hypot(vertices[tri[2]].x - vertices[tri[0]].x, vertices[tri[2]].y - vertices[tri[0]].y);
+						if (d01 <= maxFillEdge && d12 <= maxFillEdge && d20 <= maxFillEdge) {
+							fillTriangles.push(tri);
+						}
+					}
+				}
+
+				// Compute per-edge thickness (Murray's law) for neuron dendrites
+				let edgeThickness = null;
+				if (connectAlgorithm === "neuron" && neuronDendriteParent && connections.length > 0) {
+					const childrenOf = new Map();
+					for (const [child, par] of neuronDendriteParent) {
+						if (!childrenOf.has(par)) childrenOf.set(par, []);
+						childrenOf.get(par).push(child);
+					}
+					const subtreeSize = new Int32Array(n).fill(1);
+					const visited = new Uint8Array(n);
+					for (const root of neuronRootsSet) {
+						const stack = [[root, false]];
+						while (stack.length) {
+							const top = stack[stack.length - 1];
+							const [node, processed] = top;
+							const kids = childrenOf.get(node) || [];
+							if (!processed) {
+								top[1] = true;
+								for (const c of kids) stack.push([c, false]);
+							} else {
+								let s = 1;
+								for (const c of kids) s += subtreeSize[c];
+								subtreeSize[node] = s;
+								visited[node] = 1;
+								stack.pop();
+							}
+						}
+					}
+					let maxSub = 1;
+					for (let i = 0; i < n; i++) if (subtreeSize[i] > maxSub) maxSub = subtreeSize[i];
+					const maxRadiusUnit = Math.pow(maxSub, 1 / 3);
+
+					edgeThickness = new Float32Array(connections.length);
+					for (let i = 0; i < connections.length; i++) {
+						const a = connections[i][0], b = connections[i][1];
+						const lo = Math.min(a, b), hi = Math.max(a, b);
+						const key = lo * 100000 + hi;
+						if (neuronSomaEdgeSet && neuronSomaEdgeSet.has(key)) {
+							edgeThickness[i] = 0.35;
+						} else {
+							let tipSub = 1;
+							if (neuronDendriteParent.has(a) && neuronDendriteParent.get(a) === b) {
+								tipSub = subtreeSize[a] || 1;
+							} else if (neuronDendriteParent.has(b) && neuronDendriteParent.get(b) === a) {
+								tipSub = subtreeSize[b] || 1;
+							} else {
+								tipSub = 1;
+							}
+							const t = Math.pow(tipSub, 1 / 3) / maxRadiusUnit;
+							edgeThickness[i] = Math.min(1, Math.max(0, t));
+						}
+					}
+				}
+
+				const newChain = {
+					chain: vertices,
+					color: firstColor || hexToRGBA(colorInput.value),
+					baseDotRadius: firstRadius || globalRadiusAvg,
+					isClosed: false,
+					isGraph: true,
+					connections: connections,
+					triangles: fillTriangles,
+					edgeThickness: edgeThickness,
+					frozen: false
+				};
+
+				for (let i = particleIndices.length - 1; i >= 0; i--) {
+					chains.splice(particleIndices[i], 1);
+				}
+
+				chains.push(newChain);
+				history.push({ type: "chain" });
+				splineCache.clear();
+				spatialHashCache.needsRebuild = true;
+				_gpuTexturesDirty = true;
+				const algoNames = { knn: "KNN", delaunay: "Delaunay", colonize: "Colonize", neuron: "Neuron" };
+				const algoName = algoNames[connectAlgorithm] || "KNN";
+				toast(`Linked ${n} particles (${connections.length} edges, ${algoName})`, 1500);
+				if (typeof SFX !== "undefined" && SFX.blobComplete) SFX.blobComplete();
+			}
+
+			function performLassoDisconnect(lasso) {
+				if (lasso.length < 3) return;
+
+				let totalDisconnected = 0;
+				const chainsToRemove = [];
+				const chainsToAdd = [];
+
+				for (let ci = 0; ci < chains.length; ci++) {
+					const obj = chains[ci];
+					if (!obj.isGraph || !obj.connections) continue;
+
+					const ch = obj.chain;
+					const inside = new Uint8Array(ch.length);
+					let insideCount = 0;
+					for (let vi = 0; vi < ch.length; vi++) {
+						if (pointInPolygon(ch[vi].x, ch[vi].y, lasso)) {
+							inside[vi] = 1;
+							insideCount++;
+						}
+					}
+					if (insideCount === 0) continue;
+
+					for (let vi = 0; vi < ch.length; vi++) {
+						if (!inside[vi]) continue;
+						chainsToAdd.push({
+							chain: [{ x: ch[vi].x, y: ch[vi].y, vx: ch[vi].vx || 0, vy: ch[vi].vy || 0, pinned: ch[vi].pinned || false }],
+							color: obj.color.slice(),
+							baseDotRadius: obj.baseDotRadius || globalRadiusAvg,
+							isClosed: false,
+							frozen: false,
+							isParticle: true,
+							particleRenderSize: (obj.baseDotRadius || globalRadiusAvg) / 1.15
+						});
+						totalDisconnected++;
+					}
+
+					if (insideCount === ch.length) {
+						chainsToRemove.push(ci);
+						continue;
+					}
+
+					const oldToNew = new Int32Array(ch.length).fill(-1);
+					let newIdx = 0;
+					for (let vi = 0; vi < ch.length; vi++) {
+						if (!inside[vi]) oldToNew[vi] = newIdx++;
+					}
+
+					const newConns = [];
+					for (const edge of obj.connections) {
+						const na = oldToNew[edge[0]], nb = oldToNew[edge[1]];
+						if (na >= 0 && nb >= 0) {
+							newConns.push([na, nb, edge[2]]);
+						}
+					}
+
+					const newChainArr = [];
+					for (let vi = 0; vi < ch.length; vi++) {
+						if (!inside[vi]) newChainArr.push(ch[vi]);
+					}
+
+					if (newChainArr.length < 2 || newConns.length === 0) {
+						for (const v of newChainArr) {
+							chainsToAdd.push({
+								chain: [{ x: v.x, y: v.y, vx: v.vx || 0, vy: v.vy || 0, pinned: v.pinned || false }],
+								color: obj.color.slice(),
+								baseDotRadius: obj.baseDotRadius || globalRadiusAvg,
+								isClosed: false,
+								frozen: false,
+								isParticle: true,
+								particleRenderSize: (obj.baseDotRadius || globalRadiusAvg) / 1.15
+							});
+						}
+						chainsToRemove.push(ci);
+					} else {
+						obj.chain = newChainArr;
+						obj.connections = newConns;
+						// Drop fill triangles & edge thickness — they'd be stale after removal
+						if (obj.triangles) {
+							const remappedTris = [];
+							for (const tri of obj.triangles) {
+								const a = oldToNew[tri[0]], b = oldToNew[tri[1]], c = oldToNew[tri[2]];
+								if (a >= 0 && b >= 0 && c >= 0) remappedTris.push([a, b, c]);
+							}
+							obj.triangles = remappedTris;
+						}
+						if (obj.edgeThickness) {
+							// Recompute by index alignment with newConns: easiest to drop
+							obj.edgeThickness = null;
+						}
+					}
+				}
+
+				for (let i = chainsToRemove.length - 1; i >= 0; i--) {
+					chains.splice(chainsToRemove[i], 1);
+				}
+
+				for (const p of chainsToAdd) chains.push(p);
+
+				if (totalDisconnected > 0) {
+					history.push({ type: "chain" });
+					splineCache.clear();
+					spatialHashCache.needsRebuild = true;
+					_gpuTexturesDirty = true;
+					toast(`Disconnected ${totalDisconnected} node${totalDisconnected > 1 ? 's' : ''}`, 1500);
+				} else {
+					toast("No graph nodes found in lasso", 1800);
+				}
+			}
+
+			/* ── Render a graph chain (vertices + explicit edges) ── */
+			function drawGraph(chainObj, chainIndex) {
+				const ch = chainObj.chain;
+				const conns = chainObj.connections;
+				if (!conns || conns.length === 0 || ch.length < 2) return;
+
+				gl.useProgram(lineProgram);
+				gl.enableVertexAttribArray(linePosLoc);
+				gl.uniform2f(lineResLoc, canvas.width, canvas.height);
+				gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+				const col = chainObj.color;
+				const alpha = chainObj.alpha ?? 1.0;
+				const thick = outlineWidth;
+				const et = chainObj.edgeThickness;
+				const maxThickMult = 5;
+				const halfAt = (i) => {
+					const t = et ? thick + (thick * maxThickMult - thick) * et[i] : thick;
+					return t * 0.5;
+				};
+
+				// Graphs are ALWAYS rendered as colored outlined edges — fill mode and the
+				// black border are intentionally bypassed. Variable-width thickness comes
+				// from edgeThickness (Murray's law on neurons). Edges are drawn as quads
+				// (no built-in stroke join), then a colored disc is painted at every vertex
+				// to act as a round join that hides the wedge-shaped gaps and corner overlaps
+				// you'd otherwise see whenever outlineWidth > 1.
+				_rgbaScratch[0] = col[0]; _rgbaScratch[1] = col[1];
+				_rgbaScratch[2] = col[2]; _rgbaScratch[3] = alpha;
+
+				{
+					const quadVerts = new Float32Array(conns.length * 12);
+					for (let i = 0; i < conns.length; i++) {
+						const a = conns[i][0], b = conns[i][1];
+						const ax = ch[a].x, ay = ch[a].y;
+						const bx = ch[b].x, by = ch[b].y;
+						const dx = bx - ax, dy = by - ay;
+						const len = Math.hypot(dx, dy);
+						if (len < 1e-4) continue;
+						const h = halfAt(i);
+						const nx = (-dy / len) * h;
+						const ny = (dx / len) * h;
+						const o = i * 12;
+						quadVerts[o]    = ax + nx; quadVerts[o+1]  = ay + ny;
+						quadVerts[o+2]  = ax - nx; quadVerts[o+3]  = ay - ny;
+						quadVerts[o+4]  = bx + nx; quadVerts[o+5]  = by + ny;
+						quadVerts[o+6]  = bx + nx; quadVerts[o+7]  = by + ny;
+						quadVerts[o+8]  = ax - nx; quadVerts[o+9]  = ay - ny;
+						quadVerts[o+10] = bx - nx; quadVerts[o+11] = by - ny;
+					}
+					gl.bufferData(gl.ARRAY_BUFFER, quadVerts, gl.DYNAMIC_DRAW);
+					gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+					gl.uniform4fv(lineColorLoc, _rgbaScratch);
+					gl.drawArrays(gl.TRIANGLES, 0, conns.length * 6);
+				}
+
+				// Round-join discs at each vertex (sized to thickest incident edge).
+				// Skip when stroke is hairline — a 1px dot just adds noise.
+				{
+					const vMaxHalf = new Float32Array(ch.length);
+					for (let i = 0; i < conns.length; i++) {
+						const h = halfAt(i);
+						const a = conns[i][0], b = conns[i][1];
+						if (h > vMaxHalf[a]) vMaxHalf[a] = h;
+						if (h > vMaxHalf[b]) vMaxHalf[b] = h;
+					}
+					// Worst-case max half-width to decide segment count (more segs for thicker strokes).
+					let maxH = 0;
+					for (let i = 0; i < ch.length; i++) if (vMaxHalf[i] > maxH) maxH = vMaxHalf[i];
+					if (maxH > 0.6) {
+						const SEGS = maxH < 3 ? 8 : (maxH < 8 ? 12 : 16);
+						const TWO_PI = Math.PI * 2;
+						const cosT = new Float32Array(SEGS);
+						const sinT = new Float32Array(SEGS);
+						for (let s = 0; s < SEGS; s++) {
+							const a = (s / SEGS) * TWO_PI;
+							cosT[s] = Math.cos(a);
+							sinT[s] = Math.sin(a);
+						}
+						// Triangle fan per vertex, but expressed as flat triangles for a single draw call.
+						let activeCount = 0;
+						for (let v = 0; v < ch.length; v++) if (vMaxHalf[v] > 0) activeCount++;
+						if (activeCount > 0) {
+							const discVerts = new Float32Array(activeCount * SEGS * 6);
+							let o = 0;
+							for (let v = 0; v < ch.length; v++) {
+								const r = vMaxHalf[v];
+								if (r <= 0) continue;
+								const cx = ch[v].x, cy = ch[v].y;
+								for (let s = 0; s < SEGS; s++) {
+									const sNext = (s + 1) % SEGS;
+									discVerts[o++] = cx;                    discVerts[o++] = cy;
+									discVerts[o++] = cx + cosT[s] * r;      discVerts[o++] = cy + sinT[s] * r;
+									discVerts[o++] = cx + cosT[sNext] * r;  discVerts[o++] = cy + sinT[sNext] * r;
+								}
+							}
+							gl.bufferData(gl.ARRAY_BUFFER, discVerts, gl.DYNAMIC_DRAW);
+							gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+							gl.uniform4fv(lineColorLoc, _rgbaScratch);
+							gl.drawArrays(gl.TRIANGLES, 0, activeCount * SEGS * 3);
+						}
+					}
+				}
+
+				// Pinned indicators for graph vertices
+				for (let i = 0; i < ch.length; i++) {
+					if (ch[i].pinned && typeof drawPinnedIndicator === "function") {
+						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+						drawPinnedIndicator(ch[i].x, ch[i].y);
+					}
+				}
+
+				// Hover indicator in pin/drag mode
+				if ((pinMode || dragMode) && chainIndex === pinHoverChainIndex && pinHoverDotIndex !== null) {
+					const hoverDot = ch[pinHoverDotIndex];
+					if (typeof drawHoverIndicator === "function") {
+						gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+						drawHoverIndicator(hoverDot, hoverDot.pinned);
+					}
 				}
 			}
 
@@ -6701,6 +7869,55 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 						gl.bufferData(gl.ARRAY_BUFFER, frzQuad, gl.DYNAMIC_DRAW);
 						gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
 						gl.uniform4fv(lineColorLoc, [0.2, 0.5, 1.0, 0.12]);
+						gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+						gl.disable(gl.STENCIL_TEST);
+					}
+				}
+
+				// Connect lasso (green for connect, red for disconnect)
+				if (connectMode && connectLassoActive && connectLassoPath.length >= 2) {
+					const isDisconnect = connectLinkSubMode === "disconnect";
+					const lassoLineColor = isDisconnect ? [0.9, 0.2, 0.2, 0.9] : [0.2, 0.85, 0.3, 0.9];
+					const lassoFillColor = isDisconnect ? [0.9, 0.2, 0.2, 0.10] : [0.2, 0.85, 0.3, 0.10];
+					const n = connectLassoPath.length;
+					const verts = new Float32Array(n * 2);
+					for (let i = 0; i < n; i++) {
+						verts[i * 2] = connectLassoPath[i].x;
+						verts[i * 2 + 1] = connectLassoPath[i].y;
+					}
+					gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+					gl.bufferData(gl.ARRAY_BUFFER, verts, gl.DYNAMIC_DRAW);
+					gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+					gl.uniform4fv(lineColorLoc, lassoLineColor);
+					gl.drawArrays(gl.LINE_LOOP, 0, n);
+
+					if (n >= 3) {
+						let cx = 0, cy = 0;
+						for (const p of connectLassoPath) { cx += p.x; cy += p.y; }
+						cx /= n; cy /= n;
+						const fillVerts = new Float32Array((n + 2) * 2);
+						fillVerts[0] = cx; fillVerts[1] = cy;
+						for (let i = 0; i < n; i++) {
+							fillVerts[(i + 1) * 2] = connectLassoPath[i].x;
+							fillVerts[(i + 1) * 2 + 1] = connectLassoPath[i].y;
+						}
+						fillVerts[(n + 1) * 2] = connectLassoPath[0].x;
+						fillVerts[(n + 1) * 2 + 1] = connectLassoPath[0].y;
+						gl.bufferData(gl.ARRAY_BUFFER, fillVerts, gl.DYNAMIC_DRAW);
+						gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+						gl.clear(gl.STENCIL_BUFFER_BIT);
+						gl.enable(gl.STENCIL_TEST);
+						gl.stencilFunc(gl.ALWAYS, 1, 0xFF);
+						gl.stencilOp(gl.KEEP, gl.KEEP, gl.REPLACE);
+						gl.colorMask(false, false, false, false);
+						gl.drawArrays(gl.TRIANGLE_FAN, 0, n + 2);
+						gl.colorMask(true, true, true, true);
+						gl.stencilFunc(gl.EQUAL, 1, 0xFF);
+						gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
+						const conQuad = new Float32Array([0,0, canvas.width,0, 0,canvas.height, canvas.width,canvas.height]);
+						gl.bufferData(gl.ARRAY_BUFFER, conQuad, gl.DYNAMIC_DRAW);
+						gl.vertexAttribPointer(linePosLoc, 2, gl.FLOAT, false, 0, 0);
+						gl.uniform4fv(lineColorLoc, lassoFillColor);
 						gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 						gl.disable(gl.STENCIL_TEST);
 					}
@@ -6992,6 +8209,16 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			let deleteLassoPath = [];           // [{x,y}, ...] freeform path
 			let freezeLassoActive = false;      // true when drawing a lasso in freeze mode
 			let freezeLassoPath = [];           // [{x,y}, ...] freeform path
+			let connectLassoActive = false;     // true when drawing a lasso in connect mode
+			let connectLassoPath = [];          // [{x,y}, ...] freeform path
+			let connectLinkSubMode = "connect"; // "connect" or "disconnect"
+			let connectAlgorithm = "neuron";    // "knn", "delaunay", "colonize", or "neuron"
+			let connectKnnK = 3;                // K value for KNN algorithm (2-5)
+			let colonizeMaxDistMult = 2.5;      // Max connection distance multiplier (1.5-5)
+			let colonizeBranchFactor = 1;       // Connections per tree node per iteration (1-3)
+			let neuronSomaThresh = 0.75;        // Legacy: dense (soma) threshold — kept for save/load compatibility
+			let neuronDendriteThresh = 1.4;     // Legacy: sparse (dendrite) threshold — kept for save/load compatibility
+			let neuronBalanceFactor = 0.4;      // Cuntz MST balance: 0 = wire-min (bushy), 1 = path-min (star)
 			// While we’re waiting to see if this becomes a long-press
 			let waitingForLongPress = false;
 			/* 4. Active edit-tool flags (mutually exclusive) */
@@ -6999,7 +8226,8 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				dragMode = false,
 				pinMode = false,
 				freezeMode = false,
-				deleteMode = false;
+				deleteMode = false,
+				connectMode = false;
 
 			/* 5. Drag / hover helpers */
 			let draggingChainIndex = null,
@@ -7010,7 +8238,7 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			/* 6. Render options */
 			let showOutline = true; // Show outline/stroke
 			let showFilled = true; // Show filled area
-			let outlineWidth = 4; // Width of outline/border
+			let outlineWidth = 2; // Width of outline/border
 			let canvasBackgroundColor = [0.75, 0.80, 0.67, 1.0]; // Canvas background color [r, g, b, a]
 			let showGrid = true; // Show grid on canvas
 
@@ -7063,7 +8291,7 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 				damping = 0.85, // ~85 %
 				timeStep = 1.05, // slider 47 % → 0.1‒2
 				dotScaleFactor = 2.0, // slider 39 % → 0.1‒5
-				currentLineThickness = 4; // Default to thicker lines
+				currentLineThickness = 2; // Default outline thickness (matches outlineWidth)
 
 			let prevDamping = damping; // remembers last non-zero value
 
@@ -7119,27 +8347,29 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			  const forceOn = !!opts.forceOn;
 
 			  const isAlreadyActive = !forceOn && (
-			    (toolName === "slice"  && slicingMode) ||
-			    (toolName === "drag"   && dragMode)    ||
-			    (toolName === "pin"    && pinMode)     ||
-			    (toolName === "freeze" && freezeMode)  ||
-			    (toolName === "delete" && deleteMode)
+			    (toolName === "slice"   && slicingMode) ||
+			    (toolName === "drag"    && dragMode)    ||
+			    (toolName === "pin"     && pinMode)     ||
+			    (toolName === "freeze"  && freezeMode)  ||
+			    (toolName === "delete"  && deleteMode)  ||
+			    (toolName === "connect" && connectMode)
 			  );
 
 			  // Turn everything off first
-			  slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+			  slicingMode = dragMode = pinMode = freezeMode = deleteMode = connectMode = false;
 
 			  // Turn the requested tool on (unless user toggled it off)
 			  if (forceOn || !isAlreadyActive) {
-			    if (toolName === "slice")  slicingMode = true;
-			    if (toolName === "drag")   dragMode = true;
-			    if (toolName === "pin")    pinMode = true;
-			    if (toolName === "freeze") freezeMode = true;
-			    if (toolName === "delete") deleteMode = true;
+			    if (toolName === "slice")   slicingMode = true;
+			    if (toolName === "drag")    dragMode = true;
+			    if (toolName === "pin")     pinMode = true;
+			    if (toolName === "freeze")  freezeMode = true;
+			    if (toolName === "delete")  deleteMode = true;
+			    if (toolName === "connect") connectMode = true;
 			  }
 
 			  // ✅ If no draw mode is active, we ALWAYS fall back to drag
-			  const anyEditOn = slicingMode || dragMode || pinMode || freezeMode || deleteMode;
+			  const anyEditOn = slicingMode || dragMode || pinMode || freezeMode || deleteMode || connectMode;
 
 				if (anyEditOn) {
   // ✅ If any edit tool is active, drawing must be OFF
@@ -7151,19 +8381,24 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 
 			  // UI updates (same as your existing code)
 			  const editFrame = $("editToolsSection");
-			  editFrame.classList.toggle("edit-on", slicingMode || dragMode || pinMode || freezeMode || deleteMode);
+			  editFrame.classList.toggle("edit-on", anyEditOn);
 
-			  setIconActive($("iconSlice"),  slicingMode, "Slicing Mode (On)", "Slicing Mode (Off)");
-			  setIconActive($("iconDrag"),   dragMode,    "Disable Drag Mode", "Enable Drag Mode");
-			  setIconActive($("iconPin"),    pinMode,     "Disable Pin Mode",  "Enable Pin Mode");
-			  setIconActive($("iconFreeze"), freezeMode,  "Disable Freeze Mode","Enable Freeze Mode");
-			  setIconActive($("iconDelete"), deleteMode,  "Disable Delete Mode","Enable Delete Mode");
+			  setIconActive($("iconSlice"),   slicingMode, "Slicing Mode (On)", "Slicing Mode (Off)");
+			  setIconActive($("iconDrag"),    dragMode,    "Disable Drag Mode", "Enable Drag Mode");
+			  setIconActive($("iconPin"),     pinMode,     "Disable Pin Mode",  "Enable Pin Mode");
+			  setIconActive($("iconFreeze"),  freezeMode,  "Disable Freeze Mode","Enable Freeze Mode");
+			  setIconActive($("iconDelete"),  deleteMode,  "Disable Delete Mode","Enable Delete Mode");
+			  setIconActive($("iconConnect"), connectMode,
+			    connectLinkSubMode === "disconnect" ? "Disable Disconnect Mode" : "Disable Link Mode",
+			    "Enable Link Tool");
 
 			  updateCanvasCursor();
 
-			  const msg =
-			    forceOn ? "Drag mode" :
-			    (isAlreadyActive ? "Edit tools off" : `Edit mode: ${toolName.toUpperCase()}`);
+			  let msg;
+			  if (forceOn) msg = "Drag mode";
+			  else if (isAlreadyActive) msg = "Edit tools off";
+			  else if (toolName === "connect") msg = connectLinkSubMode === "disconnect" ? "Disconnect mode — lasso graph nodes to release" : "Link mode — lasso particles to connect";
+			  else msg = `Edit mode: ${toolName.toUpperCase()}`;
 
 			  toast(msg, 1800);
 			}
@@ -7175,11 +8410,12 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			function clearAllEditToolsUIOnly() {
 			  const editFrame = $("editToolsSection");
 			  editFrame.classList.remove("edit-on");
-			  setIconActive($("iconSlice"),  false, "Slicing Mode (On)", "Slicing Mode (Off)");
-			  setIconActive($("iconDrag"),   false, "Disable Drag Mode", "Enable Drag Mode");
-			  setIconActive($("iconPin"),    false, "Disable Pin Mode",  "Enable Pin Mode");
-			  setIconActive($("iconFreeze"), false, "Disable Freeze Mode","Enable Freeze Mode");
-			  setIconActive($("iconDelete"), false, "Disable Delete Mode","Enable Delete Mode");
+			  setIconActive($("iconSlice"),   false, "Slicing Mode (On)", "Slicing Mode (Off)");
+			  setIconActive($("iconDrag"),    false, "Disable Drag Mode", "Enable Drag Mode");
+			  setIconActive($("iconPin"),     false, "Disable Pin Mode",  "Enable Pin Mode");
+			  setIconActive($("iconFreeze"),  false, "Disable Freeze Mode","Enable Freeze Mode");
+			  setIconActive($("iconDelete"),  false, "Disable Delete Mode","Enable Delete Mode");
+			  setIconActive($("iconConnect"), false, "Disable Link Mode", "Enable Link Tool");
 			}
 
 			function clearDrawModeUIOnly() {
@@ -7208,7 +8444,10 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			    toast("Draw: OFF (Drag)", 1600);
 			  } else {
 			    // Entering a draw mode: turn off edit tools to avoid blocking drawing
-			    slicingMode = dragMode = pinMode = freezeMode = deleteMode = false;
+			    slicingMode = dragMode = pinMode = freezeMode = deleteMode = connectMode = false;
+			    // Also drop any in-progress connect-lasso state so the next pointerdown is clean.
+			    connectLassoActive = false;
+			    connectLassoPath = [];
 			    clearAllEditToolsUIOnly();
 			    toast(`Draw mode: ${drawMode.toUpperCase()}`, 1600);
 			  }
@@ -7237,6 +8476,107 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 			$("iconDelete").onclick = function() {
 				setEditTool("delete");
 			};
+
+			/* -----------------------------------
+			   LINK / CONNECT TOOL
+			----------------------------------- */
+			$("iconConnect").onclick = function() {
+				$("knnKSlider").value = connectKnnK;
+				$("knnKValue").textContent = connectKnnK;
+				$("colonizeReachSlider").value = colonizeMaxDistMult;
+				$("colonizeReachValue").textContent = colonizeMaxDistMult + "x";
+				$("colonizeBranchSlider").value = colonizeBranchFactor;
+				$("colonizeBranchValue").textContent = colonizeBranchFactor;
+				$("neuronSomaSlider").value = neuronSomaThresh;
+				$("neuronSomaValue").textContent = neuronSomaThresh.toFixed(2);
+				$("neuronDendriteSlider").value = neuronDendriteThresh;
+				$("neuronDendriteValue").textContent = neuronDendriteThresh.toFixed(2);
+				$("neuronBalanceSlider").value = neuronBalanceFactor;
+				$("neuronBalanceValue").textContent = neuronBalanceFactor.toFixed(2);
+				updateConnectAlgoUI();
+				$("connectDialogBackdrop").style.display = "flex";
+			};
+
+			$("connectModeBtn").onclick = () => {
+				$("connectDialogBackdrop").style.display = "none";
+				connectLinkSubMode = "connect";
+				setEditTool("connect", { forceOn: true });
+			};
+
+			$("disconnectModeBtn").onclick = () => {
+				$("connectDialogBackdrop").style.display = "none";
+				connectLinkSubMode = "disconnect";
+				setEditTool("connect", { forceOn: true });
+			};
+
+			function updateConnectAlgoUI() {
+				const descs = {
+					knn: "Lasso particles to connect each one to its nearest neighbors",
+					delaunay: "Lasso particles to create a triangular mesh",
+					colonize: "Lasso particles to grow a branching tree from a chosen seed",
+					neuron: "Click a particle to set the soma, or lasso particles to auto-create the soma"
+				};
+				const sel = $("connectAlgoToggle");
+				if (sel && sel.value !== connectAlgorithm) sel.value = connectAlgorithm;
+				$("connectAlgoDesc").textContent = descs[connectAlgorithm] || descs.knn;
+				$("knnKRow").style.display = connectAlgorithm === "knn" ? "flex" : "none";
+				const isColonize = connectAlgorithm === "colonize";
+				const isNeuron = connectAlgorithm === "neuron";
+				$("colonizeReachRow").style.display = (isColonize || isNeuron) ? "flex" : "none";
+				$("colonizeBranchRow").style.display = isColonize ? "flex" : "none";
+				// Legacy density-based controls — no longer used by the Cuntz MST neuron mode.
+				$("neuronSomaRow").style.display = "none";
+				$("neuronDendriteRow").style.display = "none";
+				$("neuronBalanceRow").style.display = isNeuron ? "flex" : "none";
+			}
+
+			$("connectAlgoToggle").onchange = function() {
+				connectAlgorithm = this.value;
+				updateConnectAlgoUI();
+			};
+
+			$("knnKSlider").oninput = function() {
+				connectKnnK = parseInt(this.value, 10);
+				$("knnKValue").textContent = connectKnnK;
+			};
+
+			$("colonizeReachSlider").oninput = function() {
+				colonizeMaxDistMult = parseFloat(this.value);
+				$("colonizeReachValue").textContent = colonizeMaxDistMult + "x";
+			};
+
+			$("colonizeBranchSlider").oninput = function() {
+				colonizeBranchFactor = parseInt(this.value, 10);
+				$("colonizeBranchValue").textContent = colonizeBranchFactor;
+			};
+
+			$("neuronSomaSlider").oninput = function() {
+				neuronSomaThresh = parseFloat(this.value);
+				$("neuronSomaValue").textContent = neuronSomaThresh.toFixed(2);
+			};
+
+			$("neuronDendriteSlider").oninput = function() {
+				neuronDendriteThresh = parseFloat(this.value);
+				$("neuronDendriteValue").textContent = neuronDendriteThresh.toFixed(2);
+			};
+
+			$("neuronBalanceSlider").oninput = function() {
+				neuronBalanceFactor = parseFloat(this.value);
+				$("neuronBalanceValue").textContent = neuronBalanceFactor.toFixed(2);
+			};
+
+			$("connectDialogCancelBtn").onclick = () => {
+				$("connectDialogBackdrop").style.display = "none";
+			};
+
+			{
+				const cdBackdrop = $("connectDialogBackdrop");
+				if (cdBackdrop) {
+					cdBackdrop.onclick = (e) => {
+						if (e.target === cdBackdrop) cdBackdrop.style.display = "none";
+					};
+				}
+			}
 
 			/* -----------------------------------
 			   APPEARANCE DIALOG
@@ -7744,7 +9084,19 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 							baseDotRadius: chainObj.baseDotRadius,
 							frozen: chainObj.frozen || false,
 							isParticle: chainObj.isParticle || false,
-							particleRenderSize: chainObj.particleRenderSize || 0
+							particleRenderSize: chainObj.particleRenderSize || 0,
+							// Graph (linked-particle) fields — needed so vector export can render
+							// edges + alpha-shape fill + Murray's-law thickness instead of a spline.
+							isGraph: chainObj.isGraph || false,
+							connections: chainObj.isGraph && chainObj.connections
+								? chainObj.connections.map(c => [c[0], c[1], c[2]])
+								: null,
+							triangles: chainObj.isGraph && chainObj.triangles
+								? chainObj.triangles.map(t => [t[0], t[1], t[2]])
+								: null,
+							edgeThickness: chainObj.isGraph && chainObj.edgeThickness
+								? Array.from(chainObj.edgeThickness)
+								: null
 						})),
 						circles: circles.map(circle => ({
 							x: circle.x,
@@ -8388,6 +9740,58 @@ body.fullscreen-mode .filmstrip-panel.panel-hidden::before {
 							const cy = (dot.y - exportY) * scaleY;
 							const sr = r * Math.min(scaleX, scaleY);
 							svgParts.push(`<circle cx="${cx}" cy="${cy}" r="${sr}" fill="rgb(${rr},${gg},${bb})" />`);
+							return;
+						}
+
+						// Handle graph chains (linked particles): always outline-only, never
+						// filled. Sub-paths through degree-2 vertices are smoothed with
+						// the same Catmull-Rom kernel used by the line tool.
+						if (chainObj.isGraph && chainObj.connections) {
+							const ch = chainObj.chain;
+							const conns = chainObj.connections;
+							if (!conns.length || ch.length < 2) return;
+							const [rr, gg, bb] = chainObj.color.map(c => Math.floor(c * 255));
+							const baseW = vectorData.outlineWidth * Math.min(scaleX, scaleY);
+							const et = chainObj.edgeThickness;
+							const maxThickMult = 5;
+							const seg = 10;
+							const { paths, edgeIndex, edgeKey } = decomposeGraphPaths(conns, ch.length);
+
+							for (const path of paths) {
+								if (path.length < 2) continue;
+								const pts = new Array(path.length);
+								let valid = true;
+								for (let i = 0; i < path.length; i++) {
+									const v = ch[path[i]];
+									if (!v) { valid = false; break; }
+									pts[i] = { x: (v.x - exportX) * scaleX, y: (v.y - exportY) * scaleY };
+								}
+								if (!valid) continue;
+								const spline = getOpenSmoothCurve(pts, seg);
+								if (spline.length < 4) continue;
+
+								if (!et) {
+									let d = `M ${spline[0]} ${spline[1]}`;
+									for (let i = 2; i < spline.length; i += 2) {
+										d += ` L ${spline[i]} ${spline[i + 1]}`;
+									}
+									svgParts.push(`<path d="${d}" fill="none" stroke="rgb(${rr},${gg},${bb})" stroke-width="${baseW}" stroke-linecap="round" stroke-linejoin="round" />`);
+								} else {
+									for (let e = 0; e < path.length - 1; e++) {
+										const ei = edgeIndex.get(edgeKey(path[e], path[e + 1]));
+										const t = ei !== undefined ? et[ei] : 0;
+										const w = baseW + (baseW * maxThickMult - baseW) * t;
+										const startSi = e * seg * 2;
+										let d = `M ${spline[startSi]} ${spline[startSi + 1]}`;
+										for (let s = 1; s <= seg; s++) {
+											const si = (e * seg + s) * 2;
+											if (si + 1 >= spline.length) break;
+											d += ` L ${spline[si]} ${spline[si + 1]}`;
+										}
+										svgParts.push(`<path d="${d}" fill="none" stroke="rgb(${rr},${gg},${bb})" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" />`);
+									}
+								}
+							}
 							return;
 						}
 
@@ -9619,14 +11023,9 @@ window.addEventListener("keydown", (e) => {
 			$("iconLine").onclick   = () => setDrawMode("line");
 			$("iconCircle").onclick = () => setDrawMode("circle");
 
-			// Particle emitter icon — show settings dialog
+			// Particle emitter icon — always show settings dialog (clicking again
+			// while already in particle mode is for tweaking settings, not toggling off).
 			$("iconParticle").onclick = () => {
-				// If already in particle mode, toggle off
-				if (drawMode === "particle") {
-					setDrawMode("particle"); // toggles off
-					return;
-				}
-				// Show settings dialog
 				$("particleEmitRate").value = particleEmitRate;
 				$("particleRenderSize").value = particleRenderSize;
 				$("particleSettingsBackdrop").style.display = "flex";
@@ -9638,7 +11037,20 @@ window.addEventListener("keydown", (e) => {
 				particleRenderSize = Math.max(1, Math.min(30,
 					parseFloat($("particleRenderSize").value) || 4));
 				$("particleSettingsBackdrop").style.display = "none";
-				setDrawMode("particle");
+				// Particle mode plays best with calmer physics — drop excitability to 50%.
+				damping = 0.5;
+				const dSlider = $("dampingSlider");
+				const dValue = $("dampingValue");
+				if (dSlider) dSlider.value = 50;
+				if (dValue) dValue.textContent = "50%";
+				// setDrawMode is a toggle: calling it with the current mode flips back
+				// to "none" (which forces drag mode). Skip the call when we're already
+				// in particle mode so a settings tweak doesn't kick the user out.
+				if (drawMode !== "particle") {
+					setDrawMode("particle");
+				} else {
+					toast("Particle settings updated", 1500);
+				}
 			};
 
 			$("particleSettingsCancel").onclick = () => {
@@ -9664,6 +11076,11 @@ window.addEventListener("keydown", (e) => {
 				// If converting a chain, convert it to attractor
 				if (chainToConvertIndex !== null && chainToConvertIndex < chains.length) {
 					const chain = chains[chainToConvertIndex];
+					if (chain.isGraph) {
+						toast("Linked particles can't be converted to an attractor", 2000);
+						chainToConvertIndex = null;
+						return;
+					}
 					// Convert chain path to attractor/repulsor path format
 					const path = chain.chain.map(dot => ({ x: dot.x, y: dot.y }));
 
@@ -9697,6 +11114,11 @@ window.addEventListener("keydown", (e) => {
 				// If converting a chain, convert it to repulsor
 				if (chainToConvertIndex !== null && chainToConvertIndex < chains.length) {
 					const chain = chains[chainToConvertIndex];
+					if (chain.isGraph) {
+						toast("Linked particles can't be converted to a repulsor", 2000);
+						chainToConvertIndex = null;
+						return;
+					}
 					// Convert chain path to attractor/repulsor path format
 					const path = chain.chain.map(dot => ({ x: dot.x, y: dot.y }));
 
@@ -11819,7 +13241,14 @@ window.addEventListener("keydown", (e) => {
 				const restDist = Math.max(dotR, 4) * 0.7;
 
 				// Springs
-				if (chainObj.isClosed) {
+				if (chainObj.isGraph && chainObj.connections) {
+					// Graph mode: use explicit connections with 2x standard rest distance
+					const graphRestDist = restDist * 2;
+					for (let ci = 0; ci < chainObj.connections.length; ci++) {
+						const edge = chainObj.connections[ci];
+						applySpring(arr, forces, edge[0], edge[1], graphRestDist);
+					}
+				} else if (chainObj.isClosed) {
 					for (let i = 0; i < arr.length; i++) {
 						const j = (i + 1) % arr.length;
 						applySpring(arr, forces, i, j, restDist);
@@ -12930,6 +14359,7 @@ window.addEventListener("keydown", (e) => {
 
 			// GPU-based rendering function (reads from GPU textures, no readPixels)
 			function drawChainFromGPU(chainObj, chainIndex) {
+				if (chainObj.isGraph) { drawGraph(chainObj, chainIndex); return; }
 				if (!gpuPhysics.initialized || !gpuPhysics.renderProgram || gpuPhysics.chainStartIndices[chainIndex] === undefined) {
 					// Fallback to CPU rendering
 					drawChain(chainObj, chainIndex);
@@ -13064,6 +14494,7 @@ window.addEventListener("keydown", (e) => {
 
 			function drawChain(chainObj, chainIndex) {
 				const ch = chainObj.chain;
+				if (chainObj.isGraph) { drawGraph(chainObj, chainIndex); return; }
 				if (ch.length < 2) return;
 
 				// PERFORMANCE: Cache spline calculations - only recalculate when positions change
@@ -13729,6 +15160,78 @@ window.addEventListener("keydown", (e) => {
 			/* -----------------------------------
 			   EXPORT HELPERS
 			----------------------------------- */
+
+			// Decompose a graph (vertices + connections) into a set of open polyline
+			// sub-paths suitable for spline rendering at export. Each maximal walk
+			// through degree-2 vertices becomes one sub-path; junctions (degree ≥ 3)
+			// and leaves (degree 1) terminate sub-paths. Pure cycles are broken at
+			// an arbitrary vertex and emitted as a single open sub-path. The returned
+			// edgeIndex Map lets callers look up per-edge thickness by (lo,hi) key.
+			function decomposeGraphPaths(connections, vertexCount) {
+				const adj = Array.from({ length: vertexCount }, () => []);
+				const edgeIndex = new Map();
+				const ekey = (a, b) => {
+					const lo = a < b ? a : b;
+					const hi = a < b ? b : a;
+					return lo * 100000 + hi;
+				};
+				for (let i = 0; i < connections.length; i++) {
+					const a = connections[i][0], b = connections[i][1];
+					if (a === b) continue;
+					adj[a].push(b);
+					adj[b].push(a);
+					edgeIndex.set(ekey(a, b), i);
+				}
+
+				const visited = new Set();
+				const paths = [];
+
+				// Walks starting at non-degree-2 vertices (leaves and junctions).
+				for (let start = 0; start < vertexCount; start++) {
+					if (adj[start].length === 2) continue;
+					for (const first of adj[start]) {
+						const k = ekey(start, first);
+						if (visited.has(k)) continue;
+						visited.add(k);
+						const path = [start, first];
+						let prev = start, curr = first;
+						while (adj[curr].length === 2) {
+							const next = adj[curr][0] === prev ? adj[curr][1] : adj[curr][0];
+							const nk = ekey(curr, next);
+							if (visited.has(nk)) break;
+							visited.add(nk);
+							path.push(next);
+							prev = curr;
+							curr = next;
+						}
+						paths.push(path);
+					}
+				}
+
+				// Pure cycles (every vertex degree 2): break at an arbitrary edge.
+				for (let i = 0; i < connections.length; i++) {
+					const a = connections[i][0], b = connections[i][1];
+					if (a === b) continue;
+					const k = ekey(a, b);
+					if (visited.has(k)) continue;
+					visited.add(k);
+					const path = [a, b];
+					let prev = a, curr = b;
+					while (adj[curr].length === 2) {
+						const next = adj[curr][0] === prev ? adj[curr][1] : adj[curr][0];
+						const nk = ekey(curr, next);
+						if (visited.has(nk)) break;
+						visited.add(nk);
+						path.push(next);
+						prev = curr;
+						curr = next;
+					}
+					paths.push(path);
+				}
+
+				return { paths, edgeIndex, edgeKey: ekey };
+			}
+
 			function exportSVG() {
 				// Get visual canvas dimensions (what user sees) instead of internal resolution
 				// Use getBoundingClientRect for accurate visual size, fallback to style or internal dimensions
@@ -13749,6 +15252,62 @@ window.addEventListener("keydown", (e) => {
 						const cy = dot.y * scaleY;
 						const sr = r * Math.min(scaleX, scaleY);
 						parts.push(`<circle cx="${cx}" cy="${cy}" r="${sr}" fill="rgb(${rr},${gg},${bb})" />`);
+						return;
+					}
+
+					// Handle graph chains (linked particles): always outline-only, never
+					// filled. Sub-paths through degree-2 vertices are smoothed with the
+					// same Catmull-Rom kernel used by the line tool, so neuron / colonize
+					// dendrites export as flowing curves instead of hinged polylines.
+					if (obj.isGraph && obj.connections) {
+						const ch = obj.chain;
+						const conns = obj.connections;
+						if (!conns.length || ch.length < 2) return;
+						const [rr, gg, bb] = obj.color.map(c => Math.floor(c * 255));
+						const baseW = outlineWidth * Math.min(scaleX, scaleY);
+						const et = obj.edgeThickness;
+						const maxThickMult = 5;
+						const seg = 10;
+						const { paths, edgeIndex, edgeKey } = decomposeGraphPaths(conns, ch.length);
+
+						for (const path of paths) {
+							if (path.length < 2) continue;
+							const pts = new Array(path.length);
+							let valid = true;
+							for (let i = 0; i < path.length; i++) {
+								const v = ch[path[i]];
+								if (!v) { valid = false; break; }
+								pts[i] = { x: v.x, y: v.y };
+							}
+							if (!valid) continue;
+							const spline = getOpenSmoothCurve(pts, seg);
+							if (spline.length < 4) continue;
+
+							if (!et) {
+								// Uniform stroke: emit the whole sub-path as one <path>.
+								let d = `M ${spline[0] * scaleX} ${spline[1] * scaleY}`;
+								for (let i = 2; i < spline.length; i += 2) {
+									d += ` L ${spline[i] * scaleX} ${spline[i + 1] * scaleY}`;
+								}
+								parts.push(`<path d="${d}" fill="none" stroke="rgb(${rr},${gg},${bb})" stroke-width="${baseW}" stroke-linecap="round" stroke-linejoin="round" />`);
+							} else {
+								// Murray's-law variable thickness: emit one <path> per
+								// original edge slice so width can change between segments.
+								for (let e = 0; e < path.length - 1; e++) {
+									const ei = edgeIndex.get(edgeKey(path[e], path[e + 1]));
+									const t = ei !== undefined ? et[ei] : 0;
+									const w = baseW + (baseW * maxThickMult - baseW) * t;
+									const startSi = e * seg * 2;
+									let d = `M ${spline[startSi] * scaleX} ${spline[startSi + 1] * scaleY}`;
+									for (let s = 1; s <= seg; s++) {
+										const si = (e * seg + s) * 2;
+										if (si + 1 >= spline.length) break;
+										d += ` L ${spline[si] * scaleX} ${spline[si + 1] * scaleY}`;
+									}
+									parts.push(`<path d="${d}" fill="none" stroke="rgb(${rr},${gg},${bb})" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round" />`);
+								}
+							}
+						}
 						return;
 					}
 
@@ -13834,6 +15393,65 @@ window.addEventListener("keydown", (e) => {
 						ctx.arc(dot.x * scaleX, dot.y * scaleY, r * Math.min(scaleX, scaleY), 0, Math.PI * 2);
 						ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
 						ctx.fill();
+						return;
+					}
+
+					// Handle graph chains (linked particles): always outline-only, never
+					// filled. Sub-paths through degree-2 vertices are smoothed with the
+					// same Catmull-Rom kernel used by the line tool.
+					if (obj.isGraph && obj.connections) {
+						const ch = obj.chain;
+						const conns = obj.connections;
+						if (!conns.length || ch.length < 2) return;
+						const [rr, gg, bb] = obj.color.map(c => Math.floor(c * 255));
+						const baseW = outlineWidth * Math.min(scaleX, scaleY);
+						const et = obj.edgeThickness;
+						const maxThickMult = 5;
+						const seg = 10;
+						const { paths, edgeIndex, edgeKey } = decomposeGraphPaths(conns, ch.length);
+
+						ctx.lineCap = "round";
+						ctx.lineJoin = "round";
+						ctx.strokeStyle = `rgb(${rr},${gg},${bb})`;
+
+						for (const path of paths) {
+							if (path.length < 2) continue;
+							const pts = new Array(path.length);
+							let valid = true;
+							for (let i = 0; i < path.length; i++) {
+								const v = ch[path[i]];
+								if (!v) { valid = false; break; }
+								pts[i] = { x: v.x, y: v.y };
+							}
+							if (!valid) continue;
+							const spline = getOpenSmoothCurve(pts, seg);
+							if (spline.length < 4) continue;
+
+							if (!et) {
+								ctx.lineWidth = baseW;
+								ctx.beginPath();
+								ctx.moveTo(spline[0] * scaleX, spline[1] * scaleY);
+								for (let i = 2; i < spline.length; i += 2) {
+									ctx.lineTo(spline[i] * scaleX, spline[i + 1] * scaleY);
+								}
+								ctx.stroke();
+							} else {
+								for (let e = 0; e < path.length - 1; e++) {
+									const ei = edgeIndex.get(edgeKey(path[e], path[e + 1]));
+									const t = ei !== undefined ? et[ei] : 0;
+									ctx.lineWidth = baseW + (baseW * maxThickMult - baseW) * t;
+									const startSi = e * seg * 2;
+									ctx.beginPath();
+									ctx.moveTo(spline[startSi] * scaleX, spline[startSi + 1] * scaleY);
+									for (let s = 1; s <= seg; s++) {
+										const si = (e * seg + s) * 2;
+										if (si + 1 >= spline.length) break;
+										ctx.lineTo(spline[si] * scaleX, spline[si + 1] * scaleY);
+									}
+									ctx.stroke();
+								}
+							}
+						}
 						return;
 					}
 
